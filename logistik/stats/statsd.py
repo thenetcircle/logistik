@@ -43,7 +43,7 @@ class StatsDService(StatsBase):
             import socket
 
             port = conf.get(ConfigKeys.PORT)
-            prefix = 'quiz'
+            prefix = 'logistik'
             if ConfigKeys.PREFIX in conf:
                 prefix = conf.get(ConfigKeys.PREFIX)
 
