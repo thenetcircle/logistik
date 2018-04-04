@@ -1,24 +1,24 @@
 kafka:
-  topic: '$RECS_TOPIC'
+  topic: '$LK_TOPIC'
 database:
   type: 'rdbms'
-  driver: '$RECS_DB_DRIVER'
-  host: '$RECS_DB_HOST'
-  port: '$RECS_DB_PORT'
-  db: '$RECS_DB_NAME'
-  user: '$RECS_DB_USER'
-  password: '$RECS_DB_PASS'
-  pool_size: '$RECS_DB_POOL_SIZE'
+  driver: '$LK_DB_DRIVER'
+  host: '$LK_DB_HOST'
+  port: '$LK_DB_PORT'
+  db: '$LK_DB_NAME'
+  user: '$LK_DB_USER'
+  password: '$LK_DB_PASS'
+  pool_size: '$LK_DB_POOL_SIZE'
 cache:
-  host: '$RECS_CACHE_HOST'
-  db: '$RECS_CACHE_DB'
-  type: '$RECS_CACHE_TYPE'
+  host: '$LK_CACHE_HOST'
+  db: '$LK_CACHE_DB'
+  type: '$LK_CACHE_TYPE'
 zookeeper:
   hosts:
     - '127.0.0.1:2181'
-    #- '$RECS_ZOOKEEPER_2'
+    #- '$LK_ZOOKEEPER_2'
 stats:
   type: 'statsd'
-  host: '$RECS_STATSD_HOST'
+  host: '$LK_STATSD_HOST'
   port: 8125
-  prefix: '$RECS_STATSD_PREFIX'
+  prefix: '$LK_STATSD_PREFIX'

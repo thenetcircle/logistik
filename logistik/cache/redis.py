@@ -1,5 +1,5 @@
-from recs.cache import CacheBase
-from recs.environ import GNEnvironment
+from logistik.cache import CacheBase
+from logistik.environ import GNEnvironment
 
 
 class CacheRedis(CacheBase):

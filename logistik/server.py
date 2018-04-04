@@ -6,8 +6,8 @@ from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 
-from recs import environ
-from recs.config import ConfigKeys
+from logistik import environ
+from logistik.config import ConfigKeys
 
 logging.basicConfig(
     level=getattr(logging, os.environ.get('LOG_LEVEL', 'DEBUG')),

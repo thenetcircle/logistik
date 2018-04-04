@@ -8,10 +8,10 @@ from uuid import uuid4 as uuid
 from kafka import KafkaConsumer
 from activitystreams import parse as parse_as
 
-from quiz.utils import ParseException
-from quiz.utils.base_store import IDataStore
-from quiz.config import ConfigKeys
-from quiz.environ import GNEnvironment
+from logistik.utils import ParseException
+from logistik.utils.base_store import IDataStore
+from logistik.config import ConfigKeys
+from logistik.environ import GNEnvironment
 
 
 class KafkaReader(object):

@@ -48,6 +48,7 @@ class ConfigKeys(object):
     DATE_FORMAT = 'date_format'
     PREFIX = 'prefix'
     EVENT_HANDLERS = 'handlers'
+    MODEL_NAME = 'model_name'
 
     # will be overwritten even if specified in config file
     ENVIRONMENT = '_environment'

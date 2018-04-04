@@ -1,5 +1,5 @@
-from recs.stats import StatsBase
-from recs.config import ConfigKeys
+from logistik.stats import StatsBase
+from logistik.config import ConfigKeys
 
 
 class MockStatsD(StatsBase):

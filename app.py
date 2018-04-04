@@ -4,7 +4,7 @@ import eventlet
 eventlet.monkey_patch()
 
 # keep this import; even though unused, gunicorn needs it, otherwise it will not start
-from recs.server import app
+from logistik.server import app
 
-from recs import environ
+from logistik import environ
 environ.env.node = 'app'

@@ -19,11 +19,11 @@ from typing import Union
 import pkg_resources
 import yaml
 
-from recs.config import ConfigKeys
-from recs.utils.decorators import timeit
+from logistik.config import ConfigKeys
+from logistik.utils.decorators import timeit
 
-ENV_KEY_ENVIRONMENT = 'RECS_ENVIRONMENT'
-ENV_KEY_SECRETS = 'RECS_SECRETS'
+ENV_KEY_ENVIRONMENT = 'LK_ENVIRONMENT'
+ENV_KEY_SECRETS = 'LK_SECRETS'
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +179,7 @@ def b64e(s: str) -> str:
 
 
 def find_config(config_paths: list) -> tuple:
-    default_paths = ["recs.yaml", "recs.json"]
+    default_paths = ["config.yaml", "config.json"]
     config_dict = dict()
     config_path = None
 
@@ -254,7 +254,7 @@ def create_env(config_paths: list = None) -> GNEnvironment:
     config_dict = load_secrets_file(config_dict)
 
     try:
-        config_dict[ConfigKeys.VERSION] = pkg_resources.require('recs')[0].version
+        config_dict[ConfigKeys.VERSION] = pkg_resources.require('logistik')[0].version
     except Exception:
         # ignore, it will fail when running tests on CI because we don't include all requirements; no need
         pass
@@ -265,7 +265,6 @@ def create_env(config_paths: list = None) -> GNEnvironment:
     logging.basicConfig(
             level=getattr(logging, log_level),
             format=config_dict.get(ConfigKeys.LOG_FORMAT, ConfigKeys.DEFAULT_LOG_FORMAT))
-    logging.getLogger('cassandra').setLevel(logging.WARNING)
 
     if ConfigKeys.DATE_FORMAT not in config_dict:
         date_format = ConfigKeys.DEFAULT_DATE_FORMAT
@@ -308,7 +307,7 @@ def init_cache_service(gn_env: GNEnvironment):
         raise RuntimeError('no cache type specified, use one of [redis, mock]')
 
     if cache_type == 'redis':
-        from recs.cache.redis import CacheRedis
+        from logistik.cache.redis import CacheRedis
 
         cache_host, cache_port = cache_engine.get(ConfigKeys.HOST), None
         if ':' in cache_host:
@@ -317,7 +316,7 @@ def init_cache_service(gn_env: GNEnvironment):
         cache_db = cache_engine.get(ConfigKeys.DB, 0)
         gn_env.cache = CacheRedis(gn_env, host=cache_host, port=cache_port, db=cache_db)
     elif cache_type == 'memory':
-        from recs.cache.redis import CacheRedis
+        from logistik.cache.redis import CacheRedis
         gn_env.cache = CacheRedis(gn_env, host='mock')
     else:
         raise RuntimeError('unknown cache type %s, use one of [redis, mock]' % cache_type)
@@ -339,7 +338,7 @@ def init_stats_service(gn_env: GNEnvironment) -> None:
         raise RuntimeError('no stats type specified, use one of [statsd] (set host to mock if no stats service wanted)')
 
     if stats_type == 'statsd':
-        from recs.stats.statsd import StatsDService
+        from logistik.stats.statsd import StatsDService
         gn_env.stats = StatsDService(gn_env)
 
 
@@ -364,7 +363,7 @@ def init_logging(gn_env: GNEnvironment) -> None:
     import socket
     from git.cmd import Git
 
-    home_dir = os.environ.get('RECS_HOME', default=None)
+    home_dir = os.environ.get('LK_HOME', default=None)
     if home_dir is None:
         home_dir = '.'
     tag_name = Git(home_dir).describe()
@@ -392,7 +391,7 @@ def init_plugins(gn_env: GNEnvironment):
     logging.getLogger('yapsy').setLevel(gn_env.config.get(ConfigKeys.LOG_LEVEL, logging.INFO))
 
     plugin_manager = PluginManager()
-    plugin_manager.setPluginPlaces(['recs/handlers'])
+    plugin_manager.setPluginPlaces(['logistik/handlers'])
     plugin_manager.collectPlugins()
 
     for pluginInfo in plugin_manager.getAllPlugins():
@@ -422,16 +421,16 @@ def init_plugins(gn_env: GNEnvironment):
         pluginInfo.plugin_object.setup(gn_env)
 
 
-def initialize_env(recs_env):
-    init_logging(recs_env)
-    init_cache_service(recs_env)
-    init_stats_service(recs_env)
-    init_plugins(recs_env)
+def initialize_env(lk_env):
+    init_logging(lk_env)
+    init_cache_service(lk_env)
+    init_stats_service(lk_env)
+    init_plugins(lk_env)
 
 
 _config_paths = None
-if 'RECS_CONFIG' in os.environ:
-    _config_paths = [os.environ['RECS_CONFIG']]
+if 'LK_CONFIG' in os.environ:
+    _config_paths = [os.environ['LK_CONFIG']]
 
 env = create_env(_config_paths)
 initialize_env(env)
