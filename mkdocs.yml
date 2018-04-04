@@ -1,0 +1,5 @@
+site_name: Recommendation Engine
+pages:
+    - Home: index.md
+    - Installation: md/installation.md
+theme: readthedocs
