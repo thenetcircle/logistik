@@ -157,6 +157,7 @@ class GNEnvironment(object):
         self.config = config
         self.cache = None
         self.stats = None
+        self.failed_msg_log = None
         self.capture_exception = lambda e: False
 
         self.event_handler_map = dict()
@@ -353,6 +354,16 @@ def init_logging(gn_env: GNEnvironment) -> None:
         return
     if logging_type != 'sentry':
         raise RuntimeError('unknown logging type %s' % logging_type)
+
+    failed_msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
+
+    f_msg_path = gn_env.config.get(ConfigKeys.FAILED_MESSAGE_LOG, default='/tmp/logistik-failed-msgs.log')
+    f_msg_handler = logging.FileHandler(f_msg_path)
+    f_msg_handler.setFormatter(failed_msg_formatter)
+    f_msg_logger = logging.getLogger('FailedMessages')
+    f_msg_logger.setLevel(logging.INFO)
+    f_msg_logger.addHandler(f_msg_handler)
+    gn_env.failed_msg_log = f_msg_logger
 
     dsn = gn_env.config.get(ConfigKeys.DSN, domain=ConfigKeys.LOGGING, default='')
     if dsn is None or len(dsn.strip()) == 0:

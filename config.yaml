@@ -15,10 +15,11 @@ cache:
   type: '$LK_CACHE_TYPE'
 zookeeper:
   hosts:
-    - '127.0.0.1:2181'
+    - '$LK_ZOOKEEPER_1'
     #- '$LK_ZOOKEEPER_2'
 stats:
   type: 'statsd'
   host: '$LK_STATSD_HOST'
   port: 8125
   prefix: '$LK_STATSD_PREFIX'
+secret: '$LK_SECRET_KEY'

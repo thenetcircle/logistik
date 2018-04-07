@@ -1,7 +1,7 @@
 import logging
-import time
 import json
 import sys
+import logging
 import traceback
 
 from uuid import uuid4 as uuid
@@ -9,26 +9,24 @@ from kafka import KafkaConsumer
 from activitystreams import parse as parse_as
 
 from logistik.utils import ParseException
-from logistik.utils.base_store import IDataStore
 from logistik.config import ConfigKeys
 from logistik.environ import GNEnvironment
+from logistik import environ
+
+logger = logging.getLogger(__name__)
 
 
 class KafkaReader(object):
-    def __init__(self, data_store: IDataStore, env: GNEnvironment):
+    def __init__(self, env: GNEnvironment):
         self.logger = logging.getLogger(__name__)
-        self.data_store = data_store
         self.env = env
 
     def run(self) -> None:
-        while not self.data_store.init_done:
-            time.sleep(1)
+        bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
+        self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
 
         topic_name = self.env.config.get(ConfigKeys.TOPIC, domain=ConfigKeys.KAFKA)
-        self.logger.debug('data store initialized, starting to read from kafka, topic {}'.format(topic_name))
-
-        bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
-        self.logger.debug('bootstrapping from servers: %s' % (str(bootstrap_servers)))
+        self.logger.info('consuming from topic {}'.format(topic_name))
 
         consumer = KafkaConsumer(
             topic_name,
@@ -70,29 +68,14 @@ class KafkaReader(object):
         )
 
         try:
-            activity = parse_as(message.value)
+            data = message.value
+            activity = parse_as(data)
         except Exception as e:
             self.logger.error('could not parse message as activity stream: {}'.format(str(e)))
             raise ParseException(e)
 
-        try:
-            percentages = json.loads(activity.object.content)
-        except Exception as e:
-            self.logger.error('could not parse content of activity stream: {}'.format(str(e)))
-            raise ParseException(e)
-
-        if not all([key in percentages for key in ['a', 'b', 'c', 'd']]):
-            error_msg = 'not all required keys existed in activity.object.content: {}'.format(str(percentages))
-            self.logger.error(error_msg)
-            raise ParseException(error_msg)
-
-        self.data_store.update_score(
-            int(activity.actor.id),
-            activity.object.id,
-            (
-                percentages.get('a'),
-                percentages.get('b'),
-                percentages.get('c'),
-                percentages.get('d')
-            )
-        )
+        if activity.verb in environ.env.event_handler_map:
+            for handler in environ.env.event_handler_map[activity.verb]:
+                all_ok, status_code, msg = handler(data, activity)
+                if not all_ok:
+                    logger.warning('[%s] handler "%s" failed: %s' % (activity.verb, str(handler), str(msg)))

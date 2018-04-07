@@ -1,7 +1,7 @@
 import logging
-import eventlet
 import os
 
+from uuid import uuid4 as uuid
 from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
@@ -22,6 +22,7 @@ def create_app():
     db_pass = environ.env.config.get(ConfigKeys.PASS, domain=ConfigKeys.DATABASE)
     db_name = environ.env.config.get(ConfigKeys.NAME, domain=ConfigKeys.DATABASE)
     db_pool = int(environ.env.config.get(ConfigKeys.POOL_SIZE, domain=ConfigKeys.DATABASE))
+    secret = environ.env.config.get(ConfigKeys.SECRET_KEY, default=str(uuid()))
 
     _app = Flask(__name__)
     _app.config['SECRET_KEY'] = '60e17ba8-ef84-11e7-87cb-637e35b34927'

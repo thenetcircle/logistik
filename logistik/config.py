@@ -1,6 +1,7 @@
 class ErrorCodes(object):
     OK = 200
     UNKNOWN_ERROR = 250
+    HANDLER_ERROR = 260
 
     MISSING_ACTOR_ID = 500
     MISSING_OBJECT_ID = 501
@@ -22,7 +23,17 @@ class ErrorCodes(object):
     INVALID_VERB = 607
 
 
+class HandlerKeys(object):
+    HTTP = 'http'
+    URL = 'url'
+    METHOD = 'method'
+    TIMEOUT = 'timeout'
+    RETRIES = 'retries'
+    NAME = 'name'
+
+
 class ConfigKeys(object):
+    FAILED_MESSAGE_LOG = 'failed_msg_log'
     LOG_LEVEL = 'log_level'
     LOG_FORMAT = 'log_format'
     DEBUG = 'debug'
@@ -49,6 +60,7 @@ class ConfigKeys(object):
     PREFIX = 'prefix'
     EVENT_HANDLERS = 'handlers'
     MODEL_NAME = 'model_name'
+    SECRET_KEY = 'secret'
 
     # will be overwritten even if specified in config file
     ENVIRONMENT = '_environment'
