@@ -433,6 +433,8 @@ def init_plugins(gn_env: GNEnvironment):
             except KeyError:
                 raise KeyError('specified plugin "{}" does not exist'.format(key))
 
+    # TODO: need to setup zookeeper listener to be able to enabled/disable/add/remove handlers from web
+
     gn_env.config.set(ConfigKeys.EVENT_HANDLERS, handlers)
 
     for pluginInfo in plugin_manager.getAllPlugins():
