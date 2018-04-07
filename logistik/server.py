@@ -25,7 +25,7 @@ def create_app():
     secret = environ.env.config.get(ConfigKeys.SECRET_KEY, default=str(uuid()))
 
     _app = Flask(__name__)
-    _app.config['SECRET_KEY'] = '60e17ba8-ef84-11e7-87cb-637e35b34927'
+    _app.config['SECRET_KEY'] = secret
     _app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     _app.config['SQLALCHEMY_POOL_SIZE'] = db_pool
     _app.config['SQLALCHEMY_DATABASE_URI'] = '{}://{}:{}@{}:{}/{}'.format(

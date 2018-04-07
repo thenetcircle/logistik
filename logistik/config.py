@@ -62,6 +62,20 @@ class ConfigKeys(object):
     MODEL_NAME = 'model_name'
     SECRET_KEY = 'secret'
 
+    # for the admin interface
+    ROOT_URL = 'root_url'
+    WEB = 'web'
+    USE_FLOATING_MENU = 'use_floating_menu'
+    INSECURE = 'insecure'
+    OAUTH_BASE = 'base'
+    OAUTH_PATH = 'path'
+    SERVICE_ID = 'service_id'
+    SERVICE_SECRET = 'service_secret'
+    AUTH_URL = 'authorized_url'
+    TOKEN_URL = 'token_url'
+    CALLBACK_URL = 'callback_url'
+    UNAUTH_URL = 'unauthorized_url'
+
     # will be overwritten even if specified in config file
     ENVIRONMENT = '_environment'
     VERSION = '_version'

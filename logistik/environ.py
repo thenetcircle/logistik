@@ -432,6 +432,29 @@ def init_plugins(gn_env: GNEnvironment):
         pluginInfo.plugin_object.setup(gn_env)
 
 
+@timeit(logger, 'init web auth service')
+def init_web_auth(gn_env: GNEnvironment) -> None:
+    """
+    manually invoked after app initialized
+    """
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
+    web_auth_type = gn_env.config.get(ConfigKeys.TYPE, domain=ConfigKeys.WEB, default=None)
+    if not web_auth_type or str(web_auth_type).strip().lower() in ['false', 'none', '']:
+        logger.info('auth type was "{}", not initializing web auth'.format(web_auth_type))
+        return
+
+    if web_auth_type not in {'oauth'}:
+        raise RuntimeError('unknown web auth type "{}", only "oauth" is available'.format(str(web_auth_type)))
+
+    from logistik.admin.auth.oauth import OAuthService
+    gn_env.web_auth = OAuthService(gn_env)
+    logger.info('initialized OAuthService')
+
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_cache_service(lk_env)

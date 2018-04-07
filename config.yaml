@@ -23,3 +23,16 @@ stats:
   port: 8125
   prefix: '$LK_STATSD_PREFIX'
 secret: '$LK_SECRET_KEY'
+web:
+  type: 'oauth'
+  root_url: '$LK_WEB_ROOT_URL'
+  insecure: '$LK_WEB_AUTH_INSECURE'
+  base: '$LK_WEB_AUTH_BASE'
+  path: '$LK_WEB_AUTH_PATH'
+  service_id: '$LK_WEB_AUTH_SERVICE_ID'
+  service_secret: '$LK_WEB_AUTH_SERVICE_SECRET'
+  authorized_url: '$LK_WEB_AUTH_URL'
+  token_url: '$LK_WEB_AUTH_TOKEN_URL'
+  callback_url: '$LK_WEB_AUTH_CALLBACK_URL'
+  unauthorized_url: '$LK_WEB_AUTH_UNAUTH_URL'
+  use_floating_menu: '$LK_WEB_USE_FLOATING_MENU'

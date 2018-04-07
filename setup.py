@@ -27,6 +27,7 @@ setup(
         'flask-restful',
         'flask-sqlalchemy',
         'Flask-Testing',
+        'flask-oauthlib',
         'gunicorn',
         'codecov',
         'fakeredis',
