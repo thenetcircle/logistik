@@ -22,3 +22,21 @@ class KafkaReaderTest(BaseTest):
 
         # reader should have dropped it since no mapping
         self.assertEqual(1, self.env.dropped_msg_log.drops)
+
+    def test_parsing(self):
+        class MockKafkaMessage(object):
+            def __init__(self, msg):
+                self.value = msg
+
+        verb = 'foo'
+        actor_id = 'bar'
+        data = {
+            'verb': verb,
+            'actor': {'id': actor_id}
+        }
+        message = MockKafkaMessage(data)
+
+        _, activity = self.reader.try_to_parse(message)
+
+        self.assertEqual(verb, activity.verb)
+        self.assertEqual(actor_id, activity.actor.id)

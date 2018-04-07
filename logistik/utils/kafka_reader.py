@@ -51,8 +51,6 @@ class KafkaReader(object):
             message.value)
         )
 
-        data, activity = None, None
-
         try:
             data, activity = self.try_to_parse(message)
         except InterruptedError:
