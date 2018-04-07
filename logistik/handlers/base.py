@@ -22,7 +22,7 @@ class BaseHandler(IPlugin, ABC):
 
     def __call__(self, *args, **kwargs) -> (bool, str):
         if not self.enabled:
-            return
+            return BaseHandler.FAIL, ErrorCodes.UNKNOWN_ERROR, None
 
         data, activity = args[0], args[1]
         try:

@@ -1,9 +1,12 @@
 from unittest import TestCase
+from activitystreams import Activity
 
 from logistik.utils.kafka_reader import KafkaReader
 from logistik.environ import GNEnvironment
 from logistik.environ import ConfigDict
 from logistik.stats import StatsBase
+from logistik.handlers.base import BaseHandler
+from logistik.config import ErrorCodes
 
 
 class MockLogger(object):
@@ -15,6 +18,19 @@ class MockLogger(object):
 
     def warning(self, _):
         self.drops += 1
+
+
+class MockHandler(BaseHandler):
+    def __init__(self):
+        super().__init__()
+        self.n_handled = 0
+
+    def setup(self, env: GNEnvironment):
+        self.enabled = True
+
+    def handle(self, data: dict, activity: Activity):
+        self.n_handled += 1
+        return BaseHandler.OK, ErrorCodes.OK, dict()
 
 
 class MockStats(StatsBase):
@@ -40,6 +56,7 @@ class MockEnv(GNEnvironment):
         self.dropped_msg_log = MockLogger()
         self.failed_msg_log = MockLogger()
         self.stats = MockStats()
+        self.event_handler_map = dict()
 
 
 class BaseTest(TestCase):
