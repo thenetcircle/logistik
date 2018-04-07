@@ -74,7 +74,10 @@ class KafkaReader(object):
             self.logger.error('could not parse message as activity stream: {}'.format(str(e)))
             raise ParseException(e)
 
-        if activity.verb in environ.env.event_handler_map:
+        if activity.verb not in environ.env.event_handler_map:
+            self.logger.error('no plugin enabled for event {}, dropping message'.format(activity.verb))
+            self.env.dropped_msg_log.info(data)
+            self.env.stats.incr('dropped')
             for handler in environ.env.event_handler_map[activity.verb]:
                 all_ok, status_code, msg = handler(data, activity)
                 if not all_ok:

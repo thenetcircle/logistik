@@ -19,6 +19,7 @@ from typing import Union
 import pkg_resources
 import yaml
 
+from logistik.stats import StatsBase
 from logistik.config import ConfigKeys
 from logistik.utils.decorators import timeit
 
@@ -156,8 +157,9 @@ class GNEnvironment(object):
         self.root_path = root_path
         self.config = config
         self.cache = None
-        self.stats = None
-        self.failed_msg_log = None
+        self.stats: StatsBase = None
+        self.failed_msg_log: logging.Logger = None
+        self.dropped_msg_log: logging.Logger = None
         self.capture_exception = lambda e: False
 
         self.event_handler_map = dict()
@@ -355,15 +357,20 @@ def init_logging(gn_env: GNEnvironment) -> None:
     if logging_type != 'sentry':
         raise RuntimeError('unknown logging type %s' % logging_type)
 
-    failed_msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
+    def _create_logger(_path: str, _name: str) -> logging.Logger:
+        msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
+        msg_handler = logging.FileHandler(_path)
+        msg_handler.setFormatter(msg_formatter)
+        msg_logger = logging.getLogger(_name)
+        msg_logger.setLevel(logging.INFO)
+        msg_logger.addHandler(msg_handler)
+        return msg_logger
 
     f_msg_path = gn_env.config.get(ConfigKeys.FAILED_MESSAGE_LOG, default='/tmp/logistik-failed-msgs.log')
-    f_msg_handler = logging.FileHandler(f_msg_path)
-    f_msg_handler.setFormatter(failed_msg_formatter)
-    f_msg_logger = logging.getLogger('FailedMessages')
-    f_msg_logger.setLevel(logging.INFO)
-    f_msg_logger.addHandler(f_msg_handler)
-    gn_env.failed_msg_log = f_msg_logger
+    d_msg_path = gn_env.config.get(ConfigKeys.DROPPED_MESSAGE_LOG, default='/tmp/logistik-dropped-msgs.log')
+
+    gn_env.failed_msg_log = _create_logger(f_msg_path, 'FailedMessages')
+    gn_env.dropped_msg_log = _create_logger(d_msg_path, 'DroppedMessages')
 
     dsn = gn_env.config.get(ConfigKeys.DSN, domain=ConfigKeys.LOGGING, default='')
     if dsn is None or len(dsn.strip()) == 0:
