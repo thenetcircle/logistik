@@ -7,12 +7,7 @@ from typing import Union
 import pkg_resources
 import yaml
 
-from logistik.handlers.manager import IHandlersManager
-from logistik.handlers.manager import HandlersManager
-from logistik.stats import IStats
-from logistik.cache import ICache
 from logistik.config import ConfigKeys
-from logistik.db import IDatabase
 from logistik.utils.decorators import timeit
 
 ENV_KEY_ENVIRONMENT = 'LK_ENVIRONMENT'
@@ -145,6 +140,11 @@ class GNEnvironment(object):
         # can skip when testing
         if skip_init:
             return
+
+        from logistik.handlers import IHandlersManager
+        from logistik.stats import IStats
+        from logistik.cache import ICache
+        from logistik.db import IDatabase
 
         self.root_path = root_path
         self.config = config
@@ -459,11 +459,16 @@ def init_web_auth(gn_env: GNEnvironment) -> None:
 
 @timeit(logging, 'init handlers manager')
 def init_handlers_manager(gn_env: GNEnvironment) -> None:
+    from logistik.handlers.manager import HandlersManager
     gn_env.handlers_manager = HandlersManager(gn_env)
 
 
 @timeit(logging, 'init db service')
 def init_db_service(gn_env: GNEnvironment) -> None:
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
     from logistik.db.manager import DatabaseManager
     gn_env.db = DatabaseManager(gn_env)
 

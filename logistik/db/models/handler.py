@@ -1,7 +1,8 @@
 from logistik.server import db
+from logistik.db.repr.handler import HandlerConf
 
 
-class HandlerConf(db.Model):
+class HandlerConfEntity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
     event = db.Column(db.String(80), unique=False, nullable=False)
@@ -11,7 +12,18 @@ class HandlerConf(db.Model):
     path = db.Column(db.String(80), unique=False, nullable=False)
     node = db.Column(db.Integer, unique=False, nullable=False, server_default=0)
 
+    def to_repr(self) -> HandlerConf:
+        return HandlerConf(
+            identity=self.id,
+            name=self.name,
+            enabled=self.enabled,
+            endpoint=self.endpoint,
+            version=self.version,
+            path=self.path,
+            node=self.node
+        )
+
     def __str__(self):
-        return '<Handler id={}, name={}, event={}, enabled={}, endpoint={}, version={}, path={}>'.format(
+        return '<HandlerConfEntity id={}, name={}, event={}, enabled={}, endpoint={}, version={}, path={}>'.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path
         )

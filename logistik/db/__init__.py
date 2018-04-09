@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import List
-from logistik.db.models.handler import HandlerConf
-from logistik.db.models.event import EventConf
+from logistik.db.repr.handler import HandlerConf
+from logistik.db.repr.event import EventConf
 
 
 class IDatabase(ABC):

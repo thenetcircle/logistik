@@ -1,19 +1,17 @@
 import traceback
 import sys
 
-from requests.models import Response
 from abc import ABC
-from typing import Union
 from yapsy.IPlugin import IPlugin
-from activitystreams import Activity
 from logging import Logger
 
 from logistik.config import ErrorCodes
-from logistik.db.models.handler import HandlerConf
+from logistik.db.repr.handler import HandlerConf
+from logistik.handlers import IHandler
 from logistik import environ
 
 
-class BaseHandler(IPlugin, ABC):
+class BaseHandler(IHandler, IPlugin, ABC):
     OK = True
     FAIL = False
 
@@ -55,15 +53,6 @@ class BaseHandler(IPlugin, ABC):
             self.logger.error('handler {} failed with code: {}, response: {}'.format(
                 str(self), str(error_code), str(response)))
             return BaseHandler.FAIL, error_code, response
-
-    def setup(self, env: environ.GNEnvironment):
-        raise NotImplementedError('setup() not implemented in plugin')
-
-    def handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
-        raise NotImplementedError('handle() not implemented in plugin')
-
-    def __str__(self):
-        raise NotImplementedError('__str__() not implemented in plugin')
 
     @property
     def name(self) -> str:

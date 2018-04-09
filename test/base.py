@@ -1,10 +1,10 @@
-from unittest import TestCase
+from flask_testing import TestCase
 from activitystreams import Activity
 
 from logistik.utils.kafka_reader import KafkaReader
 from logistik.environ import GNEnvironment
 from logistik.environ import ConfigDict
-from logistik.stats import StatsBase
+from logistik.stats import IStats
 from logistik.handlers.base import BaseHandler
 from logistik.config import ErrorCodes
 
@@ -33,7 +33,7 @@ class MockHandler(BaseHandler):
         return BaseHandler.OK, ErrorCodes.OK, dict()
 
 
-class MockStats(StatsBase):
+class MockStats(IStats):
     def incr(self, key: str) -> None:
         pass
 

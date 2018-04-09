@@ -15,6 +15,10 @@ logging.basicConfig(
 
 
 def create_app():
+    if len(environ.env.config) == 0 or environ.env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return None, None, None
+
     db_host = environ.env.config.get(ConfigKeys.HOST, domain=ConfigKeys.DATABASE)
     db_port = int(environ.env.config.get(ConfigKeys.PORT, domain=ConfigKeys.DATABASE))
     db_drvr = environ.env.config.get(ConfigKeys.DRIVER, domain=ConfigKeys.DATABASE)
