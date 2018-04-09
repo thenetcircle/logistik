@@ -54,17 +54,21 @@ class KafkaReader(object):
         try:
             data, activity = self.try_to_parse(message)
         except InterruptedError:
+            self.logger.warning('got interrupt, dropping message'.format(str(message.value)))
+            utils.drop_message(message.value)
             raise
         except utils.ParseException:
-            self.logger.error('activity stream was: {}'.format(str(message.value)))
+            self.logger.error('could not enrich/parse data, original data was: {}'.format(str(message.value)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
+            utils.fail_message(message.value)
             return
         except Exception as e:
             self.logger.error('got uncaught exception: {}'.format(str(e)))
             self.logger.error('event was: {}'.format(str(message)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
+            utils.fail_message(message.value)
             return
 
         try:
@@ -75,16 +79,21 @@ class KafkaReader(object):
             self.logger.error('got uncaught exception: {}'.format(str(e)))
             self.logger.error('event was: {}'.format(str(data)))
             self.logger.exception(traceback.format_exc())
-            utils.fail_message(data)
             self.env.capture_exception(sys.exc_info())
+            utils.fail_message(data)
 
     def try_to_parse(self, message) -> (dict, Activity):
+        data = message.value
+
         try:
-            data = message.value
-            activity = parse_as(data)
+            enriched_data = self.env.enrichment_manager.handle(data)
+        except Exception as e:
+            return utils.ParseException(e)
+
+        try:
+            activity = parse_as(enriched_data)
             return data, activity
         except Exception as e:
-            self.logger.error('could not parse message as activity stream: {}'.format(str(e)))
             raise utils.ParseException(e)
 
     def try_to_handle(self, data: dict, activity: Activity) -> None:

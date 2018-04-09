@@ -7,6 +7,8 @@ from logistik.environ import ConfigDict
 from logistik.stats import IStats
 from logistik.handlers.base import BaseHandler
 from logistik.config import ErrorCodes
+from logistik.enrich.identity import IdentityEnrichment
+from logistik.enrich.published import PublishedEnrichment
 
 
 class MockLogger(object):
@@ -57,6 +59,10 @@ class MockEnv(GNEnvironment):
         self.failed_msg_log = MockLogger()
         self.stats = MockStats()
         self.event_handler_map = dict()
+        self.enrichers = [
+            ('published', PublishedEnrichment()),
+            ('id', IdentityEnrichment()),
+        ]
 
 
 class BaseTest(TestCase):

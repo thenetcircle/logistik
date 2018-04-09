@@ -3,11 +3,19 @@ import logging
 import os
 from base64 import b64encode
 from typing import Union
+from typing import List
+from typing import Tuple
 
 import pkg_resources
 import yaml
 
 from logistik.config import ConfigKeys
+from logistik.handlers import IHandlersManager
+from logistik.enrich import IEnrichmentManager
+from logistik.enrich import IEnricher
+from logistik.stats import IStats
+from logistik.cache import ICache
+from logistik.db import IDatabase
 from logistik.utils.decorators import timeit
 
 ENV_KEY_ENVIRONMENT = 'LK_ENVIRONMENT'
@@ -141,11 +149,6 @@ class GNEnvironment(object):
         if skip_init:
             return
 
-        from logistik.handlers import IHandlersManager
-        from logistik.stats import IStats
-        from logistik.cache import ICache
-        from logistik.db import IDatabase
-
         self.root_path = root_path
         self.config = config
         self.cache: ICache = None
@@ -154,6 +157,9 @@ class GNEnvironment(object):
         self.failed_msg_log: logging.Logger = None
         self.dropped_msg_log: logging.Logger = None
         self.capture_exception = lambda e: False
+
+        self.enrichment_manager: IEnrichmentManager = None
+        self.enrichers: List[Tuple[str, IEnricher]] = list()
 
         self.handlers_manager: IHandlersManager = None
         self.event_handler_map = dict()
@@ -473,12 +479,30 @@ def init_db_service(gn_env: GNEnvironment) -> None:
     gn_env.db = DatabaseManager(gn_env)
 
 
+def init_enrichment_service(gn_env: GNEnvironment):
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
+    from logistik.enrich.manager import EnrichmentManager
+    gn_env.enrichment_manager = EnrichmentManager(gn_env)
+
+    # TODO: make enrichers configurable
+
+    from logistik.enrich.published import PublishedEnrichment
+
+    gn_env.enrichers = [
+        ('published', PublishedEnrichment())
+    ]
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
     init_plugins(lk_env)
+    init_enrichment_service(lk_env)
 
 
 _config_paths = None
