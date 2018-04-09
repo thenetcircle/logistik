@@ -1,7 +1,12 @@
-class ErrorCodes(object):
+from enum import Enum
+
+
+class ErrorCodes(Enum):
     OK = 200
     UNKNOWN_ERROR = 250
     HANDLER_ERROR = 260
+
+    RETRIES_EXCEEDED = 300
 
     MISSING_ACTOR_ID = 500
     MISSING_OBJECT_ID = 501
@@ -30,6 +35,12 @@ class HandlerKeys(object):
     TIMEOUT = 'timeout'
     RETRIES = 'retries'
     NAME = 'name'
+
+
+class ModelTypes(object):
+    CANARY = 'canary'
+    DECOY = 'decoy'
+    MODEL = 'model'
 
 
 class ConfigKeys(object):

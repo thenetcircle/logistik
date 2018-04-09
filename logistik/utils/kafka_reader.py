@@ -8,7 +8,7 @@ from kafka import KafkaConsumer
 from activitystreams import parse as parse_as
 from activitystreams import Activity
 
-from logistik.utils import ParseException
+from logistik import utils
 from logistik.config import ConfigKeys
 from logistik.environ import GNEnvironment
 
@@ -55,7 +55,7 @@ class KafkaReader(object):
             data, activity = self.try_to_parse(message)
         except InterruptedError:
             raise
-        except ParseException:
+        except utils.ParseException:
             self.logger.error('activity stream was: {}'.format(str(message.value)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
@@ -73,8 +73,9 @@ class KafkaReader(object):
             raise
         except Exception as e:
             self.logger.error('got uncaught exception: {}'.format(str(e)))
-            self.logger.error('event was: {}'.format(str(message)))
+            self.logger.error('event was: {}'.format(str(data)))
             self.logger.exception(traceback.format_exc())
+            utils.fail_message(data)
             self.env.capture_exception(sys.exc_info())
 
     def try_to_parse(self, message) -> (dict, Activity):
@@ -84,18 +85,12 @@ class KafkaReader(object):
             return data, activity
         except Exception as e:
             self.logger.error('could not parse message as activity stream: {}'.format(str(e)))
-            raise ParseException(e)
+            raise utils.ParseException(e)
 
     def try_to_handle(self, data: dict, activity: Activity) -> None:
         if activity.verb not in self.env.event_handler_map:
             self.logger.error('no plugin enabled for event {}, dropping message'.format(activity.verb))
-            self.env.dropped_msg_log.info(data)
-            self.env.stats.incr('dropped')
+            utils.drop_message(data)
             return
 
-        for handler in self.env.event_handler_map[activity.verb]:
-            all_ok, status_code, msg = handler(data, activity)
-            if not all_ok:
-                logger.warning('[%s] handler "%s" failed: %s' % (activity.verb, str(handler), str(msg)))
-
-        # TODO: return response
+        self.env.handlers_manager.handle(data, activity)

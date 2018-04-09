@@ -1,8 +1,8 @@
-from logistik.cache import CacheBase
+from logistik.cache import ICache
 from logistik.environ import GNEnvironment
 
 
-class CacheRedis(CacheBase):
+class CacheRedis(ICache):
     def __init__(self, env: GNEnvironment, host: str, port: int=None, db: int=None):
         self.env = env
 

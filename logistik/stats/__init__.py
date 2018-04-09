@@ -1,7 +1,7 @@
 from abc import ABC
 
 
-class StatsBase(ABC):
+class IStats(ABC):
     def incr(self, key: str) -> None:
         raise NotImplementedError()
 

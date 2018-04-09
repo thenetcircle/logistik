@@ -1,5 +1,5 @@
 from abc import ABC
 
 
-class CacheBase(ABC):
+class ICache(ABC):
     pass

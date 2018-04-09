@@ -1,15 +1,3 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import json
 import logging
 import os
@@ -19,8 +7,12 @@ from typing import Union
 import pkg_resources
 import yaml
 
-from logistik.stats import StatsBase
+from logistik.handlers.manager import IHandlersManager
+from logistik.handlers.manager import HandlersManager
+from logistik.stats import IStats
+from logistik.cache import ICache
 from logistik.config import ConfigKeys
+from logistik.db import IDatabase
 from logistik.utils.decorators import timeit
 
 ENV_KEY_ENVIRONMENT = 'LK_ENVIRONMENT'
@@ -156,12 +148,14 @@ class GNEnvironment(object):
 
         self.root_path = root_path
         self.config = config
-        self.cache = None
-        self.stats: StatsBase = None
+        self.cache: ICache = None
+        self.db: IDatabase = None
+        self.stats: IStats = None
         self.failed_msg_log: logging.Logger = None
         self.dropped_msg_log: logging.Logger = None
         self.capture_exception = lambda e: False
 
+        self.handlers_manager: IHandlersManager = None
         self.event_handler_map = dict()
         self.event_handlers = dict()
 
@@ -463,9 +457,20 @@ def init_web_auth(gn_env: GNEnvironment) -> None:
     logger.info('initialized OAuthService')
 
 
+@timeit(logging, 'init handlers manager')
+def init_handlers_manager(gn_env: GNEnvironment) -> None:
+    gn_env.handlers_manager = HandlersManager(gn_env)
+
+
+@timeit(logging, 'init db service')
+def init_db_service(gn_env: GNEnvironment) -> None:
+    from logistik.db.manager import DatabaseManager
+    gn_env.db = DatabaseManager(gn_env)
+
 
 def initialize_env(lk_env):
     init_logging(lk_env)
+    init_db_service(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
     init_plugins(lk_env)

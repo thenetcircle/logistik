@@ -2,11 +2,15 @@ import logging
 import sys
 
 import requests
+from typing import Union
+from requests.models import Response
 from activitystreams import Activity
 
 from logistik import environ
+from logistik import utils
 from logistik.config import ConfigKeys
 from logistik.config import HandlerKeys
+from logistik.config import ErrorCodes
 from logistik.handlers.base import BaseHandler
 
 logger = logging.getLogger(__name__)
@@ -23,6 +27,9 @@ class HttpHandler(BaseHandler):
         self.timeout: int = None
         self.n_retries: int = None
 
+    def __str__(self):
+        return HttpHandler.__class__.__name__
+
     def setup(self, env: environ.GNEnvironment) -> None:
         self.env = env
         try:
@@ -38,10 +45,10 @@ class HttpHandler(BaseHandler):
             return
         self.enabled = True
 
-    def handle(self, data: str, activity: Activity):
+    def handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
         for i in range(self.n_retries):
             try:
-                return requests.request(
+                return ErrorCodes.OK, requests.request(
                     method=self.method, url=self.url,
                     json=data, headers=self.json_header
                 )
@@ -50,5 +57,6 @@ class HttpHandler(BaseHandler):
                     str(i+1), self.n_retries, self.url, str(e))
                 )
                 logger.exception(e)
-                environ.env.failed_msg_log.error(data)
+                utils.fail_message(data)
                 environ.env.capture_exception(sys.exc_info())
+        return ErrorCodes.RETRIES_EXCEEDED, None

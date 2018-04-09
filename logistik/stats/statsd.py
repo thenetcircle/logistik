@@ -1,8 +1,8 @@
-from logistik.stats import StatsBase
+from logistik.stats import IStats
 from logistik.config import ConfigKeys
 
 
-class MockStatsD(StatsBase):
+class MockStatsD(IStats):
     def __init__(self):
         self.vals = dict()
         self.timings = dict()
@@ -29,7 +29,7 @@ class MockStatsD(StatsBase):
         self.vals[key] = value
 
 
-class StatsDService(StatsBase):
+class StatsDService(IStats):
     def __init__(self, env):
         self.env = env
 
