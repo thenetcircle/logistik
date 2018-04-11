@@ -1,15 +1,25 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
+import Main from '@/pages/Main'
+import config from '@/config'
 
-Vue.use(Router)
+Vue.use(Router);
 
-export default new Router({
+const router = new Router({
+  mode: 'history',
   routes: [
     {
-      path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld
+      path: config.base,
+      component: Main,
+      children: [
+        { path: config.base, name: 'home', component: Model }
+      ]
+    },
+    {
+      path: '*',
+      redirect: { name: 'home' }
     }
   ]
-})
+});
+
+export default router
