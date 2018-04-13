@@ -154,6 +154,7 @@ class GNEnvironment(object):
         self.cache: ICache = None
         self.db: IDatabase = None
         self.stats: IStats = None
+        self.sql_alchemy_db = None
         self.failed_msg_log: logging.Logger = None
         self.dropped_msg_log: logging.Logger = None
         self.capture_exception = lambda e: False
@@ -463,17 +464,20 @@ def init_web_auth(gn_env: GNEnvironment) -> None:
     logger.info('initialized OAuthService')
 
 
-@timeit(logging, 'init handlers manager')
+@timeit(logger, 'init handlers manager')
 def init_handlers_manager(gn_env: GNEnvironment) -> None:
     from logistik.handlers.manager import HandlersManager
     gn_env.handlers_manager = HandlersManager(gn_env)
 
 
-@timeit(logging, 'init db service')
+@timeit(logger, 'init db service')
 def init_db_service(gn_env: GNEnvironment) -> None:
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
         return
+
+    from flask_sqlalchemy import SQLAlchemy
+    gn_env.dbman = SQLAlchemy()
 
     from logistik.db.manager import DatabaseManager
     gn_env.db = DatabaseManager(gn_env)
@@ -499,10 +503,12 @@ def init_enrichment_service(gn_env: GNEnvironment):
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
+    init_handlers_manager(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
     init_plugins(lk_env)
     init_enrichment_service(lk_env)
+    logger.info('startup done!')
 
 
 _config_paths = None

@@ -1,13 +1,13 @@
-from logistik.server import db
+from logistik.environ import env
 from logistik.db.repr.event import EventConf
 
 
-class EventConfEntity(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=False, nullable=False)
-    event = db.Column(db.String(80), unique=False, nullable=False)
-    enabled = db.Column(db.Boolean(), unique=False, nullable=False)
-    instances = db.Column(db.Integer, unique=False, nullable=False, server_default=1)
+class EventConfEntity(env.dbman.Model):
+    id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
+    name = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    event = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False)
+    instances = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='1')
 
     def to_repr(self) -> EventConf:
         return EventConf(

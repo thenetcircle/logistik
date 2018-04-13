@@ -4,7 +4,6 @@ import os
 from uuid import uuid4 as uuid
 from flask import Flask
 from flask_restful import Api
-from flask_sqlalchemy import SQLAlchemy
 
 from logistik import environ
 from logistik.config import ConfigKeys
@@ -36,9 +35,11 @@ def create_app():
         db_drvr, db_user, db_pass, db_host, db_port, db_name
     )
 
-    return _app, Api(_app), SQLAlchemy(_app)
+    environ.env.app = _app
+    environ.env.dbman.init_app(_app)
+
+    return _app, Api(_app)
 
 
-app, api, db = create_app()
-
+app, api = create_app()
 # TODO: api.add_resource(SomeResource, '/some-path')

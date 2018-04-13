@@ -1,16 +1,16 @@
-from logistik.server import db
+from logistik.environ import env
 from logistik.db.repr.handler import HandlerConf
 
 
-class HandlerConfEntity(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=False, nullable=False)
-    event = db.Column(db.String(80), unique=False, nullable=False)
-    enabled = db.Column(db.Boolean(), unique=False, nullable=False)
-    endpoint = db.Column(db.String(80), unique=False, nullable=False)
-    version = db.Column(db.String(16), unique=False, nullable=False, server_default='v1')
-    path = db.Column(db.String(80), unique=False, nullable=False)
-    node = db.Column(db.Integer, unique=False, nullable=False, server_default=0)
+class HandlerConfEntity(env.dbman.Model):
+    id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
+    name = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    event = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False)
+    endpoint = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    version = env.dbman.Column(env.dbman.String(16), unique=False, nullable=False, server_default='v1')
+    path = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
 
     def to_repr(self) -> HandlerConf:
         return HandlerConf(
