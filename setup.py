@@ -22,6 +22,7 @@ setup(
         'pyyaml',
         'redis',
         'eventlet',
+        'ianitor',
         'psycopg2-binary',
         'sqlalchemy',
         'flask-restful',
