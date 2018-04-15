@@ -1,0 +1,137 @@
+.aside {
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  z-index: $side-nav-z-index;
+  display: none;
+  pointer-events: none;
+
+  &.keeping {
+    display: block;
+  }
+
+  &__burger {
+    position: fixed;
+    padding: 12px;
+    border: none;
+    margin-top: .5rem;
+    margin-left: .5rem;
+    color: findColorInvert($primary);
+    pointer-events: auto;
+
+    &:hover {
+      color: findColorInvert($primary);
+    }
+  }
+
+  &::before {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,.6);
+    content: "";
+    opacity: 0;
+    will-change: opacity;
+    box-sizing: border-box;
+    transition: opacity .3s cubic-bezier(0, 0, .2, 1) 0s;
+  }
+
+  nav {
+    transform: translateX(calc(-100% - 20px));
+    will-change: transform;
+    background-color: lighten($primary, 5%);
+    position: absolute;
+    left: 0;
+    right: auto;
+    width: $side-nav-width;
+    height: 100%;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex-direction: column;
+    box-shadow: 0 8px 10px -5px rgba(0,0,0,.2), 0 16px 24px 2px rgba(0,0,0,.14), 0 6px 30px 5px rgba(0,0,0,.12);
+
+    .aside__nav-item {
+      display: flex;
+      > * {
+        flex-grow: 1;
+      }
+
+      a, .collapse-item__header {
+        line-height: 3rem;
+        padding: 0 2rem;
+        color: findColorInvert($primary);
+      }
+
+      .collapse-item__body {
+        background-color: $light;
+        a {
+          color: $dark;
+        }
+      }
+    }
+
+    .aside__logo {
+      height: $nav-height / 3;
+      padding: 0 $nav-height / 2;
+      margin: $nav-height / 3;
+      background-image: url('./assets/images/logo.png');
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center top;
+    }
+  }
+
+  &.is-animating {
+    &::before {
+      transition: opacity .3s cubic-bezier(0, 0, .2, 1) 0s;
+    }
+
+    nav {
+      transition: transform .33s cubic-bezier(0, 0, .2, 1) 0s;
+    }
+  }
+  &.is-active {
+    pointer-events: auto;
+    &::before {
+      opacity: 1;
+    }
+
+    nav {
+      transform: none;
+    }
+  }
+}
+
+@include mobile {
+  .aside {
+    display: block;
+  }
+}
+
+#app.has-fixed-side-nav {
+  margin-left: $side-nav-width;
+  overflow-x: hidden;
+  .aside {
+    display: block;
+    width: $side-nav-width + 1.5rem;
+    pointer-events: auto;
+    &::before {
+      display: none;
+    }
+    nav {
+      transform: none;
+    }
+  }
+
+  .container {
+    width: 100%;
+  }
+}

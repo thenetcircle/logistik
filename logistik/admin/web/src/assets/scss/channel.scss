@@ -1,0 +1,59 @@
+header.modal-card-head {
+  justify-content: space-between;
+  .field.name-field {
+      margin-bottom: 0;
+  }
+  .hide {
+    display: none;
+  }
+  @include desktop {
+    .field.name-field {
+      width: 60%;
+    }
+  }
+  .modal-card-title {
+    cursor: pointer;
+
+    .name {
+      display: flex;
+      align-items: center;
+
+      .icon {
+        margin-left: 5px;
+      }
+
+      .icon i:not(.keep) {
+        opacity: 0;
+      }
+      .rotate {
+        animation: rotate 2s linear infinite;
+      }
+      &:hover {
+        .icon i {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+.modal-card-body {
+  .tag.adding {
+    cursor: pointer;
+  }
+  @include tablet {
+    .tags .field {
+      margin-bottom: .5rem;
+
+      .input, .button {
+        height: 2rem;
+      }
+    }
+  }
+
+  .datatable-content {
+    td:first-child {
+      padding-left: 0.75rem;
+    }
+  }
+}

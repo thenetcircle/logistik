@@ -1,0 +1,19 @@
+@import 'variables';
+@import '~bulma/bulma.sass';
+@import '~flatpickr/dist/themes/confetti.css';
+
+// Components
+@import 'basic';
+@import 'animation';
+@import 'hero-header';
+@import 'nav';
+@import 'collapse';
+@import 'loading';
+@import 'datatable';
+@import 'collection';
+@import 'dialog';
+@import 'switch';
+
+// App specification
+@import 'global-loading';
+@import 'channel';

@@ -1,0 +1,20 @@
+.global-loading {
+  &__musk {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: $loading-z-index;
+    background-color: rgba(0, 0, 0, .4);
+  }
+
+  &__loading {
+    position: fixed;
+    width: 4rem;
+    height: 4rem;
+    bottom: 20px;
+    right: 20px;
+    z-index: #{$loading-z-index + 1};
+  }
+}

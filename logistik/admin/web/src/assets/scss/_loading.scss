@@ -1,0 +1,7 @@
+.loading-wrapper {
+  .triangle-loading {
+    path {
+      stroke: lighten($primary, 5%);
+    }
+  }
+}

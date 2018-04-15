@@ -1,0 +1,92 @@
+$header-background: $white;
+$header-foreground: findColorInvert($header-background);
+$header-button-background: $primary;
+$header-button-foreground: findColorInvert($primary);
+$item-background: $white;
+$item-foreground: findColorInvert($item-background);
+$item-hover-background: $grey-lighter;
+$item-active-background: lighten($blue, 20%);
+$item-active-foreground: $item-foreground;
+
+.collection {
+  padding-left: 0;
+  list-style-type: none;
+  margin: .5rem 0 1rem 0;
+  border: 1px solid $grey-lighter;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+
+  &-title {
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    border-bottom: 1px solid $grey-lighter;
+    background-color: $header-background;
+    color: $header-foreground;
+
+    &.has-button {
+      display: flex;
+      align-items: center;
+      span {
+        flex-grow: 1;
+      }
+
+      .button {
+        background-color: $header-button-background;
+        color: $header-button-foreground;
+        border: 0;
+      }
+    }
+  }
+
+  .collection-item {
+    background-color: $item-background;
+    transition: .25s;
+    color: $item-foreground;
+    line-height: 1.5rem;
+    padding: 10px 20px;
+    margin: 0;
+    border-bottom: 1px solid $grey-lighter;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: $item-hover-background;
+      color: $item-active-foreground;
+    }
+
+    &.is-active {
+      color: $item-active-foreground;
+      background-color: $item-active-background;
+    }
+
+    &.has-avatar, &.has-icon-left {
+      min-height: 52px;
+      padding-left: 64px;
+
+      img, .icon.left {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        left: 16px;
+      }
+    }
+
+    &__title {
+      font-size: 1rem;
+      flex: 1;
+    }
+    &__right {
+      justify-self: flex-end;
+    }
+  }
+
+  a.item {
+    display: block;
+  }
+}

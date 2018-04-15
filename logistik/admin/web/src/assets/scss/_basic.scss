@@ -1,0 +1,37 @@
+html {
+  overflow: unset;
+}
+
+#app {
+  min-height: 100vh;
+  position: relative;
+  opacity: 1;
+  transition: opacity .3s;
+  &.hide {
+    opacity: 0;
+  }
+
+  main {
+    padding-bottom: 7.5rem;
+  }
+
+  .footer {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    padding: 3rem 1.5rem;
+  }
+}
+
+.icon.is-tiny .fa{
+  font-size: $size-7;
+}
+
+.tag:not(body) .delete {
+  margin-left: .25rem;
+  margin-right: -.375rem;
+}
+
+.rhum-menu {
+  background-color: lighten($blue, 10%);
+}

@@ -1,0 +1,36 @@
+.collapse {
+  display: flex;
+  flex-direction: column;
+
+  .collapse-item {
+    flex-grow: 1;
+    
+    &__header {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      p {
+        flex-grow: 1;
+      }
+      .icon {
+        transition: transform .33s;
+      }
+    }
+
+    &__body {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 0 1rem;
+    }
+
+    &.is-active {
+      .collapse-item__header {
+        .icon {
+          transform: rotate(90deg);
+        }
+      }
+    }
+  }
+
+}

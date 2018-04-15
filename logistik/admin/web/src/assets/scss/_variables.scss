@@ -1,0 +1,30 @@
+$navbar-height: 4rem;
+$nav-height: 4rem;
+$hero-header-height: $nav-height * 3;
+
+@import '~bulma/sass/utilities/initial-variables.sass';
+$primary: $orange;
+$info: $blue;
+$success: $green;
+$warning: $yellow;
+$danger: $red;
+$dark: $grey-darker;
+$text: $grey-dark;
+
+$header-z-index: 5;
+$side-nav-z-index: $header-z-index + 1;
+$loading-z-index: 7;
+$dialog-z-index: 30;
+$loading-z-index: 50;
+
+$side-nav-width: 16rem;
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

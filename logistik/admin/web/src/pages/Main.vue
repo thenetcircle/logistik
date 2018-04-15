@@ -10,7 +10,7 @@
           <router-view></router-view>
         </transition>
       </main>
-      <i-footer></i-footer>
+      <i-footer>oih</i-footer>
   </div>
 </template>
 

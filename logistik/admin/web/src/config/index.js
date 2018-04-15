@@ -6,10 +6,11 @@ document.querySelectorAll('meta').forEach((item) => {
   }
 })
 
-if (!meta.base.startsWith('/')) {
+if (meta.base !== undefined && !meta.base.startsWith('/')) {
   meta.base = `/${meta.base}`
 }
 export default {
   serviceName: 'LogistikAdmin',
+  base: '/',
   ...meta
 }
