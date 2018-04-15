@@ -1,18 +1,18 @@
 export default {
-  data() {
+  data () {
     return {
-      destroying: null,
-    };
+      destroying: null
+    }
   },
-  created() {
-    this.resetDestroying();
+  created () {
+    this.resetDestroying()
   },
   methods: {
     /**
      * Reset double-checking destroying.
      */
-    resetDestroying() {
-      this.destroying = { item: '', id: null };
+    resetDestroying () {
+      this.destroying = { item: '', id: null }
     },
 
     /**
@@ -23,15 +23,15 @@ export default {
      * @param {string} id
      * @returns {boolean}
      */
-    doubleCheckDestroy(item, id) {
+    doubleCheckDestroy (item, id) {
       if (this.destroying && this.destroying.id === id && this.destroying.item === item) {
-        this.resetDestroying();
-        return true;
+        this.resetDestroying()
+        return true
       }
-      this.destroying.id = id;
-      this.destroying.item = item;
-      this.$dialog.show('Click again to destroy!');
-      return false;
-    },
-  },
-};
+      this.destroying.id = id
+      this.destroying.item = item
+      this.$dialog.show('Click again to destroy!')
+      return false
+    }
+  }
+}

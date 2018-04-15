@@ -24,56 +24,56 @@
   </header>
 </template>
 <script>
-import config from '@/config';
+import config from '@/config'
 
 export default {
   props: {
     menu: { type: Object, default: () => ({ items: [] }) },
-    fixed: { type: Boolean, default: false },
+    fixed: { type: Boolean, default: false }
   },
-  data() {
+  data () {
     return {
       scrollY: 0,
-      activeId: 0,
-    };
+      activeId: 0
+    }
   },
   computed: {
-    isOverThreshold() {
-      return this.scrollY > 128;
+    isOverThreshold () {
+      return this.scrollY > 128
     },
-    isHome() {
-      return this.$route && this.$route.name === 'home';
+    isHome () {
+      return this.$route && this.$route.name === 'home'
     },
-    isTallHeader() {
-      return this.isHome && !this.fixed;
+    isTallHeader () {
+      return this.isHome && !this.fixed
     },
-    env() {
-      return config.environment;
+    env () {
+      return config.environment
     },
-    version() {
-      return config.version;
-    },
+    version () {
+      return config.version
+    }
   },
-  mounted() {
-    this.listeningOnScroll();
+  mounted () {
+    this.listeningOnScroll()
   },
   methods: {
-    listeningOnScroll() {
-      window.addEventListener('scroll', this.manipulateScrollY);
+    listeningOnScroll () {
+      window.addEventListener('scroll', this.manipulateScrollY)
     },
-    manipulateScrollY() {
-      this.scrollY = window.scrollY;
+    manipulateScrollY () {
+      this.scrollY = window.scrollY
     },
-    tryNavigate(item, id) {
+    tryNavigate (item, id) {
       if (item.link) {
-        location.href = item.link;
+        location.href = item.link
       }
 
       if (item.name) {
-        this.activeId = id || item.id || 1;
-        this.$router.push({ name: item.name });
+        this.activeId = id || item.id || 1
+        this.$router.push({ name: item.name })
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>

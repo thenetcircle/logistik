@@ -5,17 +5,17 @@
   </nav>
 </template>
 <script>
-import Hero from '@/partials/HeroHeader';
-import SideNav from '@/partials/SideNav';
-import MENU from '@/config/menu';
+import Hero from '@/partials/HeroHeader'
+import SideNav from '@/partials/SideNav'
+import MENU from '@/config/menu'
 
 export default {
   components: { Hero, SideNav },
-  data() {
+  data () {
     return {
       menu: MENU,
-      hasFixedAside: false,
-    };
-  },
-};
+      hasFixedAside: false
+    }
+  }
+}
 </script>

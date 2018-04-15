@@ -4,55 +4,56 @@
 </template>
 
 <script>
-import { cloneDeep } from 'lodash/lang';
-import Datatable from '@/components/Datatable';
-import Modal from '@/components/Modal';
-import Loading from '@/components/Loading';
-import Tooltip from '@/components/Tooltip';
-import globalLoading from '@/mixins/globalLoading';
-import doubleCheckDestroy from '@/mixins/doubleCheckDestroy';
-import * as actions from '@/store/actions';
+// import { cloneDeep } from 'lodash/lang'
+import Datatable from '@/components/Datatable'
+import Column from '@/components/Column'
+import Modal from '@/components/Modal'
+import Loading from '@/components/Loading'
+import Tooltip from '@/components/Tooltip'
+import globalLoading from '@/mixins/globalLoading'
+import doubleCheckDestroy from '@/mixins/doubleCheckDestroy'
+// import * as actions from '@/store/actions'
 
 export default {
   mixins: [globalLoading, doubleCheckDestroy],
   components: { Datatable, Column, Modal, Loading, Tooltip },
-  data() {
+  data () {
     return {
       modalOpen: false,
       loading: { name: false, destroying: false }
-    };
+    }
   },
   computed: {
   },
-  created() {
+  created () {
   },
-  mounted() {
-    this.resetModal();
+  mounted () {
+    this.resetModal()
   },
   methods: {
     /**
      * Reset modal stuff after close.
      */
-    resetModal() {
-      this.resetDestroying();
+    resetModal () {
+      this.resetDestroying()
     },
 
     /**
      * Callback on modal close.
      * (From modal internal)
      */
-    onModalClose() {
-      this.closeModal();
-      this.resetModal();
+    onModalClose () {
+      this.closeModal()
+      this.resetModal()
     },
 
     /**
      * Close modal.
      * (From outside)
     */
-    closeModal() {
-      this.modalOpen = false;
-    },
-  },
-};
+    closeModal () {
+      this.modalOpen = false
+    }
+  }
+}
 </script>

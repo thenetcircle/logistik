@@ -8,22 +8,22 @@
 export default {
   model: {
     prop: 'checked',
-    event: 'change',
+    event: 'change'
   },
   props: {
     checked: { type: Boolean, default: false },
-    disabled: { type: Boolean, default: false },
+    disabled: { type: Boolean, default: false }
   },
-  data() {
+  data () {
     return {
-      value: this.checked,
-    };
+      value: this.checked
+    }
   },
   watch: {
-    value(val) {
-      this.$emit('switch', val);
-      this.$emit('change', val);
-    },
-  },
-};
+    value (val) {
+      this.$emit('switch', val)
+      this.$emit('change', val)
+    }
+  }
+}
 </script>

@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Main from '@/pages/Main'
+import Model from '@/pages/Model'
 import config from '@/config'
 
-Vue.use(Router);
+Vue.use(Router)
 
 const router = new Router({
   mode: 'history',
@@ -20,6 +21,6 @@ const router = new Router({
       redirect: { name: 'home' }
     }
   ]
-});
+})
 
 export default router

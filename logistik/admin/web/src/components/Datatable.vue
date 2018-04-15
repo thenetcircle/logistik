@@ -72,9 +72,9 @@
   </div>
 </template>
 <script>
-import Fuse from 'fuse.js';
-import { head } from 'lodash/array';
-import anime from 'animejs';
+import Fuse from 'fuse.js'
+import { head } from 'lodash/array'
+import anime from 'animejs'
 
 export default {
   props: {
@@ -84,16 +84,16 @@ export default {
     perPage: { type: Array, default: () => [10, 20, 30, 40, 50] },
     defaultPerPage: { type: Number, default: 10 },
     paginate: { type: Boolean, default: true },
-    searchable: { type: Boolean, default: true },
+    searchable: { type: Boolean, default: true }
   },
-  data() {
+  data () {
     return {
       currentPage: 1,
       currentPerPage: 10,
       sortedColumn: -1,
       sortType: 'desc',
-      searchInput: '',
-    };
+      searchInput: ''
+    }
   },
   computed: {
     /**
@@ -101,8 +101,8 @@ export default {
      *
      * @var {Array}
      */
-    columns() {
-      return this.$slots.columns.map(({ data: { attrs } }) => attrs);
+    columns () {
+      return this.$slots.columns.map(({ data: { attrs } }) => attrs)
     },
 
     /**
@@ -110,19 +110,20 @@ export default {
      *
      * @var {Array}
      */
-    perPageOptions() {
-      let options = this.perPage || [10, 20, 30, 40, 50];
+    perPageOptions () {
+      let options = this.perPage || [10, 20, 30, 40, 50]
       // Force numbers
-      options = options.map(v => parseInt(v, 10));
+      options = options.map(v => parseInt(v, 10))
       // Sort options
-      options.sort((a, b) => a - b);
+      options.sort((a, b) => a - b)
       // And add "All"
-      options.push(-1);
+      options.push(-1)
       // If defaultPerPage is provided and it's a valid option, set as current per page
       if (options.indexOf(this.defaultPerPage) > -1) {
-        this.currentPerPage = this.defaultPerPage;
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.currentPerPage = this.defaultPerPage
       }
-      return options;
+      return options
     },
 
     /**
@@ -130,17 +131,15 @@ export default {
      *
      * @var {Array}
      */
-    paginated() {
-      let paginatedRows = this.processedRows;
+    paginated () {
+      let paginatedRows = this.processedRows
       if (this.paginate) {
         paginatedRows = paginatedRows.slice(
           (this.currentPage - 1) * this.currentPerPage,
-          this.currentPerPage === -1 ?
-            paginatedRows.length + 1 :
-            this.currentPage * this.currentPerPage,
-        );
+          this.currentPerPage === -1 ? paginatedRows.length + 1 : this.currentPage * this.currentPerPage
+        )
       }
-      return paginatedRows;
+      return paginatedRows
     },
 
     /**
@@ -148,80 +147,80 @@ export default {
      *
      * @var {Array}
      */
-    processedRows() {
+    processedRows () {
       if (this.data.length === 0) {
-        return [];
+        return []
       }
 
-      let computedRows = this.data;
+      let computedRows = this.data
       computedRows = computedRows.sort((x, y) => {
         if (!this.columns[this.sortedColumn]) {
-          return 0;
+          return 0
         }
-        const column = this.columns[this.sortedColumn];
+        const column = this.columns[this.sortedColumn]
 
         const cook = (src) => {
-          let dest = this.getColumnData(src, column.field);
+          let dest = this.getColumnData(src, column.field)
           if (typeof dest === 'string') {
-            dest = dest.toLowerCase();
+            dest = dest.toLowerCase()
             if (column.numeric) {
-              dest = dest.indexOf('.') !== -1 ? parseFloat(dest) : parseInt(dest, 10);
+              dest = dest.indexOf('.') !== -1 ? parseFloat(dest) : parseInt(dest, 10)
             }
           }
 
-          return dest;
-        };
-        const cookedX = cook(x);
-        const cookedY = cook(y);
-        const m = cookedX < cookedY ? -1 : 1;
-        const n = this.sortType === 'desc' ? -1 : 1;
+          return dest
+        }
+        const cookedX = cook(x)
+        const cookedY = cook(y)
+        const m = cookedX < cookedY ? -1 : 1
+        const n = this.sortType === 'desc' ? -1 : 1
 
-        return m * n;
-      });
+        return m * n
+      })
 
       // Show search result
       if (this.searchInput) {
-        const searchConfig = { keys: Object.keys(head(computedRows)), minMatchCharLength: 2 };
+        const searchConfig = { keys: Object.keys(head(computedRows)), minMatchCharLength: 2 }
 
         // Enable searching of numbers (non-string)
         // Temporary fix of https://github.com/krisk/Fuse/issues/144
         searchConfig.getFn = (obj, path) => {
           if (Number.isInteger(obj[path])) {
-            return JSON.stringify(obj[path]);
+            return JSON.stringify(obj[path])
           }
-          return obj[path];
-        };
+          return obj[path]
+        }
 
         if (this.exactSearch) {
           // return only exact matches
-          searchConfig.threshold = 0;
-          searchConfig.distance = 0;
+          searchConfig.threshold = 0
+          searchConfig.distance = 0
         }
 
-        computedRows = (new Fuse(computedRows, searchConfig)).search(this.searchInput);
+        computedRows = (new Fuse(computedRows, searchConfig)).search(this.searchInput)
       }
-
-      this.currentPage = 1;
-      return computedRows;
-    },
+      // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+      this.currentPage = 1
+      return computedRows
+    }
   },
   methods: {
 
     /**
      * Go to previout page.
      */
-    prevPage() {
+    prevPage () {
       if (this.currentPage > 1) {
-        this.currentPage -= 1;
+        this.currentPage -= 1
       }
     },
 
     /**
      * Go to next page.
      */
-    nextPage() {
+    nextPage () {
       if (this.processedRows.length > this.currentPerPage * this.currentPage) {
-        this.currentPage += 1;
+        this.currentPage += 1
       }
     },
 
@@ -232,13 +231,13 @@ export default {
      * @param {any} field
      * @return {String}
      */
-    getColumnData(src, field) {
+    getColumnData (src, field) {
       if (typeof field === 'function') {
-        return field(src);
+        return field(src)
       } else if (typeof field === 'string') {
-        return this.dig(src, field);
+        return this.dig(src, field)
       }
-      return '';
+      return ''
     },
 
     /**
@@ -248,19 +247,19 @@ export default {
      * @param {any} column
      * @return {String}
      */
-    getColumnShownData(src, column) {
-      let result = this.getColumnData(src, column.field);
+    getColumnShownData (src, column) {
+      let result = this.getColumnData(src, column.field)
 
       if (column.numeric) {
         if (typeof result === 'string') {
-          result = result.indexOf('.') !== -1 ? parseFloat(result) : parseInt(result, 10);
+          result = result.indexOf('.') !== -1 ? parseFloat(result) : parseInt(result, 10)
         }
 
         if (column.locale) {
-          result = result.toLocaleString();
+          result = result.toLocaleString()
         }
       }
-      return result;
+      return result
     },
 
     /**
@@ -270,17 +269,17 @@ export default {
      * @param {String} path
      * @return {Object}
      */
-    dig(obj, path) {
-      let result = obj;
-      const splitter = path.split('.');
+    dig (obj, path) {
+      let result = obj
+      const splitter = path.split('.')
 
       splitter.forEach((item) => {
         if (result !== undefined) {
-          result = result[item];
+          result = result[item]
         }
-      });
+      })
 
-      return result;
+      return result
     },
 
     /**
@@ -288,15 +287,15 @@ export default {
      *
      * @param {Number} index
      */
-    sort(index) {
+    sort (index) {
       if (!this.columns[index].sortable) {
-        return;
+        return
       }
       if (this.sortedColumn === index) {
-        this.sortType = this.sortType === 'desc' ? 'asc' : 'desc';
+        this.sortType = this.sortType === 'desc' ? 'asc' : 'desc'
       } else {
-        this.sortedColumn = index;
-        this.sortType = 'desc';
+        this.sortedColumn = index
+        this.sortType = 'desc'
       }
     },
 
@@ -305,8 +304,8 @@ export default {
      *
      * @param {HTMLTrElement} el
      */
-    beforeTrEnter(el) {
-      el.style.setProperty('opacity', 0);
+    beforeTrEnter (el) {
+      el.style.setProperty('opacity', 0)
     },
 
     /**
@@ -315,14 +314,14 @@ export default {
      * @param {HTMLTrElement} el
      * @param {Function} done
      */
-    trEnter(el, done) {
-      const delay = el.dataset.index * 100;
+    trEnter (el, done) {
+      const delay = el.dataset.index * 100
       anime({
         targets: el,
         delay,
         opacity: 1,
-        complete: done,
-      });
+        complete: done
+      })
     },
 
     /**
@@ -331,16 +330,16 @@ export default {
      * @param {HTMLTrElement} el
      * @param {Function} done
      */
-    trLeave(el, done) {
+    trLeave (el, done) {
       anime({
         targets: el,
         delay: el.dataset.index * 100,
         opacity: 0,
         easing: 'easeInOutQuart',
         duration: 300,
-        complete: done,
-      });
-    },
-  },
-};
+        complete: done
+      })
+    }
+  }
+}
 </script>

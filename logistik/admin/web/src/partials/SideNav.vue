@@ -16,74 +16,74 @@
   </aside>
 </template>
 <script>
-import { debounce } from 'lodash/function';
-import Collapse from '@/components/Collapse';
-import CollapseItem from '@/components/CollapseItem';
+import { debounce } from 'lodash/function'
+import Collapse from '@/components/Collapse'
+import CollapseItem from '@/components/CollapseItem'
 
 export default {
   components: { Collapse, CollapseItem },
   props: {
     menu: { type: Object, default: () => ({ items: [] }) },
-    fixed: { type: Boolean, default: false },
+    fixed: { type: Boolean, default: false }
   },
-  data() {
+  data () {
     return {
       active: false,
       onResize: null,
-      isMobileView: false,
-    };
+      isMobileView: false
+    }
   },
-  mounted() {
-    this.onResize = debounce(this.adapt, 150, { maxWait: 1000 });
-    window.addEventListener('resize', this.onResize);
-    this.adapt();
+  mounted () {
+    this.onResize = debounce(this.adapt, 150, { maxWait: 1000 })
+    window.addEventListener('resize', this.onResize)
+    this.adapt()
   },
-  beforeDestroy() {
-    window.removeEventListener('resize', this.onResize);
+  beforeDestroy () {
+    window.removeEventListener('resize', this.onResize)
   },
   methods: {
-    closeMenuOnMobile() {
+    closeMenuOnMobile () {
       if (this.active) {
-        this.active = false;
-        this.$refs.menu.classList.remove('is-active');
+        this.active = false
+        this.$refs.menu.classList.remove('is-active')
         setTimeout(() => {
-          this.$refs.menu.classList.remove('is-animating');
-        }, 330);
+          this.$refs.menu.classList.remove('is-animating')
+        }, 330)
       }
     },
-    openMenuOnMobile() {
+    openMenuOnMobile () {
       if (!this.active) {
-        this.active = true;
-        this.$refs.menu.classList.add('is-animating', 'is-active');
+        this.active = true
+        this.$refs.menu.classList.add('is-animating', 'is-active')
       }
     },
-    adapt() {
+    adapt () {
       if (window.innerWidth < 769) {
-        this.isMobileView = true;
+        this.isMobileView = true
         if (this.fixed) {
-          this.$refs.menu.classList.remove('fixed');
-          document.querySelector('#app').classList.remove('has-fixed-side-nav');
+          this.$refs.menu.classList.remove('fixed')
+          document.querySelector('#app').classList.remove('has-fixed-side-nav')
         }
       } else {
-        this.isMobileView = false;
+        this.isMobileView = false
         if (this.fixed) {
-          this.$refs.menu.classList.add('fixed');
-          document.querySelector('#app').classList.add('has-fixed-side-nav');
+          this.$refs.menu.classList.add('fixed')
+          document.querySelector('#app').classList.add('has-fixed-side-nav')
         }
       }
     },
-    tryNavigate(item) {
+    tryNavigate (item) {
       if (item.link) {
-        location.href = item.link;
+        location.href = item.link
       }
 
       if (item.name) {
         if (this.isMobileView) {
-          this.closeMenuOnMobile();
+          this.closeMenuOnMobile()
         }
-        this.$router.push({ name: item.name });
+        this.$router.push({ name: item.name })
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>

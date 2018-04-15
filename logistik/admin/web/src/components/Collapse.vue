@@ -7,24 +7,23 @@
 <script>
 export default {
   props: {
-    accordion: Boolean,
+    accordion: Boolean
   },
   computed: {
-    $collapseItems() {
-      return this.$children.filter(child => child.isCollapseItem);
-    },
+    $collapseItems () {
+      return this.$children.filter(child => child.isCollapseItem)
+    }
   },
   methods: {
-    openByIndex(index) {
+    openByIndex (index) {
       if (this.accordion) {
         this.$collapseItems.forEach((item, i) => {
           if (i !== index) {
-            item.disactive();
+            item.disactive()
           }
-        });
+        })
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
-

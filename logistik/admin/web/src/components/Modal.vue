@@ -7,67 +7,67 @@
   </div>
 </template>
 <script>
-import anime from 'animejs';
+import anime from 'animejs'
 
 export default {
   props: {
     active: { type: Boolean, required: true },
     dismissable: { type: Boolean, default: true },
     isCard: { type: Boolean, default: false },
-    duration: { type: Number, default: 500 },
+    duration: { type: Number, default: 500 }
   },
-  data() {
+  data () {
     return {
-      open: false,
-    };
+      open: false
+    }
   },
   methods: {
-    dismiss() {
+    dismiss () {
       if (this.open && this.dismissable) {
-        this.hide();
+        this.hide()
       }
     },
-    show() {
+    show () {
       if (this.open) {
-        return;
+        return
       }
-      this.open = true;
+      this.open = true
       anime({
         targets: this.$refs.background,
         opacity: [0, 0.5],
         duration: this.duration,
         easing: 'linear',
         begin: () => {
-          document.body.style.overflow = 'hidden';
-          this.$refs.modal.style.display = 'flex';
-        },
-      });
+          document.body.style.overflow = 'hidden'
+          this.$refs.modal.style.display = 'flex'
+        }
+      })
       anime({
         targets: this.$refs.content,
         scale: [0, 1],
         easing: 'easeInOutSine',
-        duration: this.duration,
-      });
+        duration: this.duration
+      })
     },
-    hide() {
+    hide () {
       if (!this.open) {
-        return;
+        return
       }
-      this.open = false;
+      this.open = false
       anime({
         targets: this.$refs.background,
         opacity: [0.5, 0],
         duration: 300,
-        easing: 'linear',
-      });
+        easing: 'linear'
+      })
       anime({
         targets: this.$refs.content,
         scale: [1, 0],
         easing: 'easeInBack',
         duration: 300,
         complete: () => {
-          document.body.style.removeProperty('overflow');
-          this.$refs.modal.style.display = 'none';
+          document.body.style.removeProperty('overflow')
+          this.$refs.modal.style.display = 'none'
           this.$emit('close')
         }
       })

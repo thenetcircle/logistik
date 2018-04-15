@@ -2,5 +2,5 @@
   <div style="display: none;"></div>
 </template>
 <script>
-export default {};
+export default {}
 </script>

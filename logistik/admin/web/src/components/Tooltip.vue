@@ -5,109 +5,109 @@
   </div>
 </template>
 <script>
-import anime from 'animejs';
+import anime from 'animejs'
 
 export default {
   props: {
     position: { type: String, default: 'bottom' },
     content: { type: String, required: true },
-    delay: { type: Number, default: 200 },
+    delay: { type: Number, default: 200 }
   },
-  data() {
+  data () {
     return {
       isOpen: false,
       isHovered: false,
       enterDelayTimeout: null,
-      leaveDelayTimeout: null,
-    };
+      leaveDelayTimeout: null
+    }
   },
   computed: {
-    tooltip() {
-      return this.$refs.tooltip;
-    },
+    tooltip () {
+      return this.$refs.tooltip
+    }
   },
   methods: {
-    setPosition() {
-      const rect = this.$refs.wrapper.getBoundingClientRect();
-      const position = this[this.position](rect);
-      this.tooltip.style.top = `${position.top}px`;
-      this.tooltip.style.left = `${position.left}px`;
+    setPosition () {
+      const rect = this.$refs.wrapper.getBoundingClientRect()
+      const position = this[this.position](rect)
+      this.tooltip.style.top = `${position.top}px`
+      this.tooltip.style.left = `${position.left}px`
     },
 
-    top(rect) {
+    top (rect) {
       return {
         left: (rect.width - this.tooltip.getBoundingClientRect().width) / 2,
-        top: -this.tooltip.getBoundingClientRect().height - 10,
-      };
+        top: -this.tooltip.getBoundingClientRect().height - 10
+      }
     },
-    bottom(rect) {
-      const result = this.top(rect);
-      result.top = -result.top;
-      return result;
+    bottom (rect) {
+      const result = this.top(rect)
+      result.top = -result.top
+      return result
     },
-    left(rect) {
+    left (rect) {
       return {
         left: -this.tooltip.getBoundingClientRect().width - 10,
-        top: (rect.height - this.tooltip.getBoundingClientRect().height) / 2,
-      };
+        top: (rect.height - this.tooltip.getBoundingClientRect().height) / 2
+      }
     },
-    right(rect) {
+    right (rect) {
       return {
         left: rect.width + 10,
-        top: (rect.height - this.tooltip.getBoundingClientRect().height) / 2,
-      };
-    },
-    show() {
-      this.isHovered = true;
-      if (this.isOpen) {
-        return;
+        top: (rect.height - this.tooltip.getBoundingClientRect().height) / 2
       }
-      this.isOpen = true;
-      this.setPosition();
-      clearTimeout(this.enterDelayTimeout);
+    },
+    show () {
+      this.isHovered = true
+      if (this.isOpen) {
+        return
+      }
+      this.isOpen = true
+      this.setPosition()
+      clearTimeout(this.enterDelayTimeout)
       this.enterDelayTimeout = setTimeout(() => {
         if (this.isHovered) {
           if (this.anime) {
-            this.anime.pause();
+            this.anime.pause()
           }
           this.anime = anime({
             targets: this.tooltip,
             opacity: 1,
             easing: 'easeOutQuart',
             begin: () => {
-              this.tooltip.style.visibility = 'visible';
+              this.tooltip.style.visibility = 'visible'
             },
-            duration: 500,
-          });
+            duration: 500
+          })
         }
-      }, this.delay);
+      }, this.delay)
     },
-    hide() {
-      this.isHovered = false;
+    hide () {
+      this.isHovered = false
       if (!this.isOpen) {
-        return;
+        return
       }
-      this.isOpen = false;
-      clearTimeout(this.leaveDelayTimeout);
+      this.isOpen = false
+      clearTimeout(this.leaveDelayTimeout)
       this.leaveDelayTimeout = setTimeout(() => {
         if (!this.isHovered) {
           if (this.anime) {
-            this.anime.pause();
+            this.anime.pause()
           }
           this.anime = anime({
             targets: this.tooltip,
             opacity: 0,
             easing: 'easeInOutQuart',
             complete: () => {
-              this.tooltip.style.visibility = 'hidden';
+              this.tooltip.style.visibility = 'hidden'
             },
-            duration: 300,
-          });
+            duration: 300
+          })
         }
-      }, this.delay);
-    },
-  },
-};
+      }, this.delay)
+    }
+  }
+}
 </script>
 <style lang="scss">
 .has-tooltip {
