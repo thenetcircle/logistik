@@ -68,19 +68,19 @@ export default {
         complete: () => {
           document.body.style.removeProperty('overflow');
           this.$refs.modal.style.display = 'none';
-          this.$emit('close');
-        },
-      });
-    },
+          this.$emit('close')
+        }
+      })
+    }
   },
   watch: {
-    active(val) {
+    active (val) {
       if (val) {
-        this.show();
+        this.show()
       } else {
-        this.hide();
+        this.hide()
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>

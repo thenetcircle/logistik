@@ -15,20 +15,20 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import Loading from '@/components/Loading';
-import Navigator from '@/partials/Navigator';
-import IFooter from '@/partials/Footer';
-import globalLoading from '@/mixins/globalLoading';
+import { mapGetters } from 'vuex'
+import Loading from '@/components/Loading'
+import Navigator from '@/partials/Navigator'
+import IFooter from '@/partials/Footer'
+import globalLoading from '@/mixins/globalLoading'
 
 export default {
   components: { Loading, Navigator, IFooter },
   mixins: [globalLoading],
   computed: {
     ...mapGetters(['isGlobalLoadingShowing', 'isLoadingMuskShowing']),
-    isHome() {
-      return this.$route.name === 'home';
-    },
-  },
-};
+    isHome () {
+      return this.$route.name === 'home'
+    }
+  }
+}
 </script>
