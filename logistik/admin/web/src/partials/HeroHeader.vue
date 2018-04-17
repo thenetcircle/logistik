@@ -2,10 +2,10 @@
   <header class="hero-header" :class="{ 'snap': isOverThreshold, 'tall-header': isTallHeader }">
     <div class="header-content container">
       <div class="header-content__logo-large" :class="{ 'hide': !isTallHeader }">
-        <p class="is-size-2">Dino Admin <span class="is-size-5">{{env}}</span></p>
+        <p class="is-size-2">Logistik <span class="is-size-5">{{version}}</span></p>
       </div>
       <div class="header-content__logo" :class="{ 'hide': isTallHeader && !isOverThreshold }">
-        <p class="is-size-6">Dino Admin - {{env}}</p>
+        <p class="is-size-6">Logistik - {{version}}</p>
       </div>
       <div ref="menu" class="header-content__menu">
         <div class="menu-item" v-for="item of menu.items" :key="item.label" :class="{ 'is-active': activeId === item.id }">
