@@ -1,15 +1,6 @@
 <template>
   <div class="section">
-    <!-- Rooms table -->
-    <datatable title="Models" :data="models" :actions="datatableActions">
-      <p slot="header" class="is-size-5">
-        Models
-        <a class="button is-primary is-small"><span class="icon"><i class="fa fa-plus"></i></span></a>
-      </p>
-      <column slot="columns" display="Sort Order" field="sort" sortable="true"/>
-      <column slot="columns" display="name" field="name" sortable="true"/>
-      <column slot="columns" display="UUID" field="uuid"/>
-    </datatable>
+    Overview of all things interesting.
   </div>
 </template>
 
