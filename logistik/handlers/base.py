@@ -4,11 +4,15 @@ import sys
 from abc import ABC
 from yapsy.IPlugin import IPlugin
 from logging import Logger
+from activitystreams import Activity
+from typing import Union
+from requests import Response
 
 from logistik.config import ErrorCodes
 from logistik.db.repr.handler import HandlerConf
 from logistik.handlers import IHandler
 from logistik import environ
+from logistik import utils
 
 
 class BaseHandler(IHandler, IPlugin, ABC):
@@ -24,6 +28,9 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.version = None
         self.path = None
         self.url = None
+        self.endpoint: str = None
+        self.timeout: int = None
+        self.n_retries: int = 1
 
     def configure(self, conf: HandlerConf):
         self.enabled = conf.enabled
@@ -33,6 +40,20 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.path = conf.path
         self.url = '{}/{}{}'.format(self.endpoint, self.version, self.path)
         self.logger.debug('configured {} with {}'.format(str(self), str(conf)))
+
+    def handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
+        for i in range(self.n_retries):
+            try:
+                return self.handle_once(data, activity)
+            except Exception as e:
+                self.logger.error('attempt {}/{} failed for endpoint {}, error was: {}'.format(
+                    str(i+1), self.n_retries, self.endpoint, str(e))
+                )
+                self.logger.exception(e)
+                environ.env.capture_exception(sys.exc_info())
+
+        utils.fail_message(data)
+        return ErrorCodes.RETRIES_EXCEEDED, None
 
     def __call__(self, *args, **kwargs) -> (bool, str):
         if not self.enabled:

@@ -1,5 +1,10 @@
 from abc import ABC
+from typing import Union
+
 from activitystreams import Activity
+from requests import Response
+
+from logistik.config import ErrorCodes
 from logistik.db.repr.handler import HandlerConf
 
 
@@ -21,8 +26,8 @@ class IHandler(ABC):
     def setup(self, env):
         raise NotImplementedError('setup() not implemented in plugin')
 
-    def handle(self, data: dict, activity: Activity) -> tuple:
-        raise NotImplementedError('handle() not implemented in plugin')
+    def handle_once(self, data: dict, _: Activity) -> (ErrorCodes, Union[None, Response]):
+        raise NotImplementedError('handle_once() not implemented in plugin')
 
     def __call__(self, *args, **kwargs) -> (bool, str):
         raise NotImplementedError()

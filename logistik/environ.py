@@ -434,7 +434,7 @@ def init_plugins(gn_env: GNEnvironment):
             except KeyError:
                 raise KeyError('specified plugin "{}" does not exist'.format(key))
 
-    # TODO: need to setup zookeeper listener to be able to enabled/disable/add/remove handlers from web
+    # TODO: need to be able to enabled/disable/add/remove handlers from web
 
     gn_env.config.set(ConfigKeys.EVENT_HANDLERS, handlers)
 
@@ -494,9 +494,11 @@ def init_enrichment_service(gn_env: GNEnvironment):
     # TODO: make enrichers configurable
 
     from logistik.enrich.published import PublishedEnrichment
+    from logistik.enrich.identity import IdentityEnrichment
 
     gn_env.enrichers = [
-        ('published', PublishedEnrichment())
+        ('published', PublishedEnrichment()),
+        ('id', IdentityEnrichment()),
     ]
 
 
