@@ -88,7 +88,7 @@ class KafkaReader(object):
         try:
             enriched_data = self.env.enrichment_manager.handle(data)
         except Exception as e:
-            return utils.ParseException(e)
+            raise utils.ParseException(e)
 
         try:
             activity = parse_as(enriched_data)

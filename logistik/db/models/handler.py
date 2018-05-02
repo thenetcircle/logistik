@@ -11,6 +11,9 @@ class HandlerConfEntity(env.dbman.Model):
     version = env.dbman.Column(env.dbman.String(16), unique=False, nullable=False, server_default='v1')
     path = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
     node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
+    method = env.dbman.Column(env.dbman.String(10), unique=False, nullable=True)
+    retries = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='1')
+    timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
 
     def to_repr(self) -> HandlerConf:
         return HandlerConf(
@@ -20,10 +23,19 @@ class HandlerConfEntity(env.dbman.Model):
             endpoint=self.endpoint,
             version=self.version,
             path=self.path,
-            node=self.node
+            node=self.node,
+            method=self.method,
+            retries=self.retries,
+            timeout=self.timeout
         )
 
     def __str__(self):
-        return '<HandlerConfEntity id={}, name={}, event={}, enabled={}, endpoint={}, version={}, path={}>'.format(
-            self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path
+        repr_string = """
+        <HandlerConfEntity 
+                id={}, name={}, event={}, enabled={}, endpoint={}, 
+                version={}, path={}, method={}, retries={}, timeout={}>
+        """
+        return repr_string.format(
+            self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
+            self.method, self.retries, self.timeout
         )

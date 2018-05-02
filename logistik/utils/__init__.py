@@ -13,14 +13,25 @@ def get_event_name(data: dict) -> str:
 
 
 def increase_counter(data: dict, suffix: str) -> None:
-    environ.env.stats.incr('{}-{}'.format(get_event_name(data), suffix))
+    if environ.env.stats is not None:
+        environ.env.stats.incr('{}-{}'.format(get_event_name(data), suffix))
 
 
 def fail_message(data: dict) -> None:
-    environ.env.failed_msg_log.info(data)
+    try:
+        environ.env.failed_msg_log.info(data)
+    except:
+        # TODO: sentry
+        pass
+
     increase_counter(data, 'failed')
 
 
 def drop_message(data: dict) -> None:
-    environ.env.dropped_msg_log.info(data)
+    try:
+        environ.env.dropped_msg_log.info(data)
+    except:
+        # TODO: sentry
+        pass
+
     increase_counter(data, 'dropped')

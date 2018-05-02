@@ -1,14 +1,19 @@
-from flask_testing import TestCase
 from activitystreams import Activity
+from flask import Flask
+from flask_testing import TestCase
 
-from logistik.utils.kafka_reader import KafkaReader
-from logistik.environ import GNEnvironment
-from logistik.environ import ConfigDict
-from logistik.stats import IStats
-from logistik.handlers.base import BaseHandler
+from logistik.cache import ICache
+from logistik.cache.redis import CacheRedis
 from logistik.config import ErrorCodes
 from logistik.enrich.identity import IdentityEnrichment
+from logistik.enrich.manager import EnrichmentManager
 from logistik.enrich.published import PublishedEnrichment
+from logistik.environ import ConfigDict
+from logistik.environ import GNEnvironment
+from logistik.handlers.base import BaseHandler
+from logistik.handlers.manager import HandlersManager
+from logistik.stats import IStats
+from logistik.utils.kafka_reader import KafkaReader
 
 
 class MockLogger(object):
@@ -58,7 +63,10 @@ class MockEnv(GNEnvironment):
         self.dropped_msg_log = MockLogger()
         self.failed_msg_log = MockLogger()
         self.stats = MockStats()
+        self.cache = ICache
         self.event_handler_map = dict()
+        self.handlers_manager = None
+        self.enrichment_manager = None
         self.enrichers = [
             ('published', PublishedEnrichment()),
             ('id', IdentityEnrichment()),
@@ -66,6 +74,14 @@ class MockEnv(GNEnvironment):
 
 
 class BaseTest(TestCase):
+    def create_app(self):
+        app = Flask(__name__)
+        app.config['TESTING'] = True
+        return app
+
     def setUp(self):
         self.env = MockEnv()
         self.reader = KafkaReader(self.env)
+        self.env.handlers_manager = MockHandler()
+        self.env.enrichment_manager = EnrichmentManager(self.env)
+        self.env.cache = CacheRedis(self.env, host='mock')

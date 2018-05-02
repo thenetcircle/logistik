@@ -43,6 +43,7 @@ smmap2==2.0.3
 SQLAlchemy==1.2.6
 statsd==3.2.2
 strict-rfc3339==0.7
+ttldict==0.3.0
 typing==3.6.4
 urllib3==1.22
 vine==1.1.4

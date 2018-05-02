@@ -9,7 +9,6 @@ from typing import Union
 from requests import Response
 
 from logistik.config import ErrorCodes
-from logistik.db.repr.handler import HandlerConf
 from logistik.handlers import IHandler
 from logistik import environ
 from logistik import utils
@@ -31,15 +30,6 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.endpoint: str = None
         self.timeout: int = None
         self.n_retries: int = 1
-
-    def configure(self, conf: HandlerConf):
-        self.enabled = conf.enabled
-        self.endpoint = conf.endpoint
-        self.name = conf.name
-        self.version = conf.version
-        self.path = conf.path
-        self.url = '{}/{}{}'.format(self.endpoint, self.version, self.path)
-        self.logger.debug('configured {} with {}'.format(str(self), str(conf)))
 
     def handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
         for i in range(self.n_retries):

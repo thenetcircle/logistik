@@ -36,6 +36,7 @@ setup(
         'codecov',
         'coverage',
         'kombu',
+        'ttldict',
         'typing',
         'nose-parameterized',
         'python-consul',

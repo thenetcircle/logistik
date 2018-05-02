@@ -3,11 +3,13 @@ import random
 import sys
 import traceback
 
+from typing import List
 from activitystreams import Activity
 
 from logistik import utils
 from logistik.config import ModelTypes
 from logistik.db.repr.handler import HandlerConf
+from logistik.db.repr.event import EventConf
 from logistik.environ import GNEnvironment
 from logistik.handlers import IHandler
 from logistik.handlers import IHandlersManager
@@ -19,10 +21,29 @@ class HandlersManager(IHandlersManager):
     def __init__(self, env: GNEnvironment):
         self.env = env
 
+    def load_event_conf(self, event_name: str) -> EventConf:
+        event_conf = self.env.cache.get_event_conf_for(event_name)
+        if event_conf is not None:
+            return event_conf
+
+        event_conf = self.env.db.get_event_conf_for(event_name)
+        self.env.cache.set_event_conf_for(event_name, event_conf)
+        return event_conf
+
+    def load_handler_confs(self, event_name: str) -> List[HandlerConf]:
+        handler_confs = self.env.cache.get_enabled_handlers_for(event_name)
+        if handler_confs is not None:
+            return handler_confs
+
+        handler_confs = self.env.db.get_enabled_handlers_for(event_name)
+        self.env.cache.set_enabled_handlers_for(event_name, handler_confs)
+        return handler_confs
+
     def handle(self, data: dict, activity: Activity) -> None:
         event_name = activity.verb
-        handler_confs = self.env.db.get_enabled_handlers_for(event_name)
-        event_conf = self.env.db.get_event_conf_for(event_name)
+
+        handler_confs = self.load_handler_confs(event_name)
+        event_conf = self.load_event_conf(event_name)
 
         if len(handler_confs) == 0:
             logger.warning('[{}] dropping event, no handler configured: {}'.format(event_name, data))
@@ -34,7 +55,6 @@ class HandlersManager(IHandlersManager):
             n_instances = len(handler_confs)
 
         handler = self.env.event_handler_map[event_name]
-
         self.call_handlers(handler, n_instances, handler_confs, data, activity)
 
     def call_handlers(self, handler: IHandler, n_instances: int, all_confs: list, data: dict, activity: Activity):
