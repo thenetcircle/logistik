@@ -1,5 +1,7 @@
 # Machine Learning Model Logistics
 
+[![Requirements Status](https://requires.io/github/thenetcircle/logistik/requirements.svg?branch=master)](https://requires.io/github/thenetcircle/logistik/requirements/?branch=master)
+
 "90% of the effort in successful machine learning is not about the algorithm or the model or the learning. It’s about logistics."
 
 ## Starting the consul agent
