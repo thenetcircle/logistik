@@ -47,6 +47,9 @@ class DatabaseManager(IDatabase):
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()
 
+        if handler.event != 'UNMAPPED':
+            self.env.cache.reset_enabled_handlers_for(handler.event)
+
     @with_session
     def register_handler(self, host, port, service_id, name, tags):
         handler = HandlerConfEntity.query.filter_by(service_id=service_id).first()
@@ -57,6 +60,9 @@ class DatabaseManager(IDatabase):
             handler.enabled = True
             self.env.dbman.session.add(handler)
             self.env.dbman.session.commit()
+
+            if handler.event != 'UNMAPPED':
+                self.env.cache.reset_enabled_handlers_for(handler.event)
             return
 
         logger.info('registering handler "{}": address "{}", port "{}", id: "{}"'.format(
