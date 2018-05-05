@@ -513,9 +513,6 @@ def init_discovery_service(gn_env: GNEnvironment):
     from logistik.discover.manager import DiscoveryService
     gn_env.discovery = DiscoveryService(gn_env)
 
-    import eventlet
-    eventlet.spawn(gn_env.discovery.run)
-
 
 def initialize_env(lk_env):
     init_logging(lk_env)

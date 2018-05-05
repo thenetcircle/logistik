@@ -41,6 +41,9 @@ def create_app():
     environ.env.dbman.init_app(_app)
     logger.info('configured db: {}'.format(_app.config['SQLALCHEMY_DATABASE_URI']))
 
+    import eventlet
+    eventlet.spawn(environ.env.discovery.run)
+
     return _app, Api(_app)
 
 
