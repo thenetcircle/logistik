@@ -45,8 +45,8 @@ class HandlersManager(IHandlersManager):
         handler_confs = self.load_handler_confs(event_name)
         event_conf = self.load_event_conf(event_name)
 
-        if len(handler_confs) == 0:
-            logger.warning('[{}] dropping event, no handler configured: {}'.format(event_name, data))
+        if event_conf is None or len(handler_confs) == 0:
+            logger.warning('[{}] dropping event, handler/event not configured: {}'.format(event_name, data))
             utils.drop_message(data)
             return
 
