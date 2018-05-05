@@ -2,7 +2,9 @@ import logging
 
 from typing import List
 from typing import Union
+from functools import wraps
 
+from logistik import environ
 from logistik.db import IDatabase
 from logistik.environ import GNEnvironment
 from logistik.db.models.handler import HandlerConfEntity
@@ -13,25 +15,41 @@ from logistik.db.repr.event import EventConf
 logger = logging.getLogger(__name__)
 
 
+def with_session(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        with environ.env.app.app_context():
+            return view_func(*args, **kwargs)
+    return wrapped
+
+
 class DatabaseManager(IDatabase):
     def __init__(self, env: GNEnvironment):
         self.env = env
 
+    @with_session
     def register_handler(self, host, port, service_id, name, tags):
         handler = HandlerConfEntity.query.filter_by(service_id=service_id).first()
         if handler is not None:
-            logger.debug('service with id {} already exists')
+            logger.debug('service with id {} already exists'.format(service_id))
             return
+
+        logger.info('registering service "{}": address "{}", port "{}", id: "{}"'.format(
+            name, host, port, service_id
+        ))
 
         handler = HandlerConfEntity()
         handler.service_id = service_id
         handler.name = name
-        handler.path = host
+        handler.endpoint = host
         handler.port = port
+        handler.event = 'UNMAPPED'
+        handler.enabled = False
         handler.tags = ','.join(tags)
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()
 
+    @with_session
     def get_enabled_handlers_for(self, event_name: str) -> List[HandlerConf]:
         handlers = HandlerConfEntity.query\
                 .filter_by(event=event_name)\
@@ -47,6 +65,7 @@ class DatabaseManager(IDatabase):
             handler_reprs.append(handler.to_repr())
         return handlers
 
+    @with_session
     def get_event_conf_for(self, event_name: str) -> Union[EventConf, None]:
         event = EventConfEntity.query\
                 .filter_by(event=event_name)\

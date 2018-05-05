@@ -31,11 +31,6 @@ class DiscoveryService(BaseDiscoveryService):
         port = service.get('ServicePort')
         s_id = service.get('ServiceID')
         tags = service.get('ServiceTags')
-
-        self.logger.info('registering service "{}": address "{}", port "{}", id: "{}"'.format(
-            name, host, port, s_id
-        ))
-
         self.env.db.register_handler(host, port, s_id, name, tags)
 
     def poll_services(self):

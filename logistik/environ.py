@@ -150,6 +150,7 @@ class GNEnvironment(object):
             return
 
         self.dbman = None
+        self.app = None
         self.root_path = root_path
         self.config = config
         self.cache: ICache = None

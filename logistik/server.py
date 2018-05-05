@@ -38,7 +38,10 @@ def create_app():
     )
 
     environ.env.app = _app
-    environ.env.dbman.init_app(_app)
+    with _app.app_context():
+        environ.env.dbman.init_app(_app)
+        environ.env.dbman.create_all()
+
     logger.info('configured db: {}'.format(_app.config['SQLALCHEMY_DATABASE_URI']))
 
     import eventlet

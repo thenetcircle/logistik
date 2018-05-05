@@ -10,7 +10,7 @@ class HandlerConfEntity(env.dbman.Model):
     enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False)
     endpoint = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
     version = env.dbman.Column(env.dbman.String(16), unique=False, nullable=False, server_default='v1')
-    path = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    path = env.dbman.Column(env.dbman.String(80), unique=False, nullable=True)
     node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
     method = env.dbman.Column(env.dbman.String(10), unique=False, nullable=True)
     retries = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='1')
