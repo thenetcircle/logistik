@@ -28,13 +28,38 @@ class DatabaseManager(IDatabase):
         self.env = env
 
     @with_session
+    def get_all_handlers(self) -> List[HandlerConf]:
+        handlers = HandlerConfEntity.query.all()
+        handler_reprs = list()
+        for handler in handlers:
+            handler_reprs.append(handler.to_repr())
+        return handlers
+
+    @with_session
+    def disable_handler(self, service_id):
+        handler = HandlerConfEntity.query.filter_by(service_id=service_id).first()
+        if handler is None:
+            logger.debug('handler with id "{}" does not exist'.format(service_id))
+            return
+
+        logger.info('disabling handler with id "{}"'.format(service_id))
+        handler.enabled = False
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+
+    @with_session
     def register_handler(self, host, port, service_id, name, tags):
         handler = HandlerConfEntity.query.filter_by(service_id=service_id).first()
         if handler is not None:
-            logger.debug('service with id {} already exists'.format(service_id))
+            if handler.enabled:
+                return
+            logger.info('enabling handler with id "{}"'.format(service_id))
+            handler.enabled = True
+            self.env.dbman.session.add(handler)
+            self.env.dbman.session.commit()
             return
 
-        logger.info('registering service "{}": address "{}", port "{}", id: "{}"'.format(
+        logger.info('registering handler "{}": address "{}", port "{}", id: "{}"'.format(
             name, host, port, service_id
         ))
 

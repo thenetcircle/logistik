@@ -11,5 +11,11 @@ class IDatabase(ABC):
     def get_event_conf_for(self, event_name: str) -> EventConf:
         raise NotImplementedError()
 
-    def register_handler(self, host, port, service_id, name, tags):
+    def get_all_handlers(self) -> List[HandlerConf]:
+        raise NotImplementedError()
+
+    def disable_handler(self, service_id) -> None:
+        raise NotImplementedError()
+
+    def register_handler(self, host, port, service_id, name, tags) -> None:
         raise NotImplementedError()
