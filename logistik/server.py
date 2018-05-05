@@ -37,12 +37,11 @@ def create_app():
         db_drvr, db_user, db_pass, db_host, db_port, db_name
     )
 
+    logger.info('configuring db: {}'.format(_app.config['SQLALCHEMY_DATABASE_URI']))
     environ.env.app = _app
     with _app.app_context():
         environ.env.dbman.init_app(_app)
         environ.env.dbman.create_all()
-
-    logger.info('configured db: {}'.format(_app.config['SQLALCHEMY_DATABASE_URI']))
 
     import eventlet
     eventlet.spawn(environ.env.discovery.run)
