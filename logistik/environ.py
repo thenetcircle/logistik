@@ -149,6 +149,7 @@ class GNEnvironment(object):
         if skip_init:
             return
 
+        self.dbman = None
         self.root_path = root_path
         self.config = config
         self.cache: ICache = None

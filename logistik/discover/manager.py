@@ -20,11 +20,23 @@ class DiscoveryService(BaseDiscoveryService):
 
         self.logger = logging.getLogger(__name__)
         self.tag = env.config.get(ConfigKeys.TAG, domain=ConfigKeys.DISCOVERY, default='logistik')
-        self.interval = env.config.get(ConfigKeys.INTERVAL, domain=ConfigKeys.DISCOVERY, default=5)
+        self.interval = env.config.get(ConfigKeys.INTERVAL, domain=ConfigKeys.DISCOVERY, default=30)
         if self.interval < 1:
             self.interval = 1
         elif self.interval > 3600:
             self.interval = 3600
+
+    def register_handler(self, service, name):
+        host = service.get('ServiceAddress')
+        port = service.get('ServicePort')
+        s_id = service.get('ServiceID')
+        tags = service.get('ServiceTags')
+
+        self.logger.info('registering service "{}": address "{}", port "{}", id: "{}"'.format(
+            name, host, port, s_id
+        ))
+
+        self.env.db.register_handler(host, port, s_id, name, tags)
 
     def poll_services(self):
         _, data = self.consul.catalog.services()
@@ -34,12 +46,7 @@ class DiscoveryService(BaseDiscoveryService):
 
             _, services = self.consul.catalog.service(name)
             for service in services:
-                self.logger.info('details on service "{}": address "{}", port "{}", id: "{}"'.format(
-                    name,
-                    service.get('ServiceAddress'),
-                    service.get('ServicePort'),
-                    service.get('ServiceID')
-                ))
+                self.register_handler(service, name)
 
     def run(self):
         while True:

@@ -17,6 +17,21 @@ class DatabaseManager(IDatabase):
     def __init__(self, env: GNEnvironment):
         self.env = env
 
+    def register_handler(self, host, port, service_id, name, tags):
+        handler = HandlerConfEntity.query.filter_by(service_id=service_id).first()
+        if handler is not None:
+            logger.debug('service with id {} already exists')
+            return
+
+        handler = HandlerConfEntity()
+        handler.service_id = service_id
+        handler.name = name
+        handler.path = host
+        handler.port = port
+        handler.tags = ','.join(tags)
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+
     def get_enabled_handlers_for(self, event_name: str) -> List[HandlerConf]:
         handlers = HandlerConfEntity.query\
                 .filter_by(event=event_name)\

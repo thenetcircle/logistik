@@ -12,6 +12,8 @@ logging.basicConfig(
     level=getattr(logging, os.environ.get('LOG_LEVEL', 'DEBUG')),
     format='%(asctime)s - %(name)-18s - %(levelname)-7s - %(message)s')
 
+logger = logging.getLogger(__name__)
+
 
 def create_app():
     if len(environ.env.config) == 0 or environ.env.config.get(ConfigKeys.TESTING, False):
@@ -37,6 +39,7 @@ def create_app():
 
     environ.env.app = _app
     environ.env.dbman.init_app(_app)
+    logger.info('configured db: {}'.format(_app.config['SQLALCHEMY_DATABASE_URI']))
 
     return _app, Api(_app)
 

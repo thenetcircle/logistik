@@ -6,8 +6,8 @@ database:
   driver: '$LK_DB_DRIVER'
   host: '$LK_DB_HOST'
   port: '$LK_DB_PORT'
-  db: '$LK_DB_NAME'
-  user: '$LK_DB_USER'
+  name: '$LK_DB_NAME'
+  username: '$LK_DB_USER'
   password: '$LK_DB_PASS'
   pool_size: '$LK_DB_POOL_SIZE'
 
