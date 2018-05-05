@@ -74,6 +74,10 @@ class ConfigKeys(object):
     MODEL_NAME = 'model_name'
     SECRET_KEY = 'secret'
 
+    DISCOVERY = 'discovery'
+    INTERVAL = 'interval'
+    TAG = 'tag'
+
     # for the admin interface
     ROOT_URL = 'root_url'
     WEB = 'web'

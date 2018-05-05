@@ -1,5 +1,6 @@
 kafka:
   topic: '$LK_TOPIC'
+
 database:
   type: 'rdbms'
   driver: '$LK_DB_DRIVER'
@@ -9,20 +10,31 @@ database:
   user: '$LK_DB_USER'
   password: '$LK_DB_PASS'
   pool_size: '$LK_DB_POOL_SIZE'
+
 cache:
   host: '$LK_CACHE_HOST'
   db: '$LK_CACHE_DB'
   type: '$LK_CACHE_TYPE'
+
 zookeeper:
   hosts:
     - '$LK_ZOOKEEPER_1'
     #- '$LK_ZOOKEEPER_2'
+
 stats:
   type: 'statsd'
   host: '$LK_STATSD_HOST'
   port: 8125
   prefix: '$LK_STATSD_PREFIX'
+
 secret: '$LK_SECRET_KEY'
+
+discovery:
+  interval: 3
+  tag: 'logistik'
+  host: '$LK_CONSUL_HOST'
+  port: '$LK_CONSUL_PORT'
+
 web:
   type: 'oauth'
   root_url: '$LK_WEB_ROOT_URL'

@@ -483,6 +483,7 @@ def init_db_service(gn_env: GNEnvironment) -> None:
     gn_env.db = DatabaseManager(gn_env)
 
 
+@timeit(logger, 'init enrichment service')
 def init_enrichment_service(gn_env: GNEnvironment):
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
@@ -502,6 +503,19 @@ def init_enrichment_service(gn_env: GNEnvironment):
     ]
 
 
+@timeit(logger, 'init discovery service')
+def init_discovery_service(gn_env: GNEnvironment):
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
+    from logistik.discover.manager import DiscoveryService
+    gn_env.discovery = DiscoveryService(gn_env)
+
+    import eventlet
+    eventlet.spawn(gn_env.discovery.run)
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
@@ -510,6 +524,7 @@ def initialize_env(lk_env):
     init_stats_service(lk_env)
     init_plugins(lk_env)
     init_enrichment_service(lk_env)
+    init_discovery_service(lk_env)
     logger.info('startup done!')
 
 
