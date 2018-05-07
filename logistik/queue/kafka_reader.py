@@ -1,6 +1,7 @@
 import json
 import sys
 import logging
+import time
 import traceback
 
 from uuid import uuid4 as uuid
@@ -9,13 +10,14 @@ from activitystreams import parse as parse_as
 from activitystreams import Activity
 
 from logistik import utils
+from logistik.queue import IKafkaReader
 from logistik.config import ConfigKeys
 from logistik.environ import GNEnvironment
 
 logger = logging.getLogger(__name__)
 
 
-class KafkaReader(object):
+class KafkaReader(IKafkaReader):
     def __init__(self, env: GNEnvironment):
         self.logger = logging.getLogger(__name__)
         self.env = env
@@ -37,12 +39,18 @@ class KafkaReader(object):
         )
 
         while True:
-            try:
-                for message in consumer:
+            for message in consumer:
+                try:
                     self.handle_message(message)
-            except InterruptedError:
-                self.logger.info('got interrupted, shutting down...')
-                break
+                except InterruptedError as e:
+                    self.logger.info('got interrupted, shutting down...')
+                    break
+                except Exception as e:
+                    self.logger.error('failed to handle message: {}'.format(str(e)))
+                    self.logger.exception(e)
+                    self.env.capture_exception(sys.exc_info())
+                    utils.fail_message(message.value)
+                    time.sleep(1)
 
     def handle_message(self, message) -> None:
         self.logger.debug("%s:%d:%d: key=%s value=%s" % (

@@ -45,6 +45,7 @@ def create_app():
 
     import eventlet
     eventlet.spawn(environ.env.discovery.run)
+    eventlet.spawn(environ.env.kafka_reader.run)
 
     return _app, Api(_app)
 

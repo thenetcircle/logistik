@@ -16,6 +16,8 @@ from logistik.enrich import IEnrichmentManager
 from logistik.enrich import IEnricher
 from logistik.stats import IStats
 from logistik.cache import ICache
+from logistik.queue import IKafkaReader
+from logistik.queue import IKafkaWriter
 from logistik.db import IDatabase
 from logistik.utils.decorators import timeit
 
@@ -167,6 +169,8 @@ class GNEnvironment(object):
 
         self.handlers_manager: IHandlersManager = None
         self.handler_stats: IHandlerStats = None
+        self.kafka_reader: IKafkaReader = None
+        self.kafka_writer: IKafkaWriter = None
         self.event_handler_map = dict()
         self.event_handlers = dict()
 
@@ -527,6 +531,26 @@ def init_handler_stats(gn_env: GNEnvironment):
     gn_env.handler_stats = HandlerStats(gn_env)
 
 
+@timeit(logger, 'init kafka reader service')
+def init_kafka_reader(gn_env: GNEnvironment):
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
+    from logistik.queue.kafka_reader import KafkaReader
+    gn_env.kafka_reader = KafkaReader(gn_env)
+
+
+@timeit(logger, 'init kafka writer service')
+def init_kafka_writer(gn_env: GNEnvironment):
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
+    from logistik.queue.kafka_writer import KafkaWriter
+    gn_env.kafka_writer = KafkaWriter(gn_env)
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
@@ -537,6 +561,8 @@ def initialize_env(lk_env):
     init_enrichment_service(lk_env)
     init_discovery_service(lk_env)
     init_handler_stats(lk_env)
+    init_kafka_reader(lk_env)
+    init_kafka_writer(lk_env)
     logger.info('startup done!')
 
 

@@ -29,6 +29,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.url = None
         self.endpoint: str = None
         self.timeout: int = None
+        self.return_to: str = None
         self.n_retries: int = 1
 
     def handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
@@ -58,12 +59,16 @@ class BaseHandler(IHandler, IPlugin, ABC):
             environ.env.capture_exception(sys.exc_info())
             return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)
 
-        if ErrorCodes.OK == error_code:
+        if error_code == ErrorCodes.OK:
+            self.handle_response(response)
             return BaseHandler.OK, ErrorCodes.OK, response
         else:
             self.logger.error('handler {} failed with code: {}, response: {}'.format(
                 str(self), str(error_code), str(response)))
             return BaseHandler.FAIL, error_code, response
+
+    def handle_response(self, response: Union[None, Response]):
+        pass  # TODO: implement
 
     @property
     def name(self) -> str:
