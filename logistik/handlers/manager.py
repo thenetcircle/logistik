@@ -101,13 +101,16 @@ class HandlersManager(IHandlersManager):
             utils.fail_message(data)
             logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
+            self.env.handler_stats.failure(handler, conf)
             return
 
         try:
             all_ok, status_code, msg = handler(data, activity)
             if all_ok:
+                self.env.handler_stats.success(handler, conf)
                 logger.info('[{}] handler "{}" success'.format(conf.event, str(handler)))
             else:
+                self.env.handler_stats.failure(handler, conf)
                 logger.error('[{}] handler "{}" failed: {}'.format(conf.event, str(handler), str(msg)))
 
         except Exception as e:
@@ -115,4 +118,5 @@ class HandlersManager(IHandlersManager):
             utils.fail_message(data)
             logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
+            self.env.handler_stats.error(handler, conf)
             return

@@ -31,3 +31,14 @@ class IHandler(ABC):
 
     def __call__(self, *args, **kwargs) -> (bool, str):
         raise NotImplementedError()
+
+
+class IHandlerStats(ABC):
+    def failure(self, handler: IHandler, conf: HandlerConf) -> None:
+        raise NotImplementedError()
+
+    def success(self, handler: IHandler, conf: HandlerConf) -> None:
+        raise NotImplementedError()
+
+    def error(self, handler: IHandler, conf: HandlerConf) -> None:
+        raise NotImplementedError()

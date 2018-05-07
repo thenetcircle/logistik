@@ -11,6 +11,7 @@ import yaml
 
 from logistik.config import ConfigKeys
 from logistik.handlers import IHandlersManager
+from logistik.handlers import IHandlerStats
 from logistik.enrich import IEnrichmentManager
 from logistik.enrich import IEnricher
 from logistik.stats import IStats
@@ -165,6 +166,7 @@ class GNEnvironment(object):
         self.enrichers: List[Tuple[str, IEnricher]] = list()
 
         self.handlers_manager: IHandlersManager = None
+        self.handler_stats: IHandlerStats = None
         self.event_handler_map = dict()
         self.event_handlers = dict()
 
@@ -515,6 +517,16 @@ def init_discovery_service(gn_env: GNEnvironment):
     gn_env.discovery = DiscoveryService(gn_env)
 
 
+@timeit(logger, 'init handler stats service')
+def init_handler_stats(gn_env: GNEnvironment):
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
+    from logistik.handlers.stats import HandlerStats
+    gn_env.handler_stats = HandlerStats(gn_env)
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
@@ -524,6 +536,7 @@ def initialize_env(lk_env):
     init_plugins(lk_env)
     init_enrichment_service(lk_env)
     init_discovery_service(lk_env)
+    init_handler_stats(lk_env)
     logger.info('startup done!')
 
 
