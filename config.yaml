@@ -1,5 +1,6 @@
 kafka:
   topic: '$LK_TOPIC'
+  hosts: '$LK_KAFKA_HOSTS'
 
 database:
   type: 'rdbms'

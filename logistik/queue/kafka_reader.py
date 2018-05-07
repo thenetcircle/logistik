@@ -31,7 +31,7 @@ class KafkaReader(IKafkaReader):
 
         consumer = KafkaConsumer(
             topic_name,
-            group_id='{}-{}'.format(self.env.config.get(ConfigKeys.MODEL_NAME), str(uuid())),
+            group_id='logistik-{}'.format(str(uuid())),
             value_deserializer=lambda m: json.loads(m.decode('ascii')),
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
