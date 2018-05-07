@@ -33,7 +33,7 @@ class DatabaseManager(IDatabase):
         handler_reprs = list()
         for handler in handlers:
             handler_reprs.append(handler.to_repr())
-        return handlers
+        return handler_reprs
 
     @with_session
     def disable_handler(self, service_id):

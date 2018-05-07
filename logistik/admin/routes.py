@@ -14,7 +14,7 @@ from werkzeug.wrappers import Response
 
 from logistik import environ
 from logistik.config import ConfigKeys
-from logistik.web import app
+from logistik.server import app
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -89,19 +89,31 @@ def authorized():
     return environ.env.web_auth.authorized()
 
 
-@app.route('/', methods=['GET'])
+@app.route('/api/handlers', methods=['GET'])
 @requires_auth
+def get_handlers():
+    """ Get handlers """
+    handlers = environ.env.db.get_all_handlers()
+    return api_response(200, [handler.to_json() for handler in handlers])
+
+
+@app.route('/', methods=['GET'])
+#@requires_auth
 def index():
     floating_menu = str(environ.env.config.get(ConfigKeys.USE_FLOATING_MENU, domain=ConfigKeys.WEB))
     floating_menu = floating_menu.strip().lower() in {'yes', 'y', 'true'}
-    logger.info('using floating menu? "%s"' % str(floating_menu))
+
+    handlers = environ.env.db.get_all_handlers()
+    handlers_json = [handler.to_json() for handler in handlers]
+
     return render_template(
-        'index.html',
+        'index_flask.html',
         environment=environment,
         config={
             'ROOT_URL': environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB),
             'FLOATING_MENU': floating_menu
         },
+        handlers=handlers_json,
         version=tag_name)
 
 

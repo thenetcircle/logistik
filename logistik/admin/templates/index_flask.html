@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <meta name=viewport content="width=device-width,initial-scale=1">
+    <meta http-equiv=X-UA-Compatible content="ie=edge">
+    {% if config.FLOATING_MENU == True %}
+        <meta name="rhum">
+    {% endif %}
+    <meta name=base content={{ config.ROOT_URL }}>
+    <meta name=environment content={{ environment }}>
+    <meta name=version content={{ version }}>
+
+    <title>Logistik Dashboard</title>
+
+    <link rel="stylesheet" type="text/css" media="all" href="static/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" media="all" href="static/datatables.min.css"/>
+
+    <script type="text/javascript" src="static/jquery-2.2.2.min.js"></script>
+    <script type="text/javascript" src="static/datatables.min.js"></script>
+
+    <script type="text/javascript" src="static/custom/js/index.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/custom/css/style.css" />
+</head>
+<body>
+    <div>
+        <table id="handlers" class="display responsive" cellspacing="0" width="100%">
+            <thead>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Event</th>
+                <th>Enabled</th>
+                <th>Endpoint</th>
+                <th>Version</th>
+                <th>Path</th>
+                <th>Model Type</th>
+                <th>Node</th>
+                <th>method</th>
+                <th>Timeout</th>
+                <th>Retries</th>
+                <th>Service ID</th>
+                <th>Tags</th>
+                <th>Return-To</th>
+            </thead>
+            <tbody>
+                {% for handler in handlers %}
+                    <tr>
+                        <td>{{ handler['identity'] }}</td>
+                        <td>{{ handler['name'] }}</td>
+                        <td>{{ handler['event'] }}</td>
+                        <td>{{ handler['enabled'] }}</td>
+                        <td>{{ handler['endpoint'] }}</td>
+                        <td>{{ handler['version'] }}</td>
+                        <td>{{ handler['path'] }}</td>
+                        <td>{{ handler['model_type'] }}</td>
+                        <td>{{ handler['node'] }}</td>
+                        <td>{{ handler['method'] }}</td>
+                        <td>{{ handler['timeout'] }}</td>
+                        <td>{{ handler['retries'] }}</td>
+                        <td>{{ handler['service_id'] }}</td>
+                        <td>{{ handler['tags'] }}</td>
+                        <td>{{ handler['return_to'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

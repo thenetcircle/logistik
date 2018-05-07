@@ -33,3 +33,22 @@ class HandlerConf(object):
             self.version, self.path, self.model_type, self.node, self.method,
             self.timeout, self.retries, self.service_id, self.tags, self.return_to
         )
+
+    def to_json(self):
+        return {
+            'identity': self.identity,
+            'name': self.name,
+            'event': self.event,
+            'enabled': self.enabled,
+            'endpoint': self.endpoint,
+            'version': self.version,
+            'path': self.path,
+            'model_type': self.model_type,
+            'node': self.node,
+            'method': self.method,
+            'timeout': self.timeout,
+            'retries': self.retries,
+            'service_id': self.service_id,
+            'tags': self.tags,
+            'return_to': self.return_to
+        }

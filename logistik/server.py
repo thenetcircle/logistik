@@ -14,7 +14,8 @@ logging.basicConfig(
     format='%(asctime)s - %(name)-18s - %(levelname)-7s - %(message)s')
 
 logger = logging.getLogger(__name__)
-logging.getLogger('kafka').setLevel('INFO')
+logging.getLogger('kafka').setLevel(logging.WARNING)
+logging.getLogger('kafka.conn').setLevel(logging.WARNING)
 
 
 class ReverseProxied(object):
@@ -74,6 +75,7 @@ def create_app():
 
     _app.wsgi_app = ReverseProxied(ProxyFix(_app.wsgi_app))
 
+    _app.config['ROOT_URL'] = environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB, default='/')
     _app.config['SECRET_KEY'] = secret
     _app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     _app.config['SQLALCHEMY_POOL_SIZE'] = db_pool
@@ -95,4 +97,7 @@ def create_app():
 
 
 app, api = create_app()
-environ.init_web_auth(environ.env)
+#environ.init_web_auth(environ.env)
+
+# keep this, otherwise flask won't find any routes
+import logistik.admin.routes
