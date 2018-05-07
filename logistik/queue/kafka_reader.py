@@ -16,6 +16,8 @@ from logistik.environ import GNEnvironment
 
 logger = logging.getLogger(__name__)
 
+ONE_MINUTE = 60_000
+
 
 class KafkaReader(IKafkaReader):
     def __init__(self, env: GNEnvironment):
@@ -35,7 +37,9 @@ class KafkaReader(IKafkaReader):
             value_deserializer=lambda m: json.loads(m.decode('ascii')),
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
-            connections_max_idle_ms=9 * 60 * 1000,
+            connections_max_idle_ms=9 * ONE_MINUTE,  # default: 9min
+            max_poll_interval_ms=10 * ONE_MINUTE,  # default: 5min
+            max_poll_records=10  # default: 500
         )
 
         while True:

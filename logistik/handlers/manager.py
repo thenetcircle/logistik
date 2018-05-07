@@ -57,7 +57,10 @@ class HandlersManager(IHandlersManager):
         handler = self.env.event_handler_map[event_name]
         self.call_handlers(handler, n_instances, handler_confs, data, activity)
 
-    def call_handlers(self, handler: IHandler, n_instances: int, all_confs: list, data: dict, activity: Activity):
+    def call_handlers(
+            self, handler: IHandler, n_instances: int,
+            all_confs: List[HandlerConf], data: dict, activity: Activity):
+
         handler_confs, canary_conf, decoy_conf = self.get_handler_configs(all_confs)
 
         if n_instances < len(handler_confs):
@@ -74,7 +77,7 @@ class HandlersManager(IHandlersManager):
         if decoy_conf is not None:
             self.handle_event_with(handler, decoy_conf, data, activity)
 
-    def get_handler_configs(self, all_confs):
+    def get_handler_configs(self, all_confs: List[HandlerConf]):
         canary_conf = None
         decoy_conf = None
         handler_confs = list()
@@ -101,17 +104,17 @@ class HandlersManager(IHandlersManager):
             utils.fail_message(data)
             logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            self.env.handler_stats.failure(handler, conf)
+            self.env.handler_stats.failure(activity, conf)
             return
 
         try:
             all_ok, status_code, msg = handler(data, activity)
             if all_ok:
-                self.env.handler_stats.success(handler, conf)
+                self.env.handler_stats.success(activity, conf)
                 self.env.kafka_writer.publish(conf, msg)
                 logger.info('[{}] handler "{}" success'.format(conf.event, str(handler)))
             else:
-                self.env.handler_stats.failure(handler, conf)
+                self.env.handler_stats.failure(activity, conf)
                 logger.error('[{}] handler "{}" failed: {}'.format(conf.event, str(handler), str(msg)))
 
         except Exception as e:
@@ -119,5 +122,5 @@ class HandlersManager(IHandlersManager):
             utils.fail_message(data)
             logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            self.env.handler_stats.error(handler, conf)
+            self.env.handler_stats.error(activity, conf)
             return

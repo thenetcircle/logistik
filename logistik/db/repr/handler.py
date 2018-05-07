@@ -1,3 +1,37 @@
+class HandlerStats(object):
+    def __init__(self, identity=None, name=None, event=None, event_time=None,
+                 endpoint=None, version=None, event_id=None, event_verb=None,
+                 service_id=None, node=None, model_type=None, stat_type=None):
+        self.identity = identity
+        self.service_id = service_id
+        self.name = name
+        self.event = event
+        self.endpoint = endpoint
+        self.version = version
+        self.event_time = event_time
+        self.event_id = event_id
+        self.event_verb = event_verb
+        self.node = node
+        self.stat_type = stat_type
+        self.model_type = model_type
+
+    def to_json(self):
+        return {
+            'identity': self.identity,
+            'name': self.name,
+            'event': self.event,
+            'endpoint': self.endpoint,
+            'version': self.version,
+            'model_type': self.model_type,
+            'node': self.node,
+            'stat_type': self.stat_type,
+            'service_id': self.service_id,
+            'event_time': self.event_time,
+            'event_id': self.event_id,
+            'event_verb': self.event_verb
+        }
+
+
 class HandlerConf(object):
     def __init__(self, identity=None, name=None, event=None, enabled=None,
                  endpoint=None, version=None, path=None, model_type=None,

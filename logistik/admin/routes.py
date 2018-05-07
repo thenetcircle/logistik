@@ -104,7 +104,12 @@ def index():
     floating_menu = floating_menu.strip().lower() in {'yes', 'y', 'true'}
 
     handlers = environ.env.db.get_all_handlers()
+    stats = environ.env.db.get_all_stats()
+    agg_stats = environ.env.db.get_all_aggregated_stats()
+
     handlers_json = [handler.to_json() for handler in handlers]
+    stats_json = [stat.to_json() for stat in stats]
+    agg_stats_json = [stat.to_json() for stat in stats]
 
     return render_template(
         'index_flask.html',
@@ -113,6 +118,8 @@ def index():
             'ROOT_URL': environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB),
             'FLOATING_MENU': floating_menu
         },
+        stats=stats_json,
+        agg_stats=agg_stats_json,
         handlers=handlers_json,
         version=tag_name)
 

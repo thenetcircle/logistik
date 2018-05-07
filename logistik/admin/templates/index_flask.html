@@ -24,6 +24,7 @@
 </head>
 <body>
     <div>
+        <h2>Handlers</h2>
         <table id="handlers" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>ID</th>
@@ -60,6 +61,66 @@
                         <td>{{ handler['service_id'] }}</td>
                         <td>{{ handler['tags'] }}</td>
                         <td>{{ handler['return_to'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h2>Aggregated Statistics</h2>
+        <table id="aggregated" class="display responsive" cellspacing="0" width="100%">
+            <thead>
+                <th>Event</th>
+                <th>Service ID</th>
+                <th>Type</th>
+                <th>Count</th>
+            </thead>
+            <tbody>
+                {% for stat in agg_stats %}
+                    <tr>
+                        <td>{{ stat['event'] }}</td>
+                        <td>{{ stat['service_id'] }}</td>
+                        <td>{{ stat['stat_type'] }}</td>
+                        <td>{{ stat['count'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h2>Event Statistics</h2>
+        <table id="stats" class="display responsive" cellspacing="0" width="100%">
+            <thead>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Event</th>
+                <th>Result</th>
+                <th>Endpoint</th>
+                <th>Version</th>
+                <th>Model Type</th>
+                <th>Node</th>
+                <th>Service ID</th>
+                <th>Event Time</th>
+                <th>Event ID</th>
+                <th>Event Verb</th>
+            </thead>
+            <tbody>
+                {% for stat in stats %}
+                    <tr>
+                        <td>{{ stat['identity'] }}</td>
+                        <td>{{ stat['name'] }}</td>
+                        <td>{{ stat['event'] }}</td>
+                        <td>{{ stat['stat_type'] }}</td>
+                        <td>{{ stat['endpoint'] }}</td>
+                        <td>{{ stat['version'] }}</td>
+                        <td>{{ stat['model_type'] }}</td>
+                        <td>{{ stat['node'] }}</td>
+                        <td>{{ stat['service_id'] }}</td>
+                        <td>{{ stat['event_time'] }}</td>
+                        <td>{{ stat['event_id'] }}</td>
+                        <td>{{ stat['event_verb'] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

@@ -5,6 +5,8 @@ from typing import Union
 from logistik.db import IDatabase
 from logistik.db.models.event import EventConfEntity
 from logistik.db.models.handler import HandlerConfEntity
+from logistik.db.models.handler import HandlerStatsEntity
+from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
 from logistik.db.repr.event import EventConf
 from logistik.db.repr.handler import HandlerConf
 from logistik.environ import GNEnvironment
@@ -20,10 +22,17 @@ class DatabaseManager(IDatabase):
     @with_session
     def get_all_handlers(self) -> List[HandlerConf]:
         handlers = HandlerConfEntity.query.all()
-        handler_reprs = list()
-        for handler in handlers:
-            handler_reprs.append(handler.to_repr())
-        return handler_reprs
+        return [handler.to_repr() for handler in handlers]
+
+    @with_session
+    def get_all_stats(self):
+        stats = HandlerStatsEntity.query.all()
+        return [stat.to_repr() for stat in stats]
+
+    @with_session
+    def get_all_aggregated_stats(self):
+        stats = AggregatedHandlerStatsEntity.query.all()
+        return [stat.to_repr() for stat in stats]
 
     @with_session
     def disable_handler(self, service_id):
