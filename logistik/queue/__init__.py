@@ -1,4 +1,7 @@
 from abc import ABC
+from requests import Response
+
+from logistik.db.repr.handler import HandlerConf
 
 
 class IKafkaReader(ABC):
@@ -7,5 +10,5 @@ class IKafkaReader(ABC):
 
 
 class IKafkaWriter(ABC):
-    def publish(self, message):
+    def publish(self, conf: HandlerConf, message: Response) -> None:
         raise NotImplementedError()

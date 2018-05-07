@@ -108,6 +108,7 @@ class HandlersManager(IHandlersManager):
             all_ok, status_code, msg = handler(data, activity)
             if all_ok:
                 self.env.handler_stats.success(handler, conf)
+                self.env.kafka_writer.publish(conf, msg)
                 logger.info('[{}] handler "{}" success'.format(conf.event, str(handler)))
             else:
                 self.env.handler_stats.failure(handler, conf)

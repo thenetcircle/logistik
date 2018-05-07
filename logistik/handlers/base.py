@@ -60,15 +60,11 @@ class BaseHandler(IHandler, IPlugin, ABC):
             return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)
 
         if error_code == ErrorCodes.OK:
-            self.handle_response(response)
             return BaseHandler.OK, ErrorCodes.OK, response
         else:
             self.logger.error('handler {} failed with code: {}, response: {}'.format(
                 str(self), str(error_code), str(response)))
             return BaseHandler.FAIL, error_code, response
-
-    def handle_response(self, response: Union[None, Response]):
-        pass  # TODO: implement
 
     @property
     def name(self) -> str:
