@@ -6,8 +6,6 @@ from requests.models import Response
 from activitystreams import Activity
 
 from logistik import environ
-from logistik.config import ConfigKeys
-from logistik.config import HandlerKeys
 from logistik.config import ErrorCodes
 from logistik.handlers.base import BaseHandler
 from logistik.db.repr.handler import HandlerConf

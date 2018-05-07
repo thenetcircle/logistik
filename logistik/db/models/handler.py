@@ -2,6 +2,18 @@ from logistik.environ import env
 from logistik.db.repr.handler import HandlerConf
 
 
+class HandlerStatsEntity(env.dbman.Model):
+    id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
+    service_id = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    name = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    event = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    endpoint = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    version = env.dbman.Column(env.dbman.String(16), unique=False, nullable=False)
+    event_time = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=False)
+    event_id = env.dbman.Column(env.dbman.String(16), unique=False, nullable=False)
+    event_verb = env.dbman.Column(env.dbman.String(16), unique=False, nullable=False)
+
+
 class HandlerConfEntity(env.dbman.Model):
     id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
     service_id = env.dbman.Column(env.dbman.String(80), unique=True, nullable=False)

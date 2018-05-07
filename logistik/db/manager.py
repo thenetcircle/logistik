@@ -1,26 +1,16 @@
 import logging
-
 from typing import List
 from typing import Union
-from functools import wraps
 
-from logistik import environ
 from logistik.db import IDatabase
-from logistik.environ import GNEnvironment
-from logistik.db.models.handler import HandlerConfEntity
 from logistik.db.models.event import EventConfEntity
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.models.handler import HandlerConfEntity
 from logistik.db.repr.event import EventConf
+from logistik.db.repr.handler import HandlerConf
+from logistik.environ import GNEnvironment
+from logistik.utils.decorators import with_session
 
 logger = logging.getLogger(__name__)
-
-
-def with_session(view_func):
-    @wraps(view_func)
-    def wrapped(*args, **kwargs):
-        with environ.env.app.app_context():
-            return view_func(*args, **kwargs)
-    return wrapped
 
 
 class DatabaseManager(IDatabase):
