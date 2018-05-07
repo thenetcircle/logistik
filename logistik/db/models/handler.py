@@ -16,6 +16,7 @@ class HandlerConfEntity(env.dbman.Model):
     retries = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='1')
     timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
     tags = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+    return_to = env.dbman.Column(env.dbman.String(80), unique=False, nullable=True)
 
     def to_repr(self) -> HandlerConf:
         return HandlerConf(
@@ -30,16 +31,18 @@ class HandlerConfEntity(env.dbman.Model):
             method=self.method,
             retries=self.retries,
             timeout=self.timeout,
-            tags=self.tags
+            tags=self.tags,
+            return_to=self.return_to
         )
 
     def __str__(self):
         repr_string = """
         <HandlerConfEntity 
                 id={}, name={}, event={}, enabled={}, endpoint={}, 
-                version={}, path={}, method={}, retries={}, timeout={}, service_id={}, tags={}>
+                version={}, path={}, method={}, retries={}, timeout={}, 
+                service_id={}, tags={}, return_to={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
-            self.method, self.retries, self.timeout, self.service_id, self.tags
+            self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to
         )

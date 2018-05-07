@@ -162,6 +162,7 @@ class GNEnvironment(object):
         self.sql_alchemy_db = None
         self.failed_msg_log: logging.Logger = None
         self.dropped_msg_log: logging.Logger = None
+        self.dropped_response_log: logging.Logger = None
         self.capture_exception = lambda e: False
 
         self.enrichment_manager: IEnrichmentManager = None
@@ -377,9 +378,11 @@ def init_logging(gn_env: GNEnvironment) -> None:
 
     f_msg_path = gn_env.config.get(ConfigKeys.FAILED_MESSAGE_LOG, default='/tmp/logistik-failed-msgs.log')
     d_msg_path = gn_env.config.get(ConfigKeys.DROPPED_MESSAGE_LOG, default='/tmp/logistik-dropped-msgs.log')
+    d_response_path = gn_env.config.get(ConfigKeys.DROPPED_RESPONSE_LOG, default='/tmp/logistik-dropped-responses.log')
 
     gn_env.failed_msg_log = _create_logger(f_msg_path, 'FailedMessages')
     gn_env.dropped_msg_log = _create_logger(d_msg_path, 'DroppedMessages')
+    gn_env.dropped_response_log = _create_logger(d_response_path, 'DroppedResponses')
 
     dsn = gn_env.config.get(ConfigKeys.DSN, domain=ConfigKeys.LOGGING, default='')
     if dsn is None or len(dsn.strip()) == 0:

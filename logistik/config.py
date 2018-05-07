@@ -46,6 +46,7 @@ class ModelTypes(object):
 class ConfigKeys(object):
     FAILED_MESSAGE_LOG = 'failed_msg_log'
     DROPPED_MESSAGE_LOG = 'dropped_msg_log'
+    DROPPED_RESPONSE_LOG = 'dropped_response_log'
     LOG_LEVEL = 'log_level'
     LOG_FORMAT = 'log_format'
     DEBUG = 'debug'

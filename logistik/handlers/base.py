@@ -29,7 +29,6 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.url = None
         self.endpoint: str = None
         self.timeout: int = None
-        self.return_to: str = None
         self.n_retries: int = 1
 
     def handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
