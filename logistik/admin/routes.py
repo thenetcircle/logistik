@@ -90,11 +90,19 @@ def authorized():
 
 
 @app.route('/api/handlers', methods=['GET'])
-@requires_auth
+#@requires_auth
 def get_handlers():
     """ Get handlers """
     handlers = environ.env.db.get_all_handlers()
     return api_response(200, [handler.to_json() for handler in handlers])
+
+
+@app.route('/api/stats/aggregated', methods=['GET'])
+#@requires_auth
+def get_agg_stats():
+    """ Get aggregated statistics """
+    agg_stats = environ.env.db.get_all_aggregated_stats()
+    return api_response(200, [stat.to_json() for stat in agg_stats])
 
 
 @app.route('/', methods=['GET'])
@@ -109,7 +117,7 @@ def index():
 
     handlers_json = [handler.to_json() for handler in handlers]
     stats_json = [stat.to_json() for stat in stats]
-    agg_stats_json = [stat.to_json() for stat in stats]
+    agg_stats_json = [stat.to_json() for stat in agg_stats]
 
     return render_template(
         'index_flask.html',
