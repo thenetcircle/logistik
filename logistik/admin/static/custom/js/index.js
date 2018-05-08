@@ -18,6 +18,27 @@ $(document).ready(function () {
         'order': [[ 0, 'desc' ]]
     });
 
+    $.getJSON('http://localhost:5656/api/graph', function (graph) {
+      console.log(graph);
+      var nodes = graph.data['nodes'];
+      var edges = graph.data['edges'];
+      console.log(nodes);
+      console.log(edges);
+      var network = null;
+    
+      var container = document.getElementById('network');
+      var data = {
+        nodes: nodes,
+        edges: edges
+      };
+      var options = {
+        nodes: {
+          shape: 'dot'
+        }
+      };
+      network = new vis.Network(container, data, options);
+    });
+
     var agg_stats = {};
     var n_stat_nodes = 0;
 
@@ -77,7 +98,12 @@ $(document).ready(function () {
           var stats_iter = 0;
           $.each(agg_stats[h.service_id], function(s_key, stat) {
             var node_id = h.identity + '-' + stats_iter;
+            //var y_value = handler_iter + stats_iter - (Object.keys(agg_stats).length-1)/2;
             var y_value = total_stat_iter++;
+            //y_value /= handler_iter + 1;
+            console.log('y_value: ' + y_value);
+            console.log(stat);
+            console.log('n_stat_nodes: ' + n_stat_nodes);
             s.graph.addNode({
               id: node_id,
               label: stat.stat_type + ': ' + stat.count,

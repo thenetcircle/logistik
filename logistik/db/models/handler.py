@@ -60,6 +60,7 @@ class HandlerConfEntity(env.dbman.Model):
             name=self.name,
             service_id=self.service_id,
             enabled=self.enabled,
+            event=self.event,
             endpoint=self.endpoint,
             version=self.version,
             path=self.path,

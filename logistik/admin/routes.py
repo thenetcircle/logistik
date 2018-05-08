@@ -15,6 +15,8 @@ from werkzeug.wrappers import Response
 from logistik import environ
 from logistik.config import ConfigKeys
 from logistik.server import app
+from logistik.db.repr.agg_stats import AggregatedHandlerStats
+from logistik.db.repr.handler import HandlerConf
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -103,6 +105,98 @@ def get_agg_stats():
     """ Get aggregated statistics """
     agg_stats = environ.env.db.get_all_aggregated_stats()
     return api_response(200, [stat.to_json() for stat in agg_stats])
+
+
+@app.route('/api/graph', methods=['GET'])
+#@requires_auth
+def get_graph():
+    """ Get aggregated statistics """
+    handlers = environ.env.db.get_all_handlers()
+    agg_stats = environ.env.db.get_all_aggregated_stats()
+
+    def stats_for(handler: HandlerConf) -> List[AggregatedHandlerStats]:
+        matching = list()
+        for stat in agg_stats:
+            if stat.service_id != handler.service_id:
+                logger.info('service_id different: stat={}, handler={}'.format(stat.service_id, handler.service_id))
+                continue
+            if stat.event != handler.event:
+                logger.info('event different: stat={}, handler={}'.format(stat.event, handler.event))
+                continue
+            if stat.model_type != handler.model_type:
+                logger.info('model_type different: stat={}, handler={}'.format(stat.model_type, handler.model_type))
+                continue
+            if stat.node != handler.node:
+                logger.info('node different: stat={}, handler={}'.format(stat.node, handler.node))
+                continue
+            matching.append(stat)
+        return matching
+
+    data = {
+        'id': '0',
+        'label': 'logistik',
+        'children': [{
+            'id': 'h-{}'.format(service_id),
+            'label': service_id,
+            'children': [{
+                'id': 'm-{}'.format(handler.identity),
+                'label': handler.model_type,
+                'children': [{
+                    'id': 's-{}-{}-{}'.format(service_id, handler.identity, stat.stat_type),
+                    'label': stat.stat_type,
+                    'value': stat.count
+                } for stat in stats_for(handler)]
+            } for handler in handlers if handler.service_id == service_id]
+        } for service_id in {handler.service_id for handler in handlers}]
+    }
+
+    root = {'id': data['id'], 'value': 1, 'label': data['label']}
+    nodes = [root]
+    edges = list()
+
+    for handler in data['children']:
+        node = {
+            'id': handler['id'],
+            'value': 1,
+            'label': handler['label']
+        }
+        nodes.append(node)
+        edges.append({
+            'from': root['id'],
+            'to': node['id'],
+            'value': 1,
+            'title': node['label']
+        })
+
+        for model in handler['children']:
+            m_node = {
+                'id': model['id'],
+                'value': 1,
+                'label': model['label']
+            }
+            nodes.append(m_node)
+            edges.append({
+                'from': node['id'],
+                'to': m_node['id'],
+                'value': 1,
+                'title': m_node['label']
+            })
+
+            for stat in model['children']:
+                s_node = {
+                    'id': stat['id'],
+                    'value': 1,
+                    'label': stat['label']
+                }
+                nodes.append(s_node)
+                edges.append({
+                    'from': m_node['id'],
+                    'to': stat['id'],
+                    'value': stat['value'],
+                    'title': stat['label']
+                })
+
+    return api_response(200, {'nodes': nodes, 'edges': edges})
 
 
 @app.route('/', methods=['GET'])

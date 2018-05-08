@@ -8,6 +8,7 @@ from logistik.db.models.handler import HandlerConfEntity
 from logistik.db.models.handler import HandlerStatsEntity
 from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
 from logistik.db.repr.event import EventConf
+from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.handler import HandlerConf
 from logistik.environ import GNEnvironment
 from logistik.utils.decorators import with_session
@@ -30,7 +31,7 @@ class DatabaseManager(IDatabase):
         return [stat.to_repr() for stat in stats]
 
     @with_session
-    def get_all_aggregated_stats(self):
+    def get_all_aggregated_stats(self) -> List[AggregatedHandlerStats]:
         stats = AggregatedHandlerStatsEntity.query.all()
         return [stat.to_repr() for stat in stats]
 
