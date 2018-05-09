@@ -111,44 +111,67 @@ def get_agg_stats():
 #@requires_auth
 def get_graph():
     """ Get aggregated statistics """
-    handlers = environ.env.db.get_all_handlers()
-    agg_stats = environ.env.db.get_all_aggregated_stats()
-
     def stats_for(handler: HandlerConf) -> List[AggregatedHandlerStats]:
         matching = list()
         for stat in agg_stats:
             if stat.service_id != handler.service_id:
-                logger.info('service_id different: stat={}, handler={}'.format(stat.service_id, handler.service_id))
                 continue
             if stat.event != handler.event:
-                logger.info('event different: stat={}, handler={}'.format(stat.event, handler.event))
                 continue
             if stat.model_type != handler.model_type:
-                logger.info('model_type different: stat={}, handler={}'.format(stat.model_type, handler.model_type))
                 continue
             if stat.node != handler.node:
-                logger.info('node different: stat={}, handler={}'.format(stat.node, handler.node))
                 continue
             matching.append(stat)
         return matching
+
+    handlers = environ.env.db.get_all_handlers()
+    agg_stats = environ.env.db.get_all_aggregated_stats()
+    stats_per_service = dict()
+    stats_per_node = dict()
+
+    for stat in agg_stats:
+        if stat.service_id not in stats_per_service:
+            stats_per_service[stat.service_id] = 0
+        stats_per_service[stat.service_id] += stat.count
+
+        node_key = '{}-{}'.format(stat.service_id, stat.model_type)
+        if node_key not in stats_per_node:
+            stats_per_node[node_key] = 0
+        stats_per_node[node_key] += stat.count
+
+    service_id_enabled = {h.service_id: h.enabled for h in handlers}
+    service_id_event = {h.service_id: h.event for h in handlers}
+    from uuid import uuid4 as uuid
 
     data = {
         'id': '0',
         'label': 'logistik',
         'children': [{
-            'id': 'h-{}'.format(service_id),
+            'id': 'h-{}-{}'.format(service_id, str(uuid())),
             'label': service_id,
+            'enabled': service_id_enabled.get(service_id),
+            'event': service_id_event.get(service_id),
+            'value': stats_per_service.get(service_id, 0),
             'children': [{
                 'id': 'm-{}'.format(handler.identity),
                 'label': handler.model_type,
+                'value': stats_per_node.get('{}-{}'.format(handler.service_id, handler.model_type), 0),
                 'children': [{
                     'id': 's-{}-{}-{}'.format(service_id, handler.identity, stat.stat_type),
                     'label': stat.stat_type,
-                    'value': stat.count
+                    'value': str(stat.count)
                 } for stat in stats_for(handler)]
             } for handler in handlers if handler.service_id == service_id]
-        } for service_id in {handler.service_id for handler in handlers}]
+        } for service_id in {h.service_id for h in handlers}]
     }
+
+    """
+    for (service_id, event_name, model_type, node) in {
+            (handler.service_id, handler.event, handler.model_type, handler.node)
+            for handler in handlers
+        }]
+    """
 
     root = {'id': data['id'], 'value': 1, 'label': data['label']}
     nodes = [root]
@@ -160,12 +183,12 @@ def get_graph():
             'value': 1,
             'label': handler['label']
         }
+
         nodes.append(node)
         edges.append({
             'from': root['id'],
             'to': node['id'],
-            'value': 1,
-            'title': node['label']
+            'label': '{}\n{}'.format(handler['event'], handler['value'])
         })
 
         for model in handler['children']:
@@ -174,26 +197,29 @@ def get_graph():
                 'value': 1,
                 'label': model['label']
             }
+            if not handler['enabled']:
+                m_node['color'] = '#f00'
+
             nodes.append(m_node)
             edges.append({
                 'from': node['id'],
                 'to': m_node['id'],
-                'value': 1,
-                'title': m_node['label']
+                'label': model['value']
             })
 
             for stat in model['children']:
                 s_node = {
                     'id': stat['id'],
                     'value': 1,
-                    'label': stat['label']
+                    'label': stat['label'],
+                    'group': stat['label']
                 }
+
                 nodes.append(s_node)
                 edges.append({
                     'from': m_node['id'],
                     'to': stat['id'],
-                    'value': stat['value'],
-                    'title': stat['label']
+                    'label': stat['value']
                 })
 
     return api_response(200, {'nodes': nodes, 'edges': edges})

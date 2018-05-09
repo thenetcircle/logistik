@@ -19,24 +19,72 @@ $(document).ready(function () {
     });
 
     $.getJSON('http://localhost:5656/api/graph', function (graph) {
-      console.log(graph);
       var nodes = graph.data['nodes'];
       var edges = graph.data['edges'];
-      console.log(nodes);
-      console.log(edges);
-      var network = null;
-    
+
+      nodes[0]['shape'] = 'box';
+      nodes[0]['color'] = '#FFA807';
+
       var container = document.getElementById('network');
       var data = {
         nodes: nodes,
         edges: edges
       };
       var options = {
+        physics: true,
+        groups: {
+          model: {
+            shape: 'icon',
+            icon: {
+              face: 'FontAwesome',
+              code: '\uf085',
+              size: 30
+            }
+          },
+          service: {
+            shape: 'icon',
+            icon: {
+              face: 'FontAwesome',
+              code: '\uf233',
+              size: 30
+            }
+          },
+          success: {
+            shape: 'icon',
+            icon: {
+              face: 'FontAwesome',
+              code: '\uf058',
+              size: 30
+            }
+          },
+          error: {
+            shape: 'icon',
+            icon: {
+              face: 'FontAwesome',
+              code: '\uf057',
+              size: 30
+            }
+          },
+          failure: {
+            shape: 'icon',
+            icon: {
+              face: 'FontAwesome',
+              code: '\uf06a',
+              size: 30
+            }
+          }
+        },
         nodes: {
           shape: 'dot'
+        },
+        edges: {
+          font: {
+            align: 'bottom'
+          },
+          arrows: 'to'
         }
       };
-      network = new vis.Network(container, data, options);
+      new vis.Network(container, data, options);
     });
 
     var agg_stats = {};

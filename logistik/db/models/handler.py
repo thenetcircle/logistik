@@ -3,6 +3,8 @@ from logistik.db.repr.handler import HandlerConf
 from logistik.db.repr.handler import HandlerStats
 from logistik.config import ModelTypes
 
+from sqlalchemy import UniqueConstraint
+
 
 class HandlerStatsEntity(env.dbman.Model):
     __tablename__ = 'handler_stats_entity'
@@ -39,7 +41,7 @@ class HandlerStatsEntity(env.dbman.Model):
 
 class HandlerConfEntity(env.dbman.Model):
     id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
-    service_id = env.dbman.Column(env.dbman.String(80), unique=True, nullable=False)
+    service_id = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
     name = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
     event = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
     enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False)
@@ -53,6 +55,8 @@ class HandlerConfEntity(env.dbman.Model):
     timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
     tags = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
     return_to = env.dbman.Column(env.dbman.String(80), unique=False, nullable=True)
+
+    UniqueConstraint('service_id', 'node', 'model_type', name='uix_1')
 
     def to_repr(self) -> HandlerConf:
         return HandlerConf(
