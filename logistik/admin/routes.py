@@ -155,7 +155,7 @@ def get_graph():
             'value': stats_per_service.get(service_id, 0),
             'children': [{
                 'id': 'm-{}'.format(handler.identity),
-                'label': handler.model_type,
+                'label': '{}-{}'.format(handler.model_type, handler.node),
                 'value': stats_per_node.get('{}-{}'.format(handler.service_id, handler.model_type), 0),
                 'children': [{
                     'id': 's-{}-{}-{}'.format(service_id, handler.identity, stat.stat_type),
@@ -166,13 +166,6 @@ def get_graph():
         } for service_id in {h.service_id for h in handlers}]
     }
 
-    """
-    for (service_id, event_name, model_type, node) in {
-            (handler.service_id, handler.event, handler.model_type, handler.node)
-            for handler in handlers
-        }]
-    """
-
     root = {'id': data['id'], 'value': 1, 'label': data['label']}
     nodes = [root]
     edges = list()
@@ -180,7 +173,6 @@ def get_graph():
     for handler in data['children']:
         node = {
             'id': handler['id'],
-            'value': 1,
             'label': handler['label']
         }
 
@@ -194,7 +186,6 @@ def get_graph():
         for model in handler['children']:
             m_node = {
                 'id': model['id'],
-                'value': 1,
                 'label': model['label']
             }
             if not handler['enabled']:
@@ -204,13 +195,12 @@ def get_graph():
             edges.append({
                 'from': node['id'],
                 'to': m_node['id'],
-                'label': model['value']
+                'label': str(model['value'])
             })
 
             for stat in model['children']:
                 s_node = {
                     'id': stat['id'],
-                    'value': 1,
                     'label': stat['label'],
                     'group': stat['label']
                 }

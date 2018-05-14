@@ -47,7 +47,7 @@ class KafkaReader(IKafkaReader):
             for message in consumer:
                 try:
                     self.handle_message(message)
-                except InterruptedError as e:
+                except InterruptedError:
                     self.logger.info('got interrupted, shutting down...')
                     break
                 except Exception as e:

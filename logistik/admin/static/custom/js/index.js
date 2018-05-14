@@ -7,7 +7,7 @@ $(document).ready(function () {
     });
 
     $('#stats').DataTable({
-        'paging': false,
+        'paging': true,
         'info': false,
         'order': [[ 0, 'desc' ]]
     });
@@ -15,6 +15,22 @@ $(document).ready(function () {
     $('#aggregated').DataTable({
         'paging': false,
         'info': false,
+        'order': [[ 0, 'desc' ]]
+    });
+
+    $('#events').DataTable({
+        'paging': false,
+        'info': false,
+        'searching': false,
+        'ordering': false,
+        'order': [[ 0, 'desc' ]]
+    });
+
+    $('#models').DataTable({
+        'paging': false,
+        'info': false,
+        'searching': false,
+        'ordering': false,
         'order': [[ 0, 'desc' ]]
     });
 
@@ -75,7 +91,6 @@ $(document).ready(function () {
           }
         },
         nodes: {
-          shape: 'dot'
         },
         edges: {
           font: {
@@ -87,6 +102,7 @@ $(document).ready(function () {
       new vis.Network(container, data, options);
     });
 
+    /*
     var agg_stats = {};
     var n_stat_nodes = 0;
 
@@ -173,4 +189,5 @@ $(document).ready(function () {
 
       s.refresh();
     }));
+    */
 });

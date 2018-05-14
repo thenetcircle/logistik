@@ -28,15 +28,48 @@
 </head>
 <body>
     <div>
-        <h2>Deployed Models</h2>
+        <h2>Network</h2>
         <div id="network"></div>
     </div>
+
     <div>
-        <h2>Structure</h2>
-        <div id="graph-container">
-            <div id="graph"></div>
-        </div>
+        <h2>Events</h2>
+        <table id="events" class="display responsive" cellspacing="0" width="400px">
+            <thead>
+                <th>Event</th>
+                <th></th>
+                <th>Model</th>
+            </thead>
+            <tbody>
+                {% for handler in handlers %}
+                    <tr>
+                        <td>{{ handler['event'] }}</td>
+                        <td>-&gt;</td>
+                        <td>{{ handler['service_id'] }}-{{ handler['model_type'] }}-{{ handler['node'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+
+    <div>
+        <h2>Models</h2>
+        <table id="models" class="display responsive" cellspacing="0" width="400px">
+            <thead>
+                <th>Model</th>
+                <th>Enabled</th>
+            </thead>
+            <tbody>
+                {% for handler in handlers %}
+                    <tr>
+                        <td>{{ handler['service_id'] }}-{{ handler['model_type'] }}-{{ handler['node'] }}</td>
+                        <td>{{ handler['enabled'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <div>
         <h2>Handlers</h2>
         <table id="handlers" class="display responsive" cellspacing="0" width="100%">

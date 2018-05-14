@@ -58,6 +58,10 @@ class DatabaseManager(IDatabase):
                 return
             logger.info('enabling handler with id "{}"'.format(service_id))
             handler.enabled = True
+            handler.name = name
+            handler.endpoint = host
+            handler.port = port
+            handler.tags = ','.join(tags)
             self.env.dbman.session.add(handler)
             self.env.dbman.session.commit()
 
