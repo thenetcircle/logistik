@@ -31,13 +31,6 @@ class DiscoveryService(BaseDiscoveryService):
         elif self.interval > 3600:
             self.interval = 3600
 
-    def register_handler(self, service, name):
-        host = service.get(DiscoveryService.SERVICE_ADDRESS)
-        port = service.get(DiscoveryService.SERVICE_PORT)
-        s_id = service.get(DiscoveryService.SERVICE_ID)
-        tags = service.get(DiscoveryService.SERVICE_TAGS)
-        self.env.db.register_handler(host, port, s_id, name, tags)
-
     def poll_services(self):
         handlers = self.env.db.get_all_handlers()
         enabled_handlers_to_check = set()
@@ -57,10 +50,23 @@ class DiscoveryService(BaseDiscoveryService):
                 if service_id in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(service_id)
 
-                self.register_handler(service, name)
+                self.enable_handler(service, name)
 
         for service_id in enabled_handlers_to_check:
-            self.env.db.disable_handler(service_id)
+            self.disable_handler(service_id)
+
+    def disable_handler(self, service_id: str):
+        self.env.db.disable_handler(service_id)
+        self.env.handlers_manager.stop_handler(service_id)
+
+    def enable_handler(self, service, name):
+        host = service.get(DiscoveryService.SERVICE_ADDRESS)
+        port = service.get(DiscoveryService.SERVICE_PORT)
+        s_id = service.get(DiscoveryService.SERVICE_ID)
+        tags = service.get(DiscoveryService.SERVICE_TAGS)
+
+        handler_conf = self.env.db.register_handler(host, port, s_id, name, tags)
+        self.env.handlers_manager.start_handler(handler_conf.node_id())
 
     def run(self):
         while True:

@@ -11,6 +11,7 @@ from logistik.db.repr.event import EventConf
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.handler import HandlerConf
 from logistik.environ import GNEnvironment
+from logistik.utils.exceptions import HandlerNotFoundException
 from logistik.utils.decorators import with_session
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,11 @@ class DatabaseManager(IDatabase):
     @with_session
     def get_all_handlers(self) -> List[HandlerConf]:
         handlers = HandlerConfEntity.query.all()
+        return [handler.to_repr() for handler in handlers]
+
+    @with_session
+    def get_all_enabled_handlers(self):
+        handlers = HandlerConfEntity.query.fitler_by(enabled=True).all()
         return [handler.to_repr() for handler in handlers]
 
     @with_session
@@ -51,11 +57,18 @@ class DatabaseManager(IDatabase):
             self.env.cache.reset_enabled_handlers_for(handler.event)
 
     @with_session
-    def register_handler(self, host, port, service_id, name, tags):
+    def get_handler_for(self, service_id: str) -> HandlerConf:
+        handler = HandlerConfEntity.query.filter_by(service_id=service_id).first()
+        if handler is None:
+            raise HandlerNotFoundException(service_id)
+        return handler.to_repr()
+
+    @with_session
+    def register_handler(self, host, port, service_id, name, tags) -> HandlerConf:
         handler = HandlerConfEntity.query.filter_by(service_id=service_id).first()
         if handler is not None:
             if handler.enabled:
-                return
+                return handler.to_repr()
             logger.info('enabling handler with id "{}"'.format(service_id))
             handler.enabled = True
             handler.name = name
@@ -67,7 +80,7 @@ class DatabaseManager(IDatabase):
 
             if handler.event != 'UNMAPPED':
                 self.env.cache.reset_enabled_handlers_for(handler.event)
-            return
+            return handler.to_repr()
 
         logger.info('registering handler "{}": address "{}", port "{}", id: "{}"'.format(
             name, host, port, service_id
@@ -83,6 +96,8 @@ class DatabaseManager(IDatabase):
         handler.tags = ','.join(tags)
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()
+
+        return handler.to_repr()
 
     @with_session
     def get_enabled_handlers_for(self, event_name: str) -> List[HandlerConf]:

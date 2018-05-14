@@ -4,7 +4,6 @@ import logging
 import time
 import traceback
 
-from uuid import uuid4 as uuid
 from kafka import KafkaConsumer
 from activitystreams import parse as parse_as
 from activitystreams import Activity
@@ -13,6 +12,8 @@ from logistik import utils
 from logistik.queue import IKafkaReader
 from logistik.config import ConfigKeys
 from logistik.environ import GNEnvironment
+from logistik.handlers.base import IHandler
+from logistik.db.repr.handler import HandlerConf
 
 logger = logging.getLogger(__name__)
 
@@ -20,20 +21,23 @@ ONE_MINUTE = 60_000
 
 
 class KafkaReader(IKafkaReader):
-    def __init__(self, env: GNEnvironment):
+    def __init__(self, env: GNEnvironment, handler_conf: HandlerConf, handler: IHandler):
         self.logger = logging.getLogger(__name__)
         self.env = env
+        self.conf = handler_conf
+        self.handler = handler
+        self.enabled = True
 
     def run(self) -> None:
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
         self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
 
-        topic_name = self.env.config.get(ConfigKeys.TOPIC, domain=ConfigKeys.KAFKA)
+        topic_name = self.conf.event
         self.logger.info('consuming from topic {}'.format(topic_name))
 
         consumer = KafkaConsumer(
             topic_name,
-            group_id='logistik-{}'.format(str(uuid())),
+            group_id='logistik-{}'.format(self.conf.service_id),
             value_deserializer=lambda m: json.loads(m.decode('ascii')),
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
@@ -44,6 +48,10 @@ class KafkaReader(IKafkaReader):
         )
 
         while True:
+            if not self.enabled:
+                self.logger.info('reader for "{}" disabled, shutting down'.format(self.conf.service_id))
+                break
+
             for message in consumer:
                 try:
                     self.handle_message(message)
@@ -56,6 +64,9 @@ class KafkaReader(IKafkaReader):
                     self.env.capture_exception(sys.exc_info())
                     utils.fail_message(message.value)
                     time.sleep(1)
+
+    def stop(self):
+        self.enabled = False
 
     def handle_message(self, message) -> None:
         self.logger.debug("%s:%d:%d: key=%s value=%s" % (
@@ -85,7 +96,7 @@ class KafkaReader(IKafkaReader):
             return
 
         try:
-            self.try_to_handle(data, activity)
+            self.handler.handle(data, activity)
         except InterruptedError:
             raise
         except Exception as e:
@@ -108,11 +119,3 @@ class KafkaReader(IKafkaReader):
             return data, activity
         except Exception as e:
             raise utils.ParseException(e)
-
-    def try_to_handle(self, data: dict, activity: Activity) -> None:
-        if activity.verb not in self.env.event_handler_map:
-            self.logger.error('no plugin enabled for event {}, dropping message'.format(activity.verb))
-            utils.drop_message(data)
-            return
-
-        self.env.handlers_manager.handle(data, activity)

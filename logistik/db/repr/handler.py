@@ -53,6 +53,13 @@ class HandlerConf(object):
         self.return_to: str = return_to
         self.tags: str = tags
 
+    def node_id(self):
+        return '{}-{}-{}'.format(
+            self.service_id,
+            self.model_type,
+            self.node
+        )
+
     def __str__(self):
         repr_string = """
         <HandlerConf 

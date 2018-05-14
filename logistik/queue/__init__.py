@@ -8,6 +8,9 @@ class IKafkaReader(ABC):
     def run(self):
         raise NotImplementedError()
 
+    def stop(self):
+        raise NotImplementedError()
+
 
 class IKafkaWriter(ABC):
     def publish(self, conf: HandlerConf, message: Response) -> None:

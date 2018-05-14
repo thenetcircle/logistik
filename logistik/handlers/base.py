@@ -1,6 +1,7 @@
 import traceback
 import sys
 
+from eventlet.greenthread import GreenThread
 from abc import ABC
 from yapsy.IPlugin import IPlugin
 from logging import Logger
@@ -30,8 +31,11 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.endpoint: str = None
         self.timeout: int = None
         self.n_retries: int = 1
+        self.conf = None
+        self.reader = None
+        self.reader_thread: GreenThread = None
 
-    def handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
+    def try_to_handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
         for i in range(self.n_retries):
             try:
                 return self.handle_once(data, activity)
@@ -45,15 +49,14 @@ class BaseHandler(IHandler, IPlugin, ABC):
         utils.fail_message(data)
         return ErrorCodes.RETRIES_EXCEEDED, None
 
-    def __call__(self, *args, **kwargs) -> (bool, str):
+    def handle(self, data: dict, activity: Activity) -> (bool, str):
         if not self.enabled:
             return BaseHandler.FAIL, ErrorCodes.UNKNOWN_ERROR, None
 
-        data, activity = args[0], args[1]
         try:
-            error_code, response = self.handle(data, activity)
+            error_code, response = self.try_to_handle(data, activity)
         except Exception as e:
-            self.logger.error('could not execute plugin {}: {}'.format(self.name, str(e)))
+            self.logger.error('could not execute handler {}: {}'.format(self.name, str(e)))
             self.logger.exception(traceback.format_exc())
             environ.env.capture_exception(sys.exc_info())
             return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)

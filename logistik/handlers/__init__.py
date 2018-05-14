@@ -9,14 +9,11 @@ from logistik.db.repr.handler import HandlerConf
 
 
 class IHandlersManager(ABC):
-    def handle(self, data: dict, activity: Activity) -> None:
-        """
-        handle the event and possible tell the kafka writer to send a response
+    def start_handler(self, node_id: str) -> None:
+        raise NotImplementedError()
 
-        :param data: the original event, before being parsed into a activity streams model
-        :param activity: the incoming event in activity streams format
-        :return: nothing
-        """
+    def stop_handler(self, node_id: str) -> None:
+        raise NotImplementedError()
 
 
 class IHandler(ABC):
@@ -29,7 +26,10 @@ class IHandler(ABC):
     def handle_once(self, data: dict, _: Activity) -> (ErrorCodes, Union[None, Response]):
         raise NotImplementedError('handle_once() not implemented in plugin')
 
-    def __call__(self, *args, **kwargs) -> (bool, str):
+    def handle(self, data: dict, activity: Activity) -> (bool, str):
+        raise NotImplementedError()
+
+    def stop(self):
         raise NotImplementedError()
 
 
