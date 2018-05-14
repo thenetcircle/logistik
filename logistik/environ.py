@@ -534,16 +534,6 @@ def init_handler_stats(gn_env: GNEnvironment):
     gn_env.handler_stats = HandlerStats(gn_env)
 
 
-@timeit(logger, 'init kafka reader service')
-def init_kafka_reader(gn_env: GNEnvironment):
-    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
-        # assume we're testing
-        return
-
-    from logistik.queue.kafka_reader import KafkaReader
-    gn_env.kafka_reader = KafkaReader(gn_env)
-
-
 @timeit(logger, 'init kafka writer service')
 def init_kafka_writer(gn_env: GNEnvironment):
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
