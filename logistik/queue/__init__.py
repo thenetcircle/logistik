@@ -11,6 +11,9 @@ class IKafkaReader(ABC):
     def stop(self):
         raise NotImplementedError()
 
+    def get_consumer_config(self) -> dict:
+        raise NotImplementedError()
+
 
 class IKafkaWriter(ABC):
     def publish(self, conf: HandlerConf, message: Response) -> None:

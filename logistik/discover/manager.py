@@ -6,6 +6,7 @@ import logging
 from logistik.environ import GNEnvironment
 from logistik.config import ConfigKeys
 from logistik.discover.base import BaseDiscoveryService
+from logistik.db.repr.handler import HandlerConf
 
 logging.getLogger('urllib3').setLevel(logging.WARN)
 
@@ -37,7 +38,7 @@ class DiscoveryService(BaseDiscoveryService):
         for handler in handlers:
             if not handler.enabled:
                 continue
-            enabled_handlers_to_check.add(handler.service_id)
+            enabled_handlers_to_check.add(handler.node_id())
 
         _, data = self.consul.catalog.services()
         for name, tags in data.items():
@@ -47,25 +48,48 @@ class DiscoveryService(BaseDiscoveryService):
             _, services = self.consul.catalog.service(name)
             for service in services:
                 service_id = service.get(DiscoveryService.SERVICE_ID)
-                if service_id in enabled_handlers_to_check:
-                    enabled_handlers_to_check.remove(service_id)
+                service_tags = service.get(DiscoveryService.SERVICE_TAGS)
+
+                node, model_type = self.get_node_and_model_type_from_tags(service_tags)
+                node_id = HandlerConf.to_node_id(service_id, model_type, node)
+
+                if node_id in enabled_handlers_to_check:
+                    enabled_handlers_to_check.remove(node_id)
 
                 self.enable_handler(service, name)
 
-        for service_id in enabled_handlers_to_check:
-            self.disable_handler(service_id)
+        for node_id in enabled_handlers_to_check:
+            self.disable_handler(node_id)
 
-    def disable_handler(self, service_id: str):
-        self.env.db.disable_handler(service_id)
-        self.env.handlers_manager.stop_handler(service_id)
+    def disable_handler(self, node_id: str):
+        self.env.db.disable_handler(node_id)
+        self.env.handlers_manager.stop_handler(node_id)
+
+    def get_node_and_model_type_from_tags(self, tags):
+        model_type = None
+        node = None
+
+        for tag in tags:
+            if 'model=' in tag:
+                model_type = tag.split('=', 1)[1]
+            elif 'node=' in tag:
+                node = tag.split('=', 1)[1]
+
+        if model_type is None:
+            raise AttributeError('no model type in tags')
+        if node is None:
+            raise AttributeError('no node number in tags')
+
+        return node, model_type
 
     def enable_handler(self, service, name):
         host = service.get(DiscoveryService.SERVICE_ADDRESS)
         port = service.get(DiscoveryService.SERVICE_PORT)
         s_id = service.get(DiscoveryService.SERVICE_ID)
         tags = service.get(DiscoveryService.SERVICE_TAGS)
+        node, model_type = self.get_node_and_model_type_from_tags(tags)
 
-        handler_conf = self.env.db.register_handler(host, port, s_id, name, tags)
+        handler_conf = self.env.db.register_handler(host, port, s_id, name, node, model_type, tags)
         self.env.handlers_manager.start_handler(handler_conf.node_id())
 
     def run(self):

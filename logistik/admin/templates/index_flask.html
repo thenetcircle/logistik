@@ -71,6 +71,34 @@
     </div>
 
     <div>
+        <h2>Consumers</h2>
+        <table id="consumers" class="display responsive" cellspacing="0" width="100%">
+            <thead>
+                <th>Node ID</th>
+                <th>Bootstrap</th>
+                <th>Group ID</th>
+                <th>Enable auto commit?</th>
+                <th>Max poll records</th>
+                <th>Max poll interval (ms)</th>
+                <th>Session timeout (ms)</th>
+            </thead>
+            <tbody>
+                {% for consumer in consumers %}
+                    <tr>
+                        <td>{{ consumer['node_id'] }}</td>
+                        <td>{{ consumer['bootstrap_servers'] }}</td>
+                        <td>{{ consumer['group_id'] }}</td>
+                        <td>{{ consumer['enable_auto_commit'] }}</td>
+                        <td>{{ consumer['max_poll_records'] }}</td>
+                        <td>{{ consumer['max_poll_interval_ms'] }}</td>
+                        <td>{{ consumer['session_timeout_ms'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div>
         <h2>Handlers</h2>
         <table id="handlers" class="display responsive" cellspacing="0" width="100%">
             <thead>

@@ -99,6 +99,13 @@ def get_handlers():
     return api_response(200, [handler.to_json() for handler in handlers])
 
 
+@app.route('/api/consumers', methods=['GET'])
+#@requires_auth
+def get_consumers():
+    consumers = environ.env.handlers_manager.get_handlers()
+    return api_response(200, consumers)
+
+
 @app.route('/api/stats/aggregated', methods=['GET'])
 #@requires_auth
 def get_agg_stats():
@@ -224,6 +231,7 @@ def index():
     handlers = environ.env.db.get_all_handlers()
     stats = environ.env.db.get_all_stats()
     agg_stats = environ.env.db.get_all_aggregated_stats()
+    consumers = environ.env.handlers_manager.get_handlers()
 
     handlers_json = [handler.to_json() for handler in handlers]
     stats_json = [stat.to_json() for stat in stats]
@@ -236,6 +244,7 @@ def index():
             'ROOT_URL': environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB),
             'FLOATING_MENU': floating_menu
         },
+        consumers=consumers,
         stats=stats_json,
         agg_stats=agg_stats_json,
         handlers=handlers_json,

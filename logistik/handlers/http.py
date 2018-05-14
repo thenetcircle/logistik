@@ -20,6 +20,7 @@ class HttpHandler(BaseHandler):
         self.env: environ.GNEnvironment = None
         self.method: str = None
         self.json_header = {'Context-Type': 'application/json'}
+        self.logger = logging.getLogger(__name__)
 
     def __str__(self):
         return HttpHandler.__class__.__name__
@@ -42,7 +43,7 @@ class HttpHandler(BaseHandler):
         self.n_retries = conf.retries
         self.url = '{}/{}{}'.format(self.endpoint, self.version, self.path)
         self.conf = conf
-        self.logger.debug('configured {} with {}'.format(str(self), str(conf)))
+        # self.logger.debug('configured {} with {}'.format(str(self), str(conf)))
 
     def setup(self, env: environ.GNEnvironment) -> None:
         self.env = env

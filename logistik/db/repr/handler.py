@@ -60,6 +60,21 @@ class HandlerConf(object):
             self.node
         )
 
+    @staticmethod
+    def to_node_id(service_id, model_type, node):
+        return '{}-{}-{}'.format(
+            service_id,
+            model_type,
+            node
+        )
+
+    @staticmethod
+    def from_node_id(node_id) -> (str, str, str):
+        parts = node_id.rsplit('-', maxsplit=2)
+        if len(parts) != 3:
+            raise AttributeError('invalid node id "{}": needs to have exactly 3 parts'.format(node_id))
+        return parts[0], parts[1], parts[2]
+
     def __str__(self):
         repr_string = """
         <HandlerConf 

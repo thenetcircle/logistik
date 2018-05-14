@@ -3,6 +3,7 @@ import sys
 import logging
 import time
 import traceback
+from collections import defaultdict
 
 from kafka import KafkaConsumer
 from activitystreams import parse as parse_as
@@ -27,15 +28,20 @@ class KafkaReader(IKafkaReader):
         self.conf = handler_conf
         self.handler = handler
         self.enabled = True
+        self.consumer: KafkaConsumer = None
 
     def run(self) -> None:
+        if self.conf.event == 'UNMAPPED':
+            self.logger.info('not enabling reading for {}, no event mapped'.format(self.conf.node_id()))
+            return
+
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
         self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
 
         topic_name = self.conf.event
         self.logger.info('consuming from topic {}'.format(topic_name))
 
-        consumer = KafkaConsumer(
+        self.consumer = KafkaConsumer(
             topic_name,
             group_id='logistik-{}'.format(self.conf.service_id),
             value_deserializer=lambda m: json.loads(m.decode('ascii')),
@@ -52,7 +58,7 @@ class KafkaReader(IKafkaReader):
                 self.logger.info('reader for "{}" disabled, shutting down'.format(self.conf.service_id))
                 break
 
-            for message in consumer:
+            for message in self.consumer:
                 try:
                     self.handle_message(message)
                 except InterruptedError:
@@ -64,6 +70,11 @@ class KafkaReader(IKafkaReader):
                     self.env.capture_exception(sys.exc_info())
                     utils.fail_message(message.value)
                     time.sleep(1)
+
+    def get_consumer_config(self):
+        if self.consumer is None:
+            return defaultdict(default_factory=str)
+        return self.consumer.config
 
     def stop(self):
         self.enabled = False

@@ -34,6 +34,14 @@ $(document).ready(function () {
         'order': [[ 0, 'desc' ]]
     });
 
+    $('#consumers').DataTable({
+        'paging': false,
+        'info': false,
+        'searching': false,
+        'ordering': false,
+        'order': [[ 0, 'desc' ]]
+    });
+
     $.getJSON('http://localhost:5656/api/graph', function (graph) {
       var nodes = graph.data['nodes'];
       var edges = graph.data['edges'];

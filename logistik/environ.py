@@ -16,7 +16,6 @@ from logistik.enrich import IEnrichmentManager
 from logistik.enrich import IEnricher
 from logistik.stats import IStats
 from logistik.cache import ICache
-from logistik.queue import IKafkaReader
 from logistik.queue import IKafkaWriter
 from logistik.db import IDatabase
 from logistik.utils.decorators import timeit
@@ -170,7 +169,6 @@ class GNEnvironment(object):
 
         self.handlers_manager: IHandlersManager = None
         self.handler_stats: IHandlerStats = None
-        self.kafka_reader: IKafkaReader = None
         self.kafka_writer: IKafkaWriter = None
         self.event_handler_map = dict()
         self.event_handlers = dict()
@@ -554,7 +552,6 @@ def initialize_env(lk_env):
     init_enrichment_service(lk_env)
     init_discovery_service(lk_env)
     init_handler_stats(lk_env)
-    init_kafka_reader(lk_env)
     init_kafka_writer(lk_env)
     logger.info('startup done!')
 

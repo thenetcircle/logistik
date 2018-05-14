@@ -91,7 +91,7 @@ def create_app():
 
     import eventlet
     eventlet.spawn(environ.env.discovery.run)
-    eventlet.spawn(environ.env.kafka_reader.run)
+    environ.env.handlers_manager.setup()
 
     return _app, Api(_app)
 

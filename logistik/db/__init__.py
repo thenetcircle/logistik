@@ -17,11 +17,11 @@ class IDatabase(ABC):
     def get_all_enabled_handlers(self) -> List[HandlerConf]:
         raise NotImplementedError()
 
-    def get_handler_for(self, service_id: str) -> HandlerConf:
+    def get_handler_for(self, node_id: str) -> HandlerConf:
         raise NotImplementedError()
 
-    def disable_handler(self, service_id) -> None:
+    def disable_handler(self, node_id) -> None:
         raise NotImplementedError()
 
-    def register_handler(self, host, port, service_id, name, tags) -> HandlerConf:
+    def register_handler(self, host, port, service_id, name, node, model_type, tags) -> HandlerConf:
         raise NotImplementedError()

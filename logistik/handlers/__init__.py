@@ -9,10 +9,16 @@ from logistik.db.repr.handler import HandlerConf
 
 
 class IHandlersManager(ABC):
+    def setup(self):
+        raise NotImplementedError()
+
     def start_handler(self, node_id: str) -> None:
         raise NotImplementedError()
 
     def stop_handler(self, node_id: str) -> None:
+        raise NotImplementedError()
+
+    def get_handlers(self) -> list:
         raise NotImplementedError()
 
 
