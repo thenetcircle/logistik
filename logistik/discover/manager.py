@@ -76,9 +76,9 @@ class DiscoveryService(BaseDiscoveryService):
                 node = tag.split('=', 1)[1]
 
         if model_type is None:
-            raise AttributeError('no model type in tags')
+            self.logger.warning('no model type in tags')
         if node is None:
-            raise AttributeError('no node number in tags')
+            self.logger.warning('no node number in tags')
 
         return node, model_type
 
@@ -88,6 +88,9 @@ class DiscoveryService(BaseDiscoveryService):
         s_id = service.get(DiscoveryService.SERVICE_ID)
         tags = service.get(DiscoveryService.SERVICE_TAGS)
         node, model_type = self.get_node_and_model_type_from_tags(tags)
+
+        if node is None or model_type is None:
+            return 
 
         handler_conf = self.env.db.register_handler(host, port, s_id, name, node, model_type, tags)
         self.env.handlers_manager.start_handler(handler_conf.node_id())
