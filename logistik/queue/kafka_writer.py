@@ -8,13 +8,22 @@ from kafka import KafkaProducer
 from logistik.db.repr.handler import HandlerConf
 from logistik.environ import GNEnvironment
 from logistik.queue import IKafkaWriter
+from logistik.config import ConfigKeys
+
+logging.getLogger('kafka').setLevel(logging.WARNING)
+logging.getLogger('kafka.conn').setLevel(logging.WARNING)
 
 
 class KafkaWriter(IKafkaWriter):
     def __init__(self, env: GNEnvironment):
         self.env = env
         self.logger = logging.getLogger(__name__)
-        self.producer = KafkaProducer(value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+
+        bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
+        self.producer = KafkaProducer(
+            value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+            bootstrap_servers=bootstrap_servers
+        )
 
     def log(self, topic: str, data: dict) -> None:
         self.producer.send(topic, data)

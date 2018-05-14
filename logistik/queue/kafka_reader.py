@@ -17,6 +17,8 @@ from logistik.handlers.base import IHandler
 from logistik.db.repr.handler import HandlerConf
 
 logger = logging.getLogger(__name__)
+logging.getLogger('kafka').setLevel(logging.WARNING)
+logging.getLogger('kafka.conn').setLevel(logging.WARNING)
 
 ONE_MINUTE = 60_000
 
