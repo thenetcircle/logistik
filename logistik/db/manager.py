@@ -80,7 +80,12 @@ class DatabaseManager(IDatabase):
     @with_session
     def register_handler(self, host, port, service_id, name, node, model_type, tags) -> HandlerConf:
 
-        handler = HandlerConfEntity.query.filter_by(service_id=service_id).first()
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id,
+            node=node,
+            model_type=model_type
+        ).first()
+
         if handler is not None:
             if handler.enabled:
                 return handler.to_repr()

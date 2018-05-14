@@ -57,6 +57,9 @@ class HttpHandler(BaseHandler):
         self.reader_thread = eventlet.spawn(self.reader.run)
         self.enabled = True
 
+    def stop(self):
+        self.reader.stop()
+
     def handle_once(self, data: dict, _: Activity) -> (ErrorCodes, Union[None, Response]):
         return ErrorCodes.OK, requests.request(
             method=self.method, url=self.url,

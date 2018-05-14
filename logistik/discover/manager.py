@@ -90,7 +90,8 @@ class DiscoveryService(BaseDiscoveryService):
         node, model_type = self.get_node_and_model_type_from_tags(tags)
 
         if node is None or model_type is None:
-            return 
+            self.logger.info(service)
+            return
 
         handler_conf = self.env.db.register_handler(host, port, s_id, name, node, model_type, tags)
         self.env.handlers_manager.start_handler(handler_conf.node_id())

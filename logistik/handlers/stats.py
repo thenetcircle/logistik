@@ -20,22 +20,27 @@ class HandlerStats(IHandlerStats):
     def create(self, event: Activity, conf: HandlerConf, stat_type: str) -> None:
         stats = HandlerStatsEntity()
         stats.service_id = conf.service_id
+        stats.model_type = conf.model_type
+        stats.node = conf.node
         stats.event = conf.event
         stats.name = conf.name
         stats.endpoint = conf.endpoint
         stats.version = conf.version
         stats.event_time = datetime.utcnow()
-        stats.event_id = event.id
-        stats.event_verb = event.verb
         stats.type = stat_type
+
+        if event is not None:
+            stats.event_id = event.id
+            stats.event_verb = event.verb
+
         self.env.dbman.session.add(stats)
         self.env.dbman.session.commit()
 
-    def failure(self, event: Activity, conf: HandlerConf) -> None:
+    def failure(self, conf: HandlerConf, event: Activity=None) -> None:
         self.create(event, conf, HandlerStats.FAILURE)
 
-    def success(self, event: Activity, conf: HandlerConf) -> None:
+    def success(self, conf: HandlerConf, event: Activity=None) -> None:
         self.create(event, conf, HandlerStats.SUCCESS)
 
-    def error(self, event: Activity, conf: HandlerConf) -> None:
+    def error(self, conf: HandlerConf, event: Activity=None) -> None:
         self.create(event, conf, HandlerStats.ERROR)

@@ -51,7 +51,8 @@ class BaseHandler(IHandler, IPlugin, ABC):
 
     def handle(self, data: dict, activity: Activity) -> (bool, str):
         if not self.enabled:
-            return BaseHandler.FAIL, ErrorCodes.UNKNOWN_ERROR, None
+            environ.env.handler_stats.failure(self.conf, activity)
+            return BaseHandler.FAIL, ErrorCodes.HANDLER_DISABLED, None
 
         try:
             error_code, response = self.try_to_handle(data, activity)
@@ -59,13 +60,16 @@ class BaseHandler(IHandler, IPlugin, ABC):
             self.logger.error('could not execute handler {}: {}'.format(self.name, str(e)))
             self.logger.exception(traceback.format_exc())
             environ.env.capture_exception(sys.exc_info())
+            environ.env.handler_stats.failure(self.conf, activity)
             return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)
 
         if error_code == ErrorCodes.OK:
+            environ.env.handler_stats.success(self.conf, activity)
             return BaseHandler.OK, ErrorCodes.OK, response
         else:
             self.logger.error('handler {} failed with code: {}, response: {}'.format(
                 str(self), str(error_code), str(response)))
+            environ.env.handler_stats.failure(self.conf, activity)
             return BaseHandler.FAIL, error_code, response
 
     @property

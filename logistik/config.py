@@ -5,6 +5,7 @@ class ErrorCodes(Enum):
     OK = 200
     UNKNOWN_ERROR = 250
     HANDLER_ERROR = 260
+    HANDLER_DISABLED = 270
 
     RETRIES_EXCEEDED = 300
 

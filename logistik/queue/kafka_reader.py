@@ -90,12 +90,14 @@ class KafkaReader(IKafkaReader):
             data, activity = self.try_to_parse(message)
         except InterruptedError:
             self.logger.warning('got interrupt, dropping message'.format(str(message.value)))
+            self.env.handler_stats.failure(self.conf, None)
             utils.drop_message(message.value)
             raise
         except utils.ParseException:
             self.logger.error('could not enrich/parse data, original data was: {}'.format(str(message.value)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
+            self.env.handler_stats.error(self.conf, None)
             utils.fail_message(message.value)
             return
         except Exception as e:
@@ -103,6 +105,7 @@ class KafkaReader(IKafkaReader):
             self.logger.error('event was: {}'.format(str(message)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
+            self.env.handler_stats.error(self.conf, None)
             utils.fail_message(message.value)
             return
 
@@ -115,6 +118,7 @@ class KafkaReader(IKafkaReader):
             self.logger.error('event was: {}'.format(str(data)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
+            self.env.handler_stats.error(self.conf, None)
             utils.fail_message(data)
 
     def try_to_parse(self, message) -> (dict, Activity):

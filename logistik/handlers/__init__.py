@@ -40,11 +40,11 @@ class IHandler(ABC):
 
 
 class IHandlerStats(ABC):
-    def failure(self, event: Activity, conf: HandlerConf) -> None:
+    def failure(self, conf: HandlerConf, event: Activity=None) -> None:
         raise NotImplementedError()
 
-    def success(self, event: Activity, conf: HandlerConf) -> None:
+    def success(self, conf: HandlerConf, event: Activity=None) -> None:
         raise NotImplementedError()
 
-    def error(self, event: Activity, conf: HandlerConf) -> None:
+    def error(self, conf: HandlerConf, event: Activity=None) -> None:
         raise NotImplementedError()
