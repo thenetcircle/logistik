@@ -1,7 +1,9 @@
 import logging
 import sys
+import json
 
 from requests import Response
+from kafka import KafkaProducer
 
 from logistik.db.repr.handler import HandlerConf
 from logistik.environ import GNEnvironment
@@ -12,6 +14,10 @@ class KafkaWriter(IKafkaWriter):
     def __init__(self, env: GNEnvironment):
         self.env = env
         self.logger = logging.getLogger(__name__)
+        self.producer = KafkaProducer(value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+
+    def log(self, topic: str, data: dict) -> None:
+        self.producer.send(topic, data)
 
     def publish(self, conf: HandlerConf, message: Response) -> None:
         try:
@@ -27,4 +33,4 @@ class KafkaWriter(IKafkaWriter):
             self.env.dropped_response_log.info(message.content)
 
     def try_to_publish(self, conf: HandlerConf, message: Response) -> None:
-        pass  # TODO: implement
+        self.producer.send(conf.return_to, message.content)

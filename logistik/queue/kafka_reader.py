@@ -79,6 +79,15 @@ class KafkaReader(IKafkaReader):
     def stop(self):
         self.enabled = False
 
+    def log_pre_processed_request(self, original_topic: str, data: dict):
+        log_topic = '{}-preprocessed'.format(original_topic)
+        try:
+            self.env.kafka_writer.log(log_topic, data)
+        except Exception as e:
+            self.logger.error('could not publish pre-processed request to kafka: {}'.format(str(e)))
+            self.logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+
     def handle_message(self, message) -> None:
         self.logger.debug("%s:%d:%d: key=%s value=%s" % (
             message.topic, message.partition,
@@ -88,6 +97,7 @@ class KafkaReader(IKafkaReader):
 
         try:
             data, activity = self.try_to_parse(message)
+            self.log_pre_processed_request(message.topic, data)
         except InterruptedError:
             self.logger.warning('got interrupt, dropping message'.format(str(message.value)))
             self.env.handler_stats.failure(self.conf, None)
@@ -131,6 +141,6 @@ class KafkaReader(IKafkaReader):
 
         try:
             activity = parse_as(enriched_data)
-            return data, activity
+            return enriched_data, activity
         except Exception as e:
             raise utils.ParseException(e)

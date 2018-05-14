@@ -11,9 +11,7 @@ from logistik.enrich.published import PublishedEnrichment
 from logistik.environ import ConfigDict
 from logistik.environ import GNEnvironment
 from logistik.handlers.base import BaseHandler
-from logistik.handlers.manager import HandlersManager
 from logistik.stats import IStats
-from logistik.utils.kafka_reader import KafkaReader
 
 
 class MockLogger(object):
@@ -81,7 +79,6 @@ class BaseTest(TestCase):
 
     def setUp(self):
         self.env = MockEnv()
-        self.reader = KafkaReader(self.env)
         self.env.handlers_manager = MockHandler()
         self.env.enrichment_manager = EnrichmentManager(self.env)
         self.env.cache = CacheRedis(self.env, host='mock')

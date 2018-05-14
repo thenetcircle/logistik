@@ -50,6 +50,15 @@ class BaseHandler(IHandler, IPlugin, ABC):
         return ErrorCodes.RETRIES_EXCEEDED, None
 
     def handle(self, data: dict, activity: Activity) -> (bool, str):
+        status_code, error_code, response = self.handle_and_return_response(data, activity)
+
+        if response is None:
+            self.logger.warning(
+                'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code))
+        else:
+            environ.env.kafka_writer.publish(self.conf, response.content)
+
+    def handle_and_return_response(self, data: dict, activity: Activity) -> (bool, str, Response):
         if not self.enabled:
             environ.env.handler_stats.failure(self.conf, activity)
             return BaseHandler.FAIL, ErrorCodes.HANDLER_DISABLED, None
