@@ -79,7 +79,6 @@ class DatabaseManager(IDatabase):
 
     @with_session
     def register_handler(self, host, port, service_id, name, node, model_type, tags) -> HandlerConf:
-
         handler = HandlerConfEntity.query.filter_by(
             service_id=service_id,
             node=node,
