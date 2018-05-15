@@ -4,7 +4,7 @@
 
 "90% of the effort in successful machine learning is not about the algorithm or the model or the learning. It’s about logistics."
 
-!(Flow)[docs/workflow-for-recs.png]
+![Flow](docs/workflow-for-recs.png)
 
 ## Starting the consul agent
 
