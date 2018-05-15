@@ -20,6 +20,7 @@ class HttpHandler(BaseHandler):
         self.env: environ.GNEnvironment = None
         self.method: str = None
         self.json_header = {'Context-Type': 'application/json'}
+        self.schema = 'http://'
         self.logger = logging.getLogger(__name__)
 
     def __str__(self):
@@ -41,9 +42,23 @@ class HttpHandler(BaseHandler):
         self.method = conf.method
         self.timeout = conf.timeout
         self.n_retries = conf.retries
-        self.url = '{}/{}{}'.format(self.endpoint, self.version, self.path)
+        self.port = conf.port
         self.conf = conf
-        # self.logger.debug('configured {} with {}'.format(str(self), str(conf)))
+
+        separator = ''
+        if self.version is not None:
+            if self.path is not None and self.path[0] != '/':
+                separator = '/'
+
+        self.url = '{}{}:{}/{}{}{}'.format(
+            self.schema,
+            self.endpoint,
+            self.port,
+            self.version,
+            separator,
+            self.path
+        )
+        self.logger.debug('configured {} for url {}'.format(str(self), self.url))
 
     def setup(self, env: environ.GNEnvironment) -> None:
         self.env = env

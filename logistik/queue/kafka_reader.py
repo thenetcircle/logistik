@@ -9,7 +9,7 @@ from kafka import KafkaConsumer
 from activitystreams import parse as parse_as
 from activitystreams import Activity
 
-from logistik import utils
+from logistik.utils.exceptions import ParseException
 from logistik.queue import IKafkaReader
 from logistik.config import ConfigKeys
 from logistik.environ import GNEnvironment
@@ -31,8 +31,27 @@ class KafkaReader(IKafkaReader):
         self.handler = handler
         self.enabled = True
         self.consumer: KafkaConsumer = None
+        self.failed_msg_log = None
+        self.dropped_msg_log = None
 
     def run(self) -> None:
+        logger.info('sleeping for 3 second before consuming')
+        time.sleep(3)
+
+        self.create_loggers()
+
+        def _create_logger(_path: str, _name: str) -> logging.Logger:
+            msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
+            msg_handler = logging.FileHandler(_path)
+            msg_handler.setFormatter(msg_formatter)
+            msg_logger = logging.getLogger(_name)
+            msg_logger.setLevel(logging.INFO)
+            msg_logger.addHandler(msg_handler)
+            return msg_logger
+
+        d_msg_path = self.env.config.get(ConfigKeys.DROPPED_MESSAGE_LOG, default='/tmp/logistik-dropped-msgs.log')
+        self.dropped_msg_log = _create_logger(d_msg_path, 'DroppedMessages')
+
         if self.conf.event == 'UNMAPPED':
             self.logger.info('not enabling reading for {}, no event mapped'.format(self.conf.node_id()))
             return
@@ -46,7 +65,6 @@ class KafkaReader(IKafkaReader):
         self.consumer = KafkaConsumer(
             topic_name,
             group_id='logistik-{}'.format(self.conf.service_id),
-            value_deserializer=lambda m: json.loads(m.decode('ascii')),
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
             connections_max_idle_ms=9 * ONE_MINUTE,  # default: 9min
@@ -60,18 +78,48 @@ class KafkaReader(IKafkaReader):
                 self.logger.info('reader for "{}" disabled, shutting down'.format(self.conf.service_id))
                 break
 
-            for message in self.consumer:
-                try:
-                    self.handle_message(message)
-                except InterruptedError:
-                    self.logger.info('got interrupted, shutting down...')
-                    break
-                except Exception as e:
-                    self.logger.error('failed to handle message: {}'.format(str(e)))
-                    self.logger.exception(e)
-                    self.env.capture_exception(sys.exc_info())
-                    utils.fail_message(message.value)
-                    time.sleep(1)
+            try:
+                self.try_to_read()
+            except InterruptedError:
+                logger.info('got interrupted, shutting down...')
+                break
+            except Exception as e:
+                logger.error('could not read from kafka: {}'.format(str(e)))
+                logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+                time.sleep(1)
+
+    def create_loggers(self):
+        def _create_logger(_path: str, _name: str) -> logging.Logger:
+            msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
+            msg_handler = logging.FileHandler(_path)
+            msg_handler.setFormatter(msg_formatter)
+            msg_logger = logging.getLogger(_name)
+            msg_logger.setLevel(logging.INFO)
+            msg_logger.addHandler(msg_handler)
+            return msg_logger
+
+        f_msg_path = self.env.config.get(
+            ConfigKeys.FAILED_MESSAGE_LOG, default='/tmp/logistik-failed-msgs.log')
+
+        d_msg_path = self.env.config.get(
+            ConfigKeys.DROPPED_MESSAGE_LOG, default='/tmp/logistik-dropped-msgs.log')
+
+        self.failed_msg_log = _create_logger(f_msg_path, 'FailedMessages')
+        self.dropped_msg_log = _create_logger(d_msg_path, 'DroppedMessages')
+
+    def try_to_read(self):
+        for message in self.consumer:
+            try:
+                self.handle_message(message)
+            except InterruptedError:
+                raise
+            except Exception as e:
+                self.logger.error('failed to handle message: {}'.format(str(e)))
+                self.logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+                self.fail_msg(message)
+                time.sleep(1)
 
     def get_consumer_config(self):
         if self.consumer is None:
@@ -90,27 +138,54 @@ class KafkaReader(IKafkaReader):
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
 
+    def fail_msg(self, message):
+        try:
+            self.failed_msg_log.info(str(message))
+        except Exception as e:
+            self.logger.error('could not log failed message: {}'.format(str(e)))
+            self.logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+
+    def drop_msg(self, message):
+        try:
+            self.dropped_msg_log.info(str(message))
+        except Exception as e:
+            self.logger.error('could not log dropped message: {}'.format(str(e)))
+            self.logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+
     def handle_message(self, message) -> None:
-        self.logger.debug("%s:%d:%d: key=%s value=%s" % (
+        self.logger.debug("%s:%d:%d: key=%s" % (
             message.topic, message.partition,
-            message.offset, message.key,
-            message.value)
+            message.offset, message.key)
         )
 
         try:
-            data, activity = self.try_to_parse(message)
+            message_value = json.loads(message.value.decode('ascii'))
+        except Exception as e:
+            logger.error('could not decode message from kafka, dropping: {}'.format(str(e)))
+            logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+            self.dropped_msg_log.info("[{}:{}:{}:key={}] {}".format(
+                message.topic, message.partition,
+                message.offset, message.key, str(message.value))
+            )
+            return
+
+        try:
+            data, activity = self.try_to_parse(message_value)
             self.log_pre_processed_request(message.topic, data)
         except InterruptedError:
             self.logger.warning('got interrupt, dropping message'.format(str(message.value)))
             self.env.handler_stats.failure(self.conf, None)
-            utils.drop_message(message.value)
+            self.drop_msg(message_value)
             raise
-        except utils.ParseException:
+        except ParseException:
             self.logger.error('could not enrich/parse data, original data was: {}'.format(str(message.value)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
             self.env.handler_stats.error(self.conf, None)
-            utils.fail_message(message.value)
+            self.fail_msg(message_value)
             return
         except Exception as e:
             self.logger.error('got uncaught exception: {}'.format(str(e)))
@@ -118,7 +193,7 @@ class KafkaReader(IKafkaReader):
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
             self.env.handler_stats.error(self.conf, None)
-            utils.fail_message(message.value)
+            self.fail_msg(message_value)
             return
 
         try:
@@ -131,18 +206,16 @@ class KafkaReader(IKafkaReader):
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
             self.env.handler_stats.error(self.conf, None)
-            utils.fail_message(data)
+            self.fail_msg(data)
 
-    def try_to_parse(self, message) -> (dict, Activity):
-        data = message.value
-
+    def try_to_parse(self, data) -> (dict, Activity):
         try:
             enriched_data = self.env.enrichment_manager.handle(data)
         except Exception as e:
-            raise utils.ParseException(e)
+            raise ParseException(e)
 
         try:
             activity = parse_as(enriched_data)
             return enriched_data, activity
         except Exception as e:
-            raise utils.ParseException(e)
+            raise ParseException(e)

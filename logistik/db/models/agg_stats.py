@@ -29,7 +29,7 @@ class AggregatedHandlerStatsEntity(db.Model):
 
     created manually for now:
 
-        create materialized view handler_stats_mv (
+        create view handler_stats_mv (
             event, service_id, stat_type, node, model_type, count
         ) as
         select

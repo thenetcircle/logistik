@@ -27,11 +27,14 @@ class HandlerStats(IHandlerStats):
         stats.endpoint = conf.endpoint
         stats.version = conf.version
         stats.event_time = datetime.utcnow()
-        stats.type = stat_type
+        stats.stat_type = stat_type
 
         if event is not None:
             stats.event_id = event.id
             stats.event_verb = event.verb
+        else:
+            stats.event_id = '<unknown>'
+            stats.event_verb = '<unknown>'
 
         self.env.dbman.session.add(stats)
         self.env.dbman.session.commit()

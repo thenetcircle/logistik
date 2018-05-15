@@ -4,3 +4,7 @@ class HandlerNotFoundException(Exception):
 
 class HandlerExistsException(Exception):
     pass
+
+
+class ParseException(Exception):
+    pass

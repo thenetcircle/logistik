@@ -1,10 +1,6 @@
 from logistik import environ
 
 
-class ParseException(Exception):
-    pass
-
-
 def get_event_name(data: dict) -> str:
     try:
         return data['verb']

@@ -27,8 +27,10 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.endpoint = None
         self.version = None
         self.path = None
+        self.port = None
         self.url = None
         self.endpoint: str = None
+        self.schema: str = None
         self.timeout: int = None
         self.n_retries: int = 1
         self.conf = None
@@ -56,7 +58,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
             self.logger.warning(
                 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code))
         else:
-            environ.env.kafka_writer.publish(self.conf, response.content)
+            environ.env.kafka_writer.publish(self.conf, response)
 
     def handle_and_return_response(self, data: dict, activity: Activity) -> (bool, str, Response):
         if not self.enabled:

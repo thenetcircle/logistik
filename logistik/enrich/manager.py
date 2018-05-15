@@ -1,6 +1,6 @@
 from logistik.environ import GNEnvironment
 from logistik.enrich import IEnrichmentManager
-from logistik.utils import ParseException
+from logistik.utils.exceptions import ParseException
 
 
 class EnrichmentManager(IEnrichmentManager):
