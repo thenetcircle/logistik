@@ -45,7 +45,7 @@
                     <tr>
                         <td>{{ handler['event'] }}</td>
                         <td>-&gt;</td>
-                        <td>{{ handler['service_id'] }}-{{ handler['model_type'] }}-{{ handler['node'] }}</td>
+                        <td>{{ handler['node_id'] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -53,8 +53,8 @@
     </div>
 
     <div>
-        <h2>Models</h2>
-        <table id="models" class="display responsive" cellspacing="0" width="400px">
+        <h2>Enabled Models</h2>
+        <table id="models" class="display responsive" cellspacing="0" width="600px">
             <thead>
                 <th>Model</th>
                 <th>Version</th>
@@ -63,12 +63,14 @@
             </thead>
             <tbody>
                 {% for handler in handlers %}
+                    {% if handler['enabled'] %}
                     <tr>
-                        <td>{{ handler['service_id'] }}-{{ handler['model_type'] }}-{{ handler['node'] }}</td>
+                        <td>{{ handler['node_id'] }}</td>
                         <td>{{ handler['version'] }}</td>
                         <td>{{ handler['model_type'] }}</td>
                         <td>{{ handler['enabled'] }}</td>
                     </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>

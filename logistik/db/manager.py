@@ -88,6 +88,12 @@ class DatabaseManager(IDatabase):
             model_type=model_type
         ).first()
 
+        version = None
+        for tag in tags:
+            if 'version=' in tag:
+                version = tag.split('=', maxsplit=1)[1]
+                break
+
         if handler is not None:
             if handler.enabled:
                 return handler.to_repr()
@@ -95,6 +101,7 @@ class DatabaseManager(IDatabase):
             logger.info('enabling handler with node id "{}"'.format(node_id))
             handler.enabled = True
             handler.name = name
+            handler.version = version or handler.version
             handler.node = node
             handler.model_type = model_type
             handler.hostname = hostname
@@ -119,6 +126,7 @@ class DatabaseManager(IDatabase):
         handler.event = 'UNMAPPED'
         handler.service_id = service_id
         handler.name = name
+        handler.version = version or ''
         handler.node = node
         handler.model_type = model_type
         handler.hostname = hostname
