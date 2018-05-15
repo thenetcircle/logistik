@@ -59,6 +59,7 @@ class AggregatedHandlerStatsEntity(db.Model):
             event=self.event,
             service_id=self.service_id,
             stat_type=self.stat_type,
+            hostname=self.hostname,
             count=self.count,
             model_type=self.model_type,
             node=self.node

@@ -115,11 +115,8 @@ class DatabaseManager(IDatabase):
             service_id=service_id
         ).first()
 
-        event_name = 'UNMAPPED'
-        if other_service_handler is not None:
-            event_name = other_service_handler.event
-
         handler = HandlerConfEntity()
+        handler.event = 'UNMAPPED'
         handler.service_id = service_id
         handler.name = name
         handler.node = node
@@ -127,8 +124,16 @@ class DatabaseManager(IDatabase):
         handler.hostname = hostname
         handler.endpoint = host
         handler.port = port
-        handler.event = event_name
         handler.enabled = False
+
+        if other_service_handler is not None:
+            handler.event = other_service_handler.event
+            handler.path = other_service_handler.path
+            handler.method = other_service_handler.method
+
+            # TODO: version should come from tags, maybe "github describe" on client side
+            handler.version = other_service_handler.version
+
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()
 
