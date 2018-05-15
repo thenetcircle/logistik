@@ -10,16 +10,17 @@ class HandlerStatsEntity(env.dbman.Model):
     __tablename__ = 'handler_stats_entity'
 
     id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
-    service_id = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    name = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    event = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    endpoint = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    version = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    stat_type = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    endpoint = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    stat_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     event_time = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=False)
-    event_id = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    event_verb = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    model_type = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    event_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    event_verb = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
 
     def to_repr(self) -> HandlerStats:
@@ -27,6 +28,7 @@ class HandlerStatsEntity(env.dbman.Model):
             identity=self.id,
             name=self.name,
             service_id=self.service_id,
+            hostname=self.hostname,
             endpoint=self.endpoint,
             version=self.version,
             event=self.event,
@@ -41,23 +43,24 @@ class HandlerStatsEntity(env.dbman.Model):
 
 class HandlerConfEntity(env.dbman.Model):
     id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
-    service_id = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    name = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
-    event = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False)
-    endpoint = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False)
+    endpoint = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     port = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
-    version = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False, server_default='')
-    path = env.dbman.Column(env.dbman.String(80), unique=False, nullable=True)
+    version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='')
+    path = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
     node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
-    method = env.dbman.Column(env.dbman.String(80), unique=False, nullable=True)
-    model_type = env.dbman.Column(env.dbman.String(80), unique=False, nullable=False, server_default=ModelTypes.MODEL)
+    method = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+    model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default=ModelTypes.MODEL)
     retries = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='1')
     timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
     tags = env.dbman.Column(env.dbman.String(256), unique=False, nullable=True)
-    return_to = env.dbman.Column(env.dbman.String(80), unique=False, nullable=True)
+    return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
 
-    UniqueConstraint('service_id', 'node', 'model_type', name='uix_1')
+    UniqueConstraint('service_id', 'hostname', 'node', 'model_type', name='uix_1')
 
     def to_repr(self) -> HandlerConf:
         return HandlerConf(
@@ -67,6 +70,7 @@ class HandlerConfEntity(env.dbman.Model):
             enabled=self.enabled,
             event=self.event,
             endpoint=self.endpoint,
+            hostname=self.hostname,
             port=self.port,
             version=self.version,
             path=self.path,
@@ -84,9 +88,10 @@ class HandlerConfEntity(env.dbman.Model):
         <HandlerConfEntity 
                 id={}, name={}, event={}, enabled={}, endpoint={}, 
                 version={}, path={}, method={}, retries={}, timeout={}, 
-                service_id={}, tags={}, return_to={}, port={}>
+                service_id={}, tags={}, return_to={}, port={}, hostname={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
-            self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to, self.port
+            self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
+            self.port, self.hostname
         )

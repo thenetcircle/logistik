@@ -30,27 +30,28 @@ class AggregatedHandlerStatsEntity(db.Model):
     created manually for now:
 
         create view handler_stats_mv (
-            event, service_id, stat_type, node, model_type, count
+            event, service_id, hostname, stat_type, node, model_type, count
         ) as
         select
-            event, service_id, stat_type, node, model_type, count(id) as count
+            event, service_id, hostname, stat_type, node, model_type, count(id) as count
         from
             handler_stats_entity
         group by
-            event, service_id, stat_type, node, model_type;
+            event, service_id, hostname, stat_type, node, model_type;
 
     """
 
     __tablename__ = 'handler_stats_mv'
     __table_args__ = (
-        PrimaryKeyConstraint('service_id', 'event', 'stat_type', 'model_type', 'node'),
+        PrimaryKeyConstraint('service_id', 'event', 'hostname', 'stat_type', 'model_type', 'node'),
     )
 
-    service_id = db.Column(db.String(80), unique=False, nullable=False)
-    event = db.Column(db.String(80), unique=False, nullable=False)
-    stat_type = db.Column(db.String(16), unique=False, nullable=False)
+    service_id = db.Column(db.String(128), unique=False, nullable=False)
+    event = db.Column(db.String(128), unique=False, nullable=False)
+    stat_type = db.Column(db.String(128), unique=False, nullable=False)
+    hostname = db.Column(db.String(128), unique=False, nullable=False)
     count = db.Column(db.Integer(), unique=False, nullable=False)
-    model_type = db.Column(db.String(16), unique=False, nullable=False)
+    model_type = db.Column(db.String(128), unique=False, nullable=False)
     node = db.Column(db.Integer(), unique=False, nullable=False)
 
     def to_repr(self) -> AggregatedHandlerStats:

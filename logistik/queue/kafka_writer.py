@@ -61,6 +61,7 @@ class KafkaWriter(IKafkaWriter):
             if conf.return_to is None or len(conf.return_to.strip()) == 0:
                 self.logger.warning('no return-to topic specified for conf: {}'.format(conf))
                 self.drop_msg(str_msg)
+                return
 
             self.try_to_publish(conf, str_msg)
         except Exception as e:
@@ -78,5 +79,4 @@ class KafkaWriter(IKafkaWriter):
             self.env.capture_exception(sys.exc_info())
 
     def try_to_publish(self, conf: HandlerConf, message: str) -> None:
-        self.logger.debug('publishing response to topic "{}": {}'.format(conf.return_to, message))
         self.producer.send(conf.return_to, message)

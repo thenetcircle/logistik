@@ -43,10 +43,11 @@ class DatabaseManager(IDatabase):
 
     @with_session
     def disable_handler(self, node_id):
-        service_id, model_type, node = HandlerConf.from_node_id(node_id)
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
 
         handler = HandlerConfEntity.query.filter_by(
             service_id=service_id,
+            hostname=hostname,
             model_type=model_type,
             node=node
         ).first()
@@ -65,10 +66,11 @@ class DatabaseManager(IDatabase):
 
     @with_session
     def get_handler_for(self, node_id: str) -> HandlerConf:
-        service_id, model_type, node = HandlerConf.from_node_id(node_id)
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
 
         handler = HandlerConfEntity.query.filter_by(
             service_id=service_id,
+            hostname=hostname,
             model_type=model_type,
             node=node
         ).first()
@@ -78,9 +80,10 @@ class DatabaseManager(IDatabase):
         return handler.to_repr()
 
     @with_session
-    def register_handler(self, host, port, service_id, name, node, model_type, tags) -> HandlerConf:
+    def register_handler(self, host, port, service_id, name, node, model_type, hostname, tags) -> HandlerConf:
         handler = HandlerConfEntity.query.filter_by(
             service_id=service_id,
+            hostname=hostname,
             node=node,
             model_type=model_type
         ).first()
@@ -88,14 +91,15 @@ class DatabaseManager(IDatabase):
         if handler is not None:
             if handler.enabled:
                 return handler.to_repr()
-            logger.info('enabling handler with id "{}"'.format(service_id))
+            node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
+            logger.info('enabling handler with node id "{}"'.format(node_id))
             handler.enabled = True
             handler.name = name
             handler.node = node
             handler.model_type = model_type
+            handler.hostname = hostname
             handler.endpoint = host
             handler.port = port
-            handler.tags = ','.join(tags)
             self.env.dbman.session.add(handler)
             self.env.dbman.session.commit()
 
@@ -107,16 +111,24 @@ class DatabaseManager(IDatabase):
             name, host, port, service_id
         ))
 
+        other_service_handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id
+        ).first()
+
+        event_name = 'UNMAPPED'
+        if other_service_handler is not None:
+            event_name = other_service_handler.event
+
         handler = HandlerConfEntity()
         handler.service_id = service_id
         handler.name = name
         handler.node = node
         handler.model_type = model_type
+        handler.hostname = hostname
         handler.endpoint = host
         handler.port = port
-        handler.event = 'UNMAPPED'
+        handler.event = event_name
         handler.enabled = False
-        handler.tags = ','.join(tags)
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()
 

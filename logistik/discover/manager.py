@@ -15,7 +15,7 @@ class DiscoveryService(BaseDiscoveryService):
     SERVICE_ADDRESS = 'ServiceAddress'
     SERVICE_PORT = 'ServicePort'
     SERVICE_TAGS = 'ServiceTags'
-    SERVICE_ID = 'ServiceID'
+    SERVICE_NAME = 'ServiceName'
 
     def __init__(self, env: GNEnvironment):
         host = env.config.get(ConfigKeys.HOST, domain=ConfigKeys.DISCOVERY, default='127.0.0.1')
@@ -47,11 +47,13 @@ class DiscoveryService(BaseDiscoveryService):
 
             _, services = self.consul.catalog.service(name)
             for service in services:
-                service_id = service.get(DiscoveryService.SERVICE_ID)
+                service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
 
-                node, model_type = self.get_node_and_model_type_from_tags(service_tags)
-                node_id = HandlerConf.to_node_id(service_id, model_type, node)
+                node = self.get_from_tags('node', service_tags)
+                model_type = self.get_from_tags('model', service_tags)
+                hostname = self.get_from_tags('hostname', service_tags)
+                node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
 
                 if node_id in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(node_id)
@@ -65,35 +67,33 @@ class DiscoveryService(BaseDiscoveryService):
         self.env.db.disable_handler(node_id)
         self.env.handlers_manager.stop_handler(node_id)
 
-    def get_node_and_model_type_from_tags(self, tags):
-        model_type = None
-        node = None
+    def get_from_tags(self, key, tags):
+        value = None
 
         for tag in tags:
-            if 'model=' in tag:
-                model_type = tag.split('=', 1)[1]
-            elif 'node=' in tag:
-                node = tag.split('=', 1)[1]
+            if '{}='.format(key) in tag:
+                value = tag.split('=', 1)[1]
 
-        if model_type is None:
-            self.logger.warning('no model type in tags')
-        if node is None:
-            self.logger.warning('no node number in tags')
+        if value is None:
+            self.logger.warning('no "{}" in tags'.format(key))
 
-        return node, model_type
+        return value
 
     def enable_handler(self, service, name):
         host = service.get(DiscoveryService.SERVICE_ADDRESS)
         port = service.get(DiscoveryService.SERVICE_PORT)
-        s_id = service.get(DiscoveryService.SERVICE_ID)
+        s_id = service.get(DiscoveryService.SERVICE_NAME)
         tags = service.get(DiscoveryService.SERVICE_TAGS)
-        node, model_type = self.get_node_and_model_type_from_tags(tags)
 
-        if node is None or model_type is None:
-            self.logger.info(service)
+        node = self.get_from_tags('node', tags)
+        model_type = self.get_from_tags('model', tags)
+        hostname = self.get_from_tags('hostname', tags)
+
+        if node is None or model_type is None or hostname is None:
+            self.logger.error('missing node/model/hostname in: {}'.format(service))
             return
 
-        handler_conf = self.env.db.register_handler(host, port, s_id, name, node, model_type, tags)
+        handler_conf = self.env.db.register_handler(host, port, s_id, name, node, model_type, hostname, tags)
         self.env.handlers_manager.start_handler(handler_conf.node_id())
 
     def run(self):

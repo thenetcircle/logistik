@@ -142,12 +142,15 @@ def get_graph():
             stats_per_service[stat.service_id] = 0
         stats_per_service[stat.service_id] += stat.count
 
-        node_key = '{}-{}'.format(stat.service_id, stat.model_type)
-        if node_key not in stats_per_node:
-            stats_per_node[node_key] = 0
-        stats_per_node[node_key] += stat.count
+        node_id = HandlerConf.to_node_id(stat.service_id, stat.hostname, stat.model_type, stat.node)
+        if node_id not in stats_per_node:
+            stats_per_node[node_id] = 0
+        stats_per_node[node_id] += stat.count
 
-    service_id_enabled = {h.service_id: h.enabled for h in handlers}
+    node_id_enabled = {
+        HandlerConf.to_node_id(h.service_id, h.hostname, h.model_type, h.node): h.enabled
+        for h in handlers
+    }
     service_id_event = {h.service_id: h.event for h in handlers}
     from uuid import uuid4 as uuid
 
@@ -157,13 +160,17 @@ def get_graph():
         'children': [{
             'id': 'h-{}-{}'.format(service_id, str(uuid())),
             'label': service_id,
-            'enabled': service_id_enabled.get(service_id),
             'event': service_id_event.get(service_id),
             'value': stats_per_service.get(service_id, 0),
             'children': [{
                 'id': 'm-{}'.format(handler.identity),
-                'label': '{}-{}'.format(handler.model_type, handler.node),
-                'value': stats_per_node.get('{}-{}'.format(handler.service_id, handler.model_type), 0),
+                'enabled': node_id_enabled.get(HandlerConf.to_node_id(
+                    handler.service_id, handler.hostname,
+                    handler.model_type, handler.node), False),
+                'label': '{}-{}-{}'.format(handler.hostname, handler.model_type, handler.node),
+                'value': stats_per_node.get(HandlerConf.to_node_id(
+                    handler.service_id, handler.hostname,
+                    handler.model_type, handler.node), 0),
                 'children': [{
                     'id': 's-{}-{}-{}'.format(service_id, handler.identity, stat.stat_type),
                     'label': stat.stat_type,
@@ -195,7 +202,7 @@ def get_graph():
                 'id': model['id'],
                 'label': model['label']
             }
-            if not handler['enabled']:
+            if not model['enabled']:
                 m_node['color'] = '#f00'
 
             nodes.append(m_node)

@@ -57,12 +57,16 @@
         <table id="models" class="display responsive" cellspacing="0" width="400px">
             <thead>
                 <th>Model</th>
+                <th>Version</th>
+                <th>Type</th>
                 <th>Enabled</th>
             </thead>
             <tbody>
                 {% for handler in handlers %}
                     <tr>
                         <td>{{ handler['service_id'] }}-{{ handler['model_type'] }}-{{ handler['node'] }}</td>
+                        <td>{{ handler['version'] }}</td>
+                        <td>{{ handler['model_type'] }}</td>
                         <td>{{ handler['enabled'] }}</td>
                     </tr>
                 {% endfor %}
@@ -102,39 +106,29 @@
         <h2>Handlers</h2>
         <table id="handlers" class="display responsive" cellspacing="0" width="100%">
             <thead>
-                <th>ID</th>
                 <th>Name</th>
                 <th>Event</th>
                 <th>Enabled</th>
                 <th>Endpoint</th>
-                <th>Version</th>
                 <th>Path</th>
-                <th>Model Type</th>
                 <th>Node</th>
-                <th>method</th>
                 <th>Timeout</th>
                 <th>Retries</th>
                 <th>Service ID</th>
-                <th>Tags</th>
                 <th>Return-To</th>
             </thead>
             <tbody>
                 {% for handler in handlers %}
                     <tr>
-                        <td>{{ handler['identity'] }}</td>
                         <td>{{ handler['name'] }}</td>
                         <td>{{ handler['event'] }}</td>
                         <td>{{ handler['enabled'] }}</td>
                         <td>{{ handler['endpoint'] }}</td>
-                        <td>{{ handler['version'] }}</td>
                         <td>{{ handler['path'] }}</td>
-                        <td>{{ handler['model_type'] }}</td>
                         <td>{{ handler['node'] }}</td>
-                        <td>{{ handler['method'] }}</td>
                         <td>{{ handler['timeout'] }}</td>
                         <td>{{ handler['retries'] }}</td>
                         <td>{{ handler['service_id'] }}</td>
-                        <td>{{ handler['tags'] }}</td>
                         <td>{{ handler['return_to'] }}</td>
                     </tr>
                 {% endfor %}

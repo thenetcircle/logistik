@@ -24,6 +24,7 @@ class HandlerStats(IHandlerStats):
         stats.node = conf.node
         stats.event = conf.event
         stats.name = conf.name
+        stats.hostname = conf.hostname
         stats.endpoint = conf.endpoint
         stats.version = conf.version
         stats.event_time = datetime.utcnow()

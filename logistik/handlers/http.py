@@ -37,7 +37,6 @@ class HttpHandler(BaseHandler):
         self.enabled = conf.enabled
         self.endpoint = conf.endpoint
         self.name = conf.name
-        self.version = conf.version
         self.path = conf.path
         self.method = conf.method
         self.timeout = conf.timeout
@@ -45,16 +44,17 @@ class HttpHandler(BaseHandler):
         self.port = conf.port
         self.conf = conf
 
-        separator = ''
-        if self.version is not None:
-            if self.path is not None and self.path[0] != '/':
-                separator = '/'
+        if self.method is None or len(self.method.strip()) == 0:
+            self.method = 'POST'
 
-        self.url = '{}{}:{}/{}{}{}'.format(
+        separator = ''
+        if self.path is not None and self.path[0] != '/':
+            separator = '/'
+
+        self.url = '{}{}:{}/{}{}'.format(
             self.schema,
             self.endpoint,
             self.port,
-            self.version,
             separator,
             self.path
         )
@@ -76,7 +76,12 @@ class HttpHandler(BaseHandler):
         self.reader.stop()
 
     def handle_once(self, data: dict, _: Activity) -> (ErrorCodes, Union[None, Response]):
-        return ErrorCodes.OK, requests.request(
+        # TODO: check http response code and return different errorcode accordingly
+        response = requests.request(
             method=self.method, url=self.url,
             json=data, headers=self.json_header
         )
+        if response.status_code == 200:
+            return ErrorCodes.OK, response
+        else:
+            return ErrorCodes.UNKNOWN_ERROR, response
