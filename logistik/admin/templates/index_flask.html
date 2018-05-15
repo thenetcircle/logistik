@@ -33,26 +33,6 @@
     </div>
 
     <div>
-        <h2>Events</h2>
-        <table id="events" class="display responsive" cellspacing="0" width="400px">
-            <thead>
-                <th>Event</th>
-                <th></th>
-                <th>Model</th>
-            </thead>
-            <tbody>
-                {% for handler in handlers %}
-                    <tr>
-                        <td>{{ handler['event'] }}</td>
-                        <td>-&gt;</td>
-                        <td>{{ handler['node_id'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div>
         <h2>Enabled Models</h2>
         <table id="models" class="display responsive" cellspacing="0" width="600px">
             <thead>
@@ -98,6 +78,26 @@
                         <td>{{ consumer['max_poll_records'] }}</td>
                         <td>{{ consumer['max_poll_interval_ms'] }}</td>
                         <td>{{ consumer['session_timeout_ms'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h2>Events</h2>
+        <table id="events" class="display responsive" cellspacing="0" width="400px">
+            <thead>
+                <th>Event</th>
+                <th></th>
+                <th>Model</th>
+            </thead>
+            <tbody>
+                {% for handler in handlers %}
+                    <tr>
+                        <td>{{ handler['event'] }}</td>
+                        <td>-&gt;</td>
+                        <td>{{ handler['node_id'] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

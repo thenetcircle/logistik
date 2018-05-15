@@ -56,6 +56,17 @@ $(document).ready(function () {
       };
       var options = {
         physics: true,
+        layout:{
+          randomSeed: 42
+        },
+        nodes: {
+        },
+        edges: {
+          font: {
+            align: 'bottom'
+          },
+          arrows: 'to'
+        },
         groups: {
           model: {
             shape: 'icon',
@@ -97,14 +108,6 @@ $(document).ready(function () {
               size: 30
             }
           }
-        },
-        nodes: {
-        },
-        edges: {
-          font: {
-            align: 'bottom'
-          },
-          arrows: 'to'
         }
       };
       new vis.Network(container, data, options);
