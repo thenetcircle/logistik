@@ -9,4 +9,11 @@ ianitor -v \
   --tags hostname=mk2 \
   --tags version=$(git describe) \
   --port 5052 the_service_name -- \
-gunicorn --worker-class eventlet --workers 1 --threads 1 --worker-connections 500 --timeout 180 --bind 0.0.0.0:5053 app:app
+gunicorn \  # this is whatever command is used to start your model, here we're using gunicorn
+  --worker-class eventlet \
+  --workers 1 \
+  --threads 1 \
+  --worker-connections 500 \
+  --timeout 180 \
+  --bind 0.0.0.0:5053 \
+  app:app
