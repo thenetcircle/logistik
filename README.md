@@ -20,9 +20,6 @@ LK_ENVIRONMENT=default gunicorn \
   --bind 0.0.0.0:5656 app:app
 ```
 
-Note: ianitor hasn't released the PR enabling service-address to be specified, so endpoint needs to be set manually
-in logistik's db after registration.
-
 ## Starting a model
 
 ```bash
