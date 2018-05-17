@@ -10,7 +10,7 @@ $(document).ready(function () {
     $('#aggregated').DataTable({
         'order': [[ 0, 'desc' ]]
     });
-    
+
     $('#models').DataTable({
         'order': [[ 0, 'desc' ]]
     });
@@ -41,7 +41,7 @@ $(document).ready(function () {
         el.innerHTML = secondsToString(el.innerHTML);
     });
 
-    $.getJSON('http://localhost:5656/api/graph', function (graph) {
+    $.getJSON('http://' + document.domain + ':' + location.port + '/api/graph', function (graph) {
       var nodes = graph.data['nodes'];
       var edges = graph.data['edges'];
 
