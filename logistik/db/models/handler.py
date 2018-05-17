@@ -59,6 +59,7 @@ class HandlerConfEntity(env.dbman.Model):
     timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
     tags = env.dbman.Column(env.dbman.String(256), unique=False, nullable=True)
     return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+    startup = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=True)
 
     UniqueConstraint('service_id', 'hostname', 'node', 'model_type', name='uix_1')
 
@@ -80,7 +81,8 @@ class HandlerConfEntity(env.dbman.Model):
             model_type=self.model_type,
             timeout=self.timeout,
             tags=self.tags,
-            return_to=self.return_to
+            return_to=self.return_to,
+            startup=self.startup,
         )
 
     def __str__(self):
@@ -88,10 +90,11 @@ class HandlerConfEntity(env.dbman.Model):
         <HandlerConfEntity 
                 id={}, name={}, event={}, enabled={}, endpoint={}, 
                 version={}, path={}, method={}, retries={}, timeout={}, 
-                service_id={}, tags={}, return_to={}, port={}, hostname={}>
+                service_id={}, tags={}, return_to={}, port={}, hostname={}. 
+                startup={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
             self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
-            self.port, self.hostname
+            self.port, self.hostname, self.startup
         )

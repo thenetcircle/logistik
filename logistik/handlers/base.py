@@ -1,5 +1,6 @@
 import traceback
 import sys
+import time
 
 from eventlet.greenthread import GreenThread
 from abc import ABC
@@ -10,7 +11,9 @@ from typing import Union
 from requests import Response
 
 from logistik.config import ErrorCodes
+from logistik.config import StatsKeys
 from logistik.handlers import IHandler
+from logistik.handlers import HandlerConf
 from logistik import environ
 from logistik import utils
 
@@ -33,14 +36,26 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.schema: str = None
         self.timeout: int = None
         self.n_retries: int = 1
-        self.conf = None
+        self.conf: HandlerConf = None
         self.reader = None
         self.reader_thread: GreenThread = None
 
     def try_to_handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
         for i in range(self.n_retries):
             try:
-                return self.handle_once(data, activity)
+                before = time.perf_counter()
+                error_code, response = self.handle_once(data, activity)
+
+                if error_code == ErrorCodes.OK:
+                    after = time.perf_counter()
+                    diff = (after-before) * 1000
+
+                    key = StatsKeys.handler_timing(self.conf.node_id())
+
+                    environ.env.stats.timing(key, diff)
+                    environ.env.db.register_runtime(self.conf, diff)
+
+                return error_code, response
             except Exception as e:
                 self.logger.error('attempt {}/{} failed for endpoint {}, error was: {}'.format(
                     str(i+1), self.n_retries, self.endpoint, str(e))

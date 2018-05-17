@@ -29,6 +29,12 @@ class ErrorCodes(Enum):
     INVALID_VERB = 607
 
 
+class StatsKeys(object):
+    @staticmethod
+    def handler_timing(node_id: str):
+        return 'logistik.handler.{}'.format(node_id)
+
+
 class HandlerKeys(object):
     HTTP = 'http'
     URL = 'url'

@@ -1,3 +1,6 @@
+import datetime
+
+
 class HandlerStats(object):
     def __init__(self, identity=None, name=None, event=None, event_time=None,
                  endpoint=None, version=None, event_id=None, event_verb=None,
@@ -38,7 +41,8 @@ class HandlerConf(object):
     def __init__(self, identity=None, name=None, event=None, enabled=None,
                  endpoint=None, version=None, path=None, model_type=None,
                  node=None, method=None, timeout=None, retries=None,
-                 service_id=None, tags=None, return_to=None, port=None, hostname=None):
+                 service_id=None, tags=None, return_to=None, port=None,
+                 hostname=None, startup=None):
         self.identity: int = identity
         self.name: str = name
         self.event: str = event
@@ -56,6 +60,7 @@ class HandlerConf(object):
         self.service_id: str = service_id
         self.return_to: str = return_to
         self.tags: str = tags
+        self.startup: datetime.datetime = startup
 
     def node_id(self):
         return '{}-{}-{}-{}'.format(
@@ -87,18 +92,19 @@ class HandlerConf(object):
             identity={}, name={}, event={}, enabled={},
             endpoint={}, version={}, path={}, model_type={}, 
             node={}, method={}, timeout={}, retries={}, 
-            service_id={}, tags={}, return_to={}, port={}, hostname={}>
+            service_id={}, tags={}, return_to={}, port={}, 
+            hostname={}, startup={}>
         """
 
         return repr_string.format(
             self.identity, self.name, self.event, self.enabled, self.endpoint,
             self.version, self.path, self.model_type, self.node, self.method,
             self.timeout, self.retries, self.service_id, self.tags, self.return_to,
-            self.port, self.hostname
+            self.port, self.hostname, self.startup
         )
 
     def to_json(self):
-        return {
+        the_json = {
             'identity': self.identity,
             'name': self.name,
             'event': self.event,
@@ -114,7 +120,15 @@ class HandlerConf(object):
             'timeout': self.timeout,
             'retries': self.retries,
             'service_id': self.service_id,
+            'startup': '',
+            'uptime': '0',
             'node_id': self.node_id(),
             'tags': self.tags,
             'return_to': self.return_to or ''
         }
+
+        if self.startup is not None:
+            the_json['startup'] = self.startup.strftime('%Y-%m-%dT%H:%M:%SZ')
+            the_json['uptime'] = int((datetime.datetime.utcnow() - self.startup).total_seconds())
+
+        return the_json

@@ -20,7 +20,7 @@ class HandlersManager(IHandlersManager):
     def get_handlers(self) -> list:
         def format_config(_node_id, config):
             _conf = {
-                key: config[key] for key in [
+                key: config.get(key, '') for key in [
                     'bootstrap_servers',
                     'group_id',
                     'auto_offset_reset',
@@ -33,7 +33,13 @@ class HandlersManager(IHandlersManager):
             _conf['node_id'] = _node_id
             return _conf
 
-        return [format_config(node_id, self.handlers[node_id].reader.get_consumer_config()) for node_id in self.handlers]
+        return [
+            format_config(
+                node_id,
+                self.handlers[node_id].reader.get_consumer_config()
+            )
+            for node_id in self.handlers
+        ]
 
     def add_handler(self, handler_conf):
         node_id = handler_conf.node_id()

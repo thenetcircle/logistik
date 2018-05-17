@@ -1,45 +1,44 @@
 $(document).ready(function () {
     $('#handlers').DataTable({
-        'paging': false,
-        'info': false,
-        'searching': false,
         'order': [[ 0, 'desc' ]]
     });
 
     $('#stats').DataTable({
-        'paging': true,
-        'info': false,
         'order': [[ 0, 'desc' ]]
     });
 
     $('#aggregated').DataTable({
-        'paging': false,
-        'info': false,
         'order': [[ 0, 'desc' ]]
     });
-
-    $('#events').DataTable({
-        'paging': false,
-        'info': false,
-        'searching': false,
-        'ordering': false,
-        'order': [[ 0, 'desc' ]]
-    });
-
+    
     $('#models').DataTable({
-        'paging': false,
-        'info': false,
-        'searching': false,
-        'ordering': false,
         'order': [[ 0, 'desc' ]]
     });
 
     $('#consumers').DataTable({
-        'paging': false,
-        'info': false,
-        'searching': false,
-        'ordering': false,
         'order': [[ 0, 'desc' ]]
+    });
+
+    $('#timings').DataTable({
+        'order': [[ 0, 'desc' ]]
+    });
+
+    function secondsToString(seconds) {
+        var n_days = Math.floor(seconds / 86400);
+        var n_hours = Math.floor((seconds % 86400) / 3600);
+        var n_minutes = Math.floor(((seconds % 86400) % 3600) / 60);
+        var n_seconds = ((seconds % 86400) % 3600) % 60;
+        if (n_days === 0 && n_hours === 0) {
+            return n_minutes + "m " + n_seconds + "s";
+        }
+        if (n_days === 0) {
+            return n_hours + "h " + n_minutes + "m " + n_seconds + "s";
+        }
+        return n_days + "d " + n_hours + "h " + n_minutes + "m " + n_seconds + "s";
+    }
+
+    $.each($('.uptime'), function(idx, el) {
+        el.innerHTML = secondsToString(el.innerHTML);
     });
 
     $.getJSON('http://localhost:5656/api/graph', function (graph) {

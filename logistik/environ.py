@@ -17,6 +17,7 @@ from logistik.enrich import IEnricher
 from logistik.stats import IStats
 from logistik.cache import ICache
 from logistik.queue import IKafkaWriter
+from logistik.timing import ITimingManager
 from logistik.db import IDatabase
 from logistik.utils.decorators import timeit
 
@@ -167,6 +168,7 @@ class GNEnvironment(object):
         self.enrichment_manager: IEnrichmentManager = None
         self.enrichers: List[Tuple[str, IEnricher]] = list()
 
+        self.timing: ITimingManager = None
         self.handlers_manager: IHandlersManager = None
         self.handler_stats: IHandlerStats = None
         self.kafka_writer: IKafkaWriter = None
@@ -532,6 +534,16 @@ def init_handler_stats(gn_env: GNEnvironment):
     gn_env.handler_stats = HandlerStats(gn_env)
 
 
+@timeit(logger, 'init handler stats service')
+def init_timing_manager(gn_env: GNEnvironment):
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
+    from logistik.timing.manager import TimingManager
+    gn_env.timing = TimingManager(gn_env)
+
+
 @timeit(logger, 'init kafka writer service')
 def init_kafka_writer(gn_env: GNEnvironment):
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
@@ -546,6 +558,7 @@ def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
     init_handlers_manager(lk_env)
+    init_timing_manager(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
     init_plugins(lk_env)

@@ -76,11 +76,11 @@ class HttpHandler(BaseHandler):
         self.reader.stop()
 
     def handle_once(self, data: dict, _: Activity) -> (ErrorCodes, Union[None, Response]):
-        # TODO: check http response code and return different errorcode accordingly
         response = requests.request(
             method=self.method, url=self.url,
             json=data, headers=self.json_header
         )
+        # TODO: stop handler if 404, endpoint not configured correctly
         if response.status_code == 200:
             return ErrorCodes.OK, response
         else:

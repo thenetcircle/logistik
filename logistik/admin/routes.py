@@ -239,10 +239,23 @@ def index():
     stats = environ.env.db.get_all_stats()
     agg_stats = environ.env.db.get_all_aggregated_stats()
     consumers = environ.env.handlers_manager.get_handlers()
+    timings = environ.env.timing.get_timing_summary()
 
     handlers_json = [handler.to_json() for handler in handlers]
     stats_json = [stat.to_json() for stat in stats]
     agg_stats_json = [stat.to_json() for stat in agg_stats]
+
+    for handler in handlers_json:
+        if handler['node_id'] in timings['node']:
+            handler['average'] = '%.2f' % timings['node'][handler['node_id']]['average']
+            handler['stddev'] = '%.2f' % timings['node'][handler['node_id']]['stddev']
+        else:
+            handler['average'] = '---'
+            handler['stddev'] = '---'
+
+    for timing in timings['version']:
+        timing['average'] = '%.2f' % timing['average']
+        timing['stddev'] = '%.2f' % timing['stddev']
 
     return render_template(
         'index_flask.html',
@@ -251,6 +264,7 @@ def index():
             'ROOT_URL': environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB),
             'FLOATING_MENU': floating_menu
         },
+        timings=timings,
         consumers=consumers,
         stats=stats_json,
         agg_stats=agg_stats_json,

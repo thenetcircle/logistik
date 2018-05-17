@@ -1,18 +1,22 @@
+import datetime
 import logging
 from typing import List
 from typing import Union
 
+from sqlalchemy import func
+
 from logistik.db import IDatabase
+from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
 from logistik.db.models.event import EventConfEntity
 from logistik.db.models.handler import HandlerConfEntity
 from logistik.db.models.handler import HandlerStatsEntity
-from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
-from logistik.db.repr.event import EventConf
+from logistik.db.models.timing import TimingEntity
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
+from logistik.db.repr.event import EventConf
 from logistik.db.repr.handler import HandlerConf
 from logistik.environ import GNEnvironment
-from logistik.utils.exceptions import HandlerNotFoundException
 from logistik.utils.decorators import with_session
+from logistik.utils.exceptions import HandlerNotFoundException
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +29,76 @@ class DatabaseManager(IDatabase):
     def get_all_handlers(self) -> List[HandlerConf]:
         handlers = HandlerConfEntity.query.all()
         return [handler.to_repr() for handler in handlers]
+
+    @with_session
+    def timing_per_node(self) -> dict:
+        return {
+            row.node_id: {
+                'average': row.average,
+                'stddev': row.stddev
+            } for row in
+            self.env.dbman.session.query(
+                TimingEntity.node_id,
+                func.avg(TimingEntity.timing).label('average'),
+                func.stddev(TimingEntity.timing).label('stddev')
+            ).group_by(TimingEntity.node_id).all()
+        }
+
+    @with_session
+    def timing_per_service(self) -> dict:
+        return {
+            row.service_id: {
+                'service_id': row.service_id,
+                'average': row.average,
+                'stddev': row.stddev
+            } for row in
+            self.env.dbman.session.query(
+                TimingEntity.service_id,
+                func.avg(TimingEntity.timing).label('average'),
+                func.stddev(TimingEntity.timing).label('stddev')
+            ).group_by(TimingEntity.service_id).all()
+        }
+
+    @with_session
+    def timing_per_host_and_version(self) -> list:
+        return [
+            {
+                'service_id': row.service_id,
+                'hostname': row.hostname,
+                'version': row.version,
+                'model_type': row.model_type,
+                'average': row.average,
+                'stddev': row.stddev
+            } for row in
+            self.env.dbman.session.query(
+                TimingEntity.service_id,
+                TimingEntity.hostname,
+                TimingEntity.model_type,
+                TimingEntity.version,
+                func.avg(TimingEntity.timing).label('average'),
+                func.stddev(TimingEntity.timing).label('stddev')
+            ).group_by(
+                TimingEntity.service_id,
+                TimingEntity.hostname,
+                TimingEntity.model_type,
+                TimingEntity.version
+            ).all()
+        ]
+
+    @with_session
+    def register_runtime(self, conf: HandlerConf, time_ms: float):
+        timing = TimingEntity()
+        timing.version = conf.version
+        timing.service_id = conf.service_id
+        timing.node_id = conf.node_id()
+        timing.hostname = conf.hostname
+        timing.model_type = conf.model_type
+        timing.timestamp = datetime.datetime.utcnow()
+        timing.node = conf.node
+        timing.timing = time_ms
+
+        self.env.dbman.session.add(timing)
+        self.env.dbman.session.commit()
 
     @with_session
     def get_all_enabled_handlers(self):
@@ -100,6 +174,7 @@ class DatabaseManager(IDatabase):
             node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
             logger.info('enabling handler with node id "{}"'.format(node_id))
             handler.enabled = True
+            handler.startup = datetime.datetime.utcnow()
             handler.name = name
             handler.version = version or handler.version
             handler.node = node
@@ -134,13 +209,11 @@ class DatabaseManager(IDatabase):
         handler.port = port
         handler.enabled = False
 
+        # copy known values form previous handler, except return-to, might be different
         if other_service_handler is not None:
             handler.event = other_service_handler.event
             handler.path = other_service_handler.path
             handler.method = other_service_handler.method
-
-            # TODO: version should come from tags, maybe "github describe" on client side
-            handler.version = other_service_handler.version
 
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()

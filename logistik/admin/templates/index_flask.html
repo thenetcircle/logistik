@@ -34,12 +34,14 @@
 
     <div>
         <h2>Enabled Models</h2>
-        <table id="models" class="display responsive" cellspacing="0" width="600px">
+        <table id="models" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>Model</th>
                 <th>Version</th>
                 <th>Type</th>
-                <th>Enabled</th>
+                <th>Uptime</th>
+                <th>Average runtime (ms)</th>
+                <th>Standard deviation</th>
             </thead>
             <tbody>
                 {% for handler in handlers %}
@@ -48,9 +50,37 @@
                         <td>{{ handler['node_id'] }}</td>
                         <td>{{ handler['version'] }}</td>
                         <td>{{ handler['model_type'] }}</td>
-                        <td>{{ handler['enabled'] }}</td>
+                        <td class="uptime">{{ handler['uptime'] }}</td>
+                        <td>{{ handler['average'] }}</td>
+                        <td>{{ handler['stddev'] }}</td>
                     </tr>
                     {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h2>Service Timings per Version</h2>
+        <table id="timings" class="display responsive" cellspacing="0" width="100%">
+            <thead>
+                <th>Service ID</th>
+                <th>Hostname</th>
+                <th>Type</th>
+                <th>Version</th>
+                <th>Average runtime (ms)</th>
+                <th>Standard deviation</th>
+            </thead>
+            <tbody>
+                {% for timing in timings['version'] %}
+                    <tr>
+                        <td>{{ timing['service_id'] }}</td>
+                        <td>{{ timing['hostname'] }}</td>
+                        <td>{{ timing['model_type'] }}</td>
+                        <td>{{ timing['version'] }}</td>
+                        <td>{{ timing['average'] }}</td>
+                        <td>{{ timing['stddev'] }}</td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -118,6 +148,8 @@
                 <th>Retries</th>
                 <th>Service ID</th>
                 <th>Return-To</th>
+                <th>Average runtime (ms)</th>
+                <th>Standard deviation</th>
             </thead>
             <tbody>
                 {% for handler in handlers %}
@@ -132,6 +164,8 @@
                         <td>{{ handler['retries'] }}</td>
                         <td>{{ handler['service_id'] }}</td>
                         <td>{{ handler['return_to'] }}</td>
+                        <td>{{ handler['average'] }}</td>
+                        <td>{{ handler['stddev'] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -158,44 +192,6 @@
                         <td>{{ stat['model_type'] }}</td>
                         <td>{{ stat['node'] }}</td>
                         <td>{{ stat['count'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div>
-        <h2>Event Statistics</h2>
-        <table id="stats" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Event</th>
-                <th>Result</th>
-                <th>Endpoint</th>
-                <th>Version</th>
-                <th>Model Type</th>
-                <th>Node</th>
-                <th>Service ID</th>
-                <th>Event Time</th>
-                <th>Event ID</th>
-                <th>Event Verb</th>
-            </thead>
-            <tbody>
-                {% for stat in stats %}
-                    <tr>
-                        <td>{{ stat['identity'] }}</td>
-                        <td>{{ stat['name'] }}</td>
-                        <td>{{ stat['event'] }}</td>
-                        <td>{{ stat['stat_type'] }}</td>
-                        <td>{{ stat['endpoint'] }}</td>
-                        <td>{{ stat['version'] }}</td>
-                        <td>{{ stat['model_type'] }}</td>
-                        <td>{{ stat['node'] }}</td>
-                        <td>{{ stat['service_id'] }}</td>
-                        <td>{{ stat['event_time'] }}</td>
-                        <td>{{ stat['event_id'] }}</td>
-                        <td>{{ stat['event_verb'] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
