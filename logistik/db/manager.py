@@ -14,6 +14,7 @@ from logistik.db.models.timing import TimingEntity
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.event import EventConf
 from logistik.db.repr.handler import HandlerConf
+from logistik.config import ModelTypes
 from logistik.environ import GNEnvironment
 from logistik.utils.decorators import with_session
 from logistik.utils.exceptions import HandlerNotFoundException
@@ -154,12 +155,11 @@ class DatabaseManager(IDatabase):
         return handler.to_repr()
 
     @with_session
-    def register_handler(self, host, port, service_id, name, node, model_type, hostname, tags) -> HandlerConf:
+    def register_handler(self, host, port, service_id, name, node, hostname, tags) -> HandlerConf:
         handler = HandlerConfEntity.query.filter_by(
             service_id=service_id,
             hostname=hostname,
-            node=node,
-            model_type=model_type
+            node=node
         ).first()
 
         version = None
@@ -171,14 +171,13 @@ class DatabaseManager(IDatabase):
         if handler is not None:
             if handler.enabled:
                 return handler.to_repr()
-            node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
+            node_id = HandlerConf.to_node_id(service_id, hostname, handler.model_type, node)
             logger.info('enabling handler with node id "{}"'.format(node_id))
             handler.enabled = True
             handler.startup = datetime.datetime.utcnow()
             handler.name = name
             handler.version = version or handler.version
             handler.node = node
-            handler.model_type = model_type
             handler.hostname = hostname
             handler.endpoint = host
             handler.port = port
@@ -203,7 +202,7 @@ class DatabaseManager(IDatabase):
         handler.name = name
         handler.version = version or ''
         handler.node = node
-        handler.model_type = model_type
+        handler.model_type = ModelTypes.CANARY
         handler.hostname = hostname
         handler.endpoint = host
         handler.port = port

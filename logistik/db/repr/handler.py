@@ -42,7 +42,7 @@ class HandlerConf(object):
                  endpoint=None, version=None, path=None, model_type=None,
                  node=None, method=None, timeout=None, retries=None,
                  service_id=None, tags=None, return_to=None, port=None,
-                 hostname=None, startup=None):
+                 hostname=None, startup=None, traffic=None):
         self.identity: int = identity
         self.name: str = name
         self.event: str = event
@@ -61,6 +61,7 @@ class HandlerConf(object):
         self.return_to: str = return_to
         self.tags: str = tags
         self.startup: datetime.datetime = startup
+        self.traffic: float = traffic
 
     def node_id(self):
         return '{}-{}-{}-{}'.format(
@@ -93,14 +94,14 @@ class HandlerConf(object):
             endpoint={}, version={}, path={}, model_type={}, 
             node={}, method={}, timeout={}, retries={}, 
             service_id={}, tags={}, return_to={}, port={}, 
-            hostname={}, startup={}>
+            hostname={}, startup={}, traffic={}>
         """
 
         return repr_string.format(
             self.identity, self.name, self.event, self.enabled, self.endpoint,
             self.version, self.path, self.model_type, self.node, self.method,
             self.timeout, self.retries, self.service_id, self.tags, self.return_to,
-            self.port, self.hostname, self.startup
+            self.port, self.hostname, self.startup, self.traffic
         )
 
     def to_json(self):
@@ -124,6 +125,7 @@ class HandlerConf(object):
             'uptime': '0',
             'node_id': self.node_id(),
             'tags': self.tags,
+            'traffic': '%s%%' % int(self.traffic * 100),
             'return_to': self.return_to or ''
         }
 

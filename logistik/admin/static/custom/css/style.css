@@ -14,7 +14,7 @@
 .model-card {
     float: left;
     width: 280px;
-    height: 200px;
+    height: 230px;
     overflow: hidden;
     border-radius: 10px;
     margin: 10px;
@@ -62,4 +62,24 @@
   font-family: "Droid Serif", serif;
   line-height: 24px;
   z-index: 20;
+}
+
+.footer {
+    margin-top: 10px;
+    border-top: 1px solid #D0BB57;
+    padding: 10px;
+}
+
+.footer a {
+    color: #D0BB57 !important;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
 }

@@ -33,11 +33,11 @@
     </div>
 
     <div>
-        <h2>Enabled Models</h2>
+        <h2>Staging Area</h2>
 
         <div id="model-container">
             {% for handler in handlers %}
-                {% if handler['enabled'] %}
+                {% if handler['enabled'] and handler['model_type'] == 'canary' %}
                     <div class="model-card">
                         <div class="model-title-version">
                             <h3>{{ handler['node_id'] }}</h3>
@@ -48,9 +48,52 @@
                         </div>
 
                         <div class="model-info">
-                            Uptime: {{ handler['uptime'] }}<br />
-                            Average: {{ handler['average'] }}<br />
+                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
+                            Average: {{ handler['average'] }} ms<br />
                             Stddev: {{ handler['stddev'] }}
+                        </div>
+                        <div class="footer">
+                            <div class="left">
+                                <p><a href="#">Retire</a></p>
+                            </div>
+                            <div class="right">
+                                <p><a href="#">Promote</a></p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div>
+        <h2>Enabled Models</h2>
+
+        <div id="model-container">
+            {% for handler in handlers %}
+                {% if handler['enabled'] and handler['model_type'] != 'canary' %}
+                    <div class="model-card">
+                        <div class="model-title-version">
+                            <h3>{{ handler['node_id'] }}</h3>
+                            <div class="model-version">
+                                {{ handler['version'] }} :: <b>{{ handler['model_type'] }}</b>
+                            </div>
+                            <hr />
+                        </div>
+
+                        <div class="model-info">
+                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
+                            Average: {{ handler['average'] }} ms<br />
+                            Stddev: {{ handler['stddev'] }}
+                        </div>
+                        <div class="footer">
+                            <div class="left">
+                                <p><a href="#">Demote</a></p>
+                            </div>
+                            <div class="right">
+                                <p></p>
+                            </div>
                         </div>
                     </div>
                 {% endif %}
@@ -63,6 +106,7 @@
                 <th>Model</th>
                 <th>Version</th>
                 <th>Type</th>
+                <th>Traffic Allocation</th>
                 <th>Uptime</th>
                 <th>Average runtime (ms)</th>
                 <th>Standard deviation</th>
@@ -74,6 +118,11 @@
                         <td>{{ handler['node_id'] }}</td>
                         <td>{{ handler['version'] }}</td>
                         <td>{{ handler['model_type'] }}</td>
+                        {% if handler['model_type'] == 'canary' %}
+                            <td>{{ handler['traffic'] }}</td>
+                        {% else %}
+                            <td>(balanced)</td>
+                        {% endif %}
                         <td class="uptime">{{ handler['uptime'] }}</td>
                         <td>{{ handler['average'] }}</td>
                         <td>{{ handler['stddev'] }}</td>

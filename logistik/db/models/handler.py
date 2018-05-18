@@ -60,6 +60,7 @@ class HandlerConfEntity(env.dbman.Model):
     tags = env.dbman.Column(env.dbman.String(256), unique=False, nullable=True)
     return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
     startup = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=True)
+    traffic = env.dbman.Column(env.dbman.Float(), unique=False, nullable=False, server_default='0.1')
 
     UniqueConstraint('service_id', 'hostname', 'node', 'model_type', name='uix_1')
 
@@ -83,6 +84,7 @@ class HandlerConfEntity(env.dbman.Model):
             tags=self.tags,
             return_to=self.return_to,
             startup=self.startup,
+            traffic=self.traffic
         )
 
     def __str__(self):
@@ -91,10 +93,10 @@ class HandlerConfEntity(env.dbman.Model):
                 id={}, name={}, event={}, enabled={}, endpoint={}, 
                 version={}, path={}, method={}, retries={}, timeout={}, 
                 service_id={}, tags={}, return_to={}, port={}, hostname={}. 
-                startup={}>
+                startup={}, traffic={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
             self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
-            self.port, self.hostname, self.startup
+            self.port, self.hostname, self.startup, self.traffic
         )

@@ -86,14 +86,13 @@ class DiscoveryService(BaseDiscoveryService):
         tags = service.get(DiscoveryService.SERVICE_TAGS)
 
         node = self.get_from_tags('node', tags)
-        model_type = self.get_from_tags('model', tags)
         hostname = self.get_from_tags('hostname', tags)
 
-        if node is None or model_type is None or hostname is None:
-            self.logger.error('missing node/model/hostname in: {}'.format(service))
+        if node is None or hostname is None:
+            self.logger.error('missing node/hostname in: {}'.format(service))
             return
 
-        handler_conf = self.env.db.register_handler(host, port, s_id, name, node, model_type, hostname, tags)
+        handler_conf = self.env.db.register_handler(host, port, s_id, name, node, hostname, tags)
         self.env.handlers_manager.start_handler(handler_conf.node_id())
 
     def run(self):

@@ -26,7 +26,7 @@ class IDatabase(ABC):
     def disable_handler(self, node_id) -> None:
         raise NotImplementedError()
 
-    def register_handler(self, host, port, service_id, name, node, model_type, hostname, tags) -> HandlerConf:
+    def register_handler(self, host, port, service_id, name, node, hostname, tags) -> HandlerConf:
         raise NotImplementedError()
 
     def timing_per_node(self) -> dict:

@@ -1,6 +1,7 @@
 import traceback
 import sys
 import time
+import random
 
 from eventlet.greenthread import GreenThread
 from abc import ABC
@@ -12,6 +13,7 @@ from requests import Response
 
 from logistik.config import ErrorCodes
 from logistik.config import StatsKeys
+from logistik.config import ModelTypes
 from logistik.handlers import IHandler
 from logistik.handlers import HandlerConf
 from logistik import environ
@@ -66,7 +68,15 @@ class BaseHandler(IHandler, IPlugin, ABC):
         utils.fail_message(data)
         return ErrorCodes.RETRIES_EXCEEDED, None
 
+    def is_canary(self):
+        return self.conf.model_type == ModelTypes.CANARY
+
     def handle(self, data: dict, activity: Activity) -> (bool, str):
+        if self.is_canary():
+            # only handle part of the traffic for canary models
+            if random.randint(0, 99) > self.conf.traffic * 100:
+                return
+
         status_code, error_code, response = self.handle_and_return_response(data, activity)
 
         if response is None:

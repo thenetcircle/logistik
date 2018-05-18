@@ -4,6 +4,7 @@ import logging
 import time
 import traceback
 from collections import defaultdict
+from uuid import uuid4 as uuid
 
 from kafka import KafkaConsumer
 from activitystreams import parse as parse_as
@@ -11,7 +12,7 @@ from activitystreams import Activity
 
 from logistik.utils.exceptions import ParseException
 from logistik.queue import IKafkaReader
-from logistik.config import ConfigKeys
+from logistik.config import ConfigKeys, ModelTypes
 from logistik.environ import GNEnvironment
 from logistik.handlers.base import IHandler
 from logistik.db.repr.handler import HandlerConf
@@ -27,7 +28,7 @@ class KafkaReader(IKafkaReader):
     def __init__(self, env: GNEnvironment, handler_conf: HandlerConf, handler: IHandler):
         self.logger = logging.getLogger(__name__)
         self.env = env
-        self.conf = handler_conf
+        self.conf: HandlerConf = handler_conf
         self.handler = handler
         self.enabled = True
         self.consumer: KafkaConsumer = None
@@ -62,9 +63,15 @@ class KafkaReader(IKafkaReader):
         topic_name = self.conf.event
         self.logger.info('consuming from topic {}'.format(topic_name))
 
+        if self.conf.model_type == ModelTypes.CANARY:
+            group_id = 'logistik-{}-{}'.format(self.conf.service_id, str(uuid()))
+            self.logger.info('canary model using Group ID {} to get all messages'.format(group_id))
+        else:
+            group_id = 'logistik-{}'.format(self.conf.service_id)
+
         self.consumer = KafkaConsumer(
             topic_name,
-            group_id='logistik-{}'.format(self.conf.service_id),
+            group_id=group_id,
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
             connections_max_idle_ms=9 * ONE_MINUTE,  # default: 9min
