@@ -15,6 +15,10 @@ $(document).ready(function () {
         'order': [[ 0, 'desc' ]]
     });
 
+    $('#events').DataTable({
+        'order': [[ 0, 'desc' ]]
+    });
+
     $('#consumers').DataTable({
         'order': [[ 0, 'desc' ]]
     });
