@@ -167,6 +167,7 @@ def get_graph():
                 'enabled': node_id_enabled.get(HandlerConf.to_node_id(
                     handler.service_id, handler.hostname,
                     handler.model_type, handler.node), False),
+                'model_type': handler.model_type,
                 'label': '{}-{}-{}'.format(handler.hostname, handler.model_type, handler.node),
                 'value': stats_per_node.get(HandlerConf.to_node_id(
                     handler.service_id, handler.hostname,
@@ -204,6 +205,8 @@ def get_graph():
             }
             if not model['enabled']:
                 m_node['color'] = '#f00'
+            elif model['model_type'] == 'canary':
+                m_node['color'] = '#D0BB57'
 
             nodes.append(m_node)
             edges.append({
@@ -249,13 +252,19 @@ def index():
         if handler['node_id'] in timings['node']:
             handler['average'] = '%.2f' % timings['node'][handler['node_id']]['average']
             handler['stddev'] = '%.2f' % timings['node'][handler['node_id']]['stddev']
+            handler['min'] = '%.2f' % timings['node'][handler['node_id']]['min']
+            handler['max'] = '%.2f' % timings['node'][handler['node_id']]['max']
         else:
             handler['average'] = '---'
             handler['stddev'] = '---'
+            handler['min'] = '---'
+            handler['max'] = '---'
 
     for timing in timings['version']:
         timing['average'] = '%.2f' % timing['average']
         timing['stddev'] = '%.2f' % timing['stddev']
+        timing['min'] = '%.2f' % timing['min']
+        timing['max'] = '%.2f' % timing['max']
 
     return render_template(
         'index_flask.html',

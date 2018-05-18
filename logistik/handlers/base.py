@@ -74,8 +74,18 @@ class BaseHandler(IHandler, IPlugin, ABC):
     def handle(self, data: dict, activity: Activity) -> (bool, str):
         if self.is_canary():
             # only handle part of the traffic for canary models
-            if random.randint(0, 99) > self.conf.traffic * 100:
+            r = random.randint(0, 99)
+
+            if r > self.conf.traffic * 100:
+                self.logger.debug(
+                    'dice shows {}, traffic is {}, skipping event'
+                    .format(r, int(self.conf.traffic*100)))
+
                 return
+
+            self.logger.debug(
+                'dice shows {}, traffic is {}, processing event'
+                .format(r, int(self.conf.traffic*100)))
 
         status_code, error_code, response = self.handle_and_return_response(data, activity)
 

@@ -36,11 +36,15 @@ class DatabaseManager(IDatabase):
         return {
             row.node_id: {
                 'average': row.average,
-                'stddev': row.stddev
+                'stddev': row.stddev,
+                'min': row.min,
+                'max': row.max
             } for row in
             self.env.dbman.session.query(
                 TimingEntity.node_id,
                 func.avg(TimingEntity.timing).label('average'),
+                func.min(TimingEntity.timing).label('min'),
+                func.max(TimingEntity.timing).label('max'),
                 func.stddev(TimingEntity.timing).label('stddev')
             ).group_by(TimingEntity.node_id).all()
         }
@@ -51,11 +55,15 @@ class DatabaseManager(IDatabase):
             row.service_id: {
                 'service_id': row.service_id,
                 'average': row.average,
-                'stddev': row.stddev
+                'stddev': row.stddev,
+                'min': row.min,
+                'max': row.max
             } for row in
             self.env.dbman.session.query(
                 TimingEntity.service_id,
                 func.avg(TimingEntity.timing).label('average'),
+                func.min(TimingEntity.timing).label('min'),
+                func.max(TimingEntity.timing).label('max'),
                 func.stddev(TimingEntity.timing).label('stddev')
             ).group_by(TimingEntity.service_id).all()
         }
@@ -69,7 +77,9 @@ class DatabaseManager(IDatabase):
                 'version': row.version,
                 'model_type': row.model_type,
                 'average': row.average,
-                'stddev': row.stddev
+                'stddev': row.stddev,
+                'min': row.min,
+                'max': row.max
             } for row in
             self.env.dbman.session.query(
                 TimingEntity.service_id,
@@ -77,6 +87,8 @@ class DatabaseManager(IDatabase):
                 TimingEntity.model_type,
                 TimingEntity.version,
                 func.avg(TimingEntity.timing).label('average'),
+                func.min(TimingEntity.timing).label('min'),
+                func.max(TimingEntity.timing).label('max'),
                 func.stddev(TimingEntity.timing).label('stddev')
             ).group_by(
                 TimingEntity.service_id,

@@ -38,11 +38,13 @@
         <div id="model-container">
             {% for handler in handlers %}
                 {% if handler['enabled'] and handler['model_type'] == 'canary' %}
-                    <div class="model-card">
+                    <div class="card canary-card">
                         <div class="model-title-version">
                             <h3>{{ handler['node_id'] }}</h3>
                             <div class="model-version">
-                                {{ handler['version'] }} :: <b>{{ handler['model_type'] }}</b>
+                                {{ handler['version'] }} ::
+                                <b>{{ handler['model_type'] }}</b> ::
+                                {{ handler['traffic'] }}
                             </div>
                             <hr />
                         </div>
@@ -73,7 +75,7 @@
         <div id="model-container">
             {% for handler in handlers %}
                 {% if handler['enabled'] and handler['model_type'] != 'canary' %}
-                    <div class="model-card">
+                    <div class="card model-card">
                         <div class="model-title-version">
                             <h3>{{ handler['node_id'] }}</h3>
                             <div class="model-version">
@@ -109,6 +111,8 @@
                 <th>Traffic Allocation</th>
                 <th>Uptime</th>
                 <th>Average runtime (ms)</th>
+                <th>Min (ms)</th>
+                <th>Max (ms)</th>
                 <th>Standard deviation</th>
             </thead>
             <tbody>
@@ -125,6 +129,8 @@
                         {% endif %}
                         <td class="uptime">{{ handler['uptime'] }}</td>
                         <td>{{ handler['average'] }}</td>
+                        <td>{{ handler['min'] }}</td>
+                        <td>{{ handler['max'] }}</td>
                         <td>{{ handler['stddev'] }}</td>
                     </tr>
                     {% endif %}
@@ -134,7 +140,7 @@
     </div>
 
     <div>
-        <h2>Service Timings per Version</h2>
+        <h2>Timings per version</h2>
         <table id="timings" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>Service ID</th>
@@ -142,6 +148,8 @@
                 <th>Type</th>
                 <th>Version</th>
                 <th>Average runtime (ms)</th>
+                <th>Min (ms)</th>
+                <th>Max (ms)</th>
                 <th>Standard deviation</th>
             </thead>
             <tbody>
@@ -152,6 +160,8 @@
                         <td>{{ timing['model_type'] }}</td>
                         <td>{{ timing['version'] }}</td>
                         <td>{{ timing['average'] }}</td>
+                        <td>{{ timing['min'] }}</td>
+                        <td>{{ timing['max'] }}</td>
                         <td>{{ timing['stddev'] }}</td>
                     </tr>
                 {% endfor %}

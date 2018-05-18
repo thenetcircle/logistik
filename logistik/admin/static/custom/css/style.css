@@ -1,6 +1,16 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto:400,500,700);
 @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic,700italic);
 
+body {
+    margin-left: 40px;
+    margin-right: 40px;
+}
+
+h2 {
+    font-family: "Roboto", sans-serif;
+    margin-top: 40px;
+}
+
 #network {
     display: inline-block;
     width: 1000px;
@@ -11,14 +21,19 @@
     background-color: #f8f8f8;
 }
 
+.canary-card {
+    background-color: #D0BB57;
+}
 .model-card {
+    background-color: #53646C;
+}
+.card {
     float: left;
     width: 280px;
     height: 230px;
     overflow: hidden;
     border-radius: 10px;
     margin: 10px;
-    background-color: #53646C;
     box-shadow: 3px 3px 20px rgba(0, 0, 0, 0.5);
     text-align: center;
 }
@@ -28,50 +43,79 @@
 }
 
 .model-card h3 {
+    color: #9CC9E3;
+}
+.canary-card h3 {
+    color: #5e5422;
+}
+.card h3 {
   font-size: 20px;
   font-weight: 500;
   letter-spacing: 2px;
-  color: #9CC9E3;
-  font-family: "Roboto", sans-serif;
   margin-bottom: 0;
 }
 
+.canary-card hr {
+    background: #1d2326;
+}
 .model-card hr {
+    background: #D0BB57;
+}
+.card hr {
   width: 50px;
   height: 3px;
   margin: 20px auto;
   border: 0;
-  background: #D0BB57;
 }
 
+.model-card .model-version {
+    color: #DCE3E7;
+}
+.canary-card .model-version {
+    color: #1d2326;
+}
 .model-version {
   width: 250px;
   margin: 0 auto;
-  color: #DCE3E7;
   font-family: "Droid Serif", serif;
   font-size: 13px;
   font-style: italic;
   line-height: 18px;
 }
 
+.canary-card .model-info {
+  color: #1d2326;
+}
+.model-card .model-info {
+  color: #DCE3E7;
+}
 .model-info {
   width: 100%;
   margin: 0 auto;
   padding: 0 50px;
-  color: #DCE3E7;
   font-family: "Droid Serif", serif;
   line-height: 24px;
   z-index: 20;
 }
 
+.canary-card .footer {
+    border-top: 1px solid #1d2326;
+}
+.model-card .footer {
+    border-top: 1px solid #D0BB57;
+}
 .footer {
     margin-top: 10px;
-    border-top: 1px solid #D0BB57;
     padding: 10px;
 }
 
-.footer a {
+.canary-card .footer a {
+    color: #1d2326 !important;
+}
+.model-card .footer a {
     color: #D0BB57 !important;
+}
+.footer a {
     font-size: 1.5rem;
     font-weight: bold;
 }

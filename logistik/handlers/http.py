@@ -80,8 +80,10 @@ class HttpHandler(BaseHandler):
             method=self.method, url=self.url,
             json=data, headers=self.json_header
         )
-        # TODO: stop handler if 404, endpoint not configured correctly
         if response.status_code == 200:
             return ErrorCodes.OK, response
+        elif response.status_code == 404:
+            self.logger.error('shutting down handler, received 404 for conf: {}'.format(self.conf))
+            self.stop()
         else:
             return ErrorCodes.UNKNOWN_ERROR, response

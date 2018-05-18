@@ -66,6 +66,7 @@ $(document).ready(function () {
         },
         edges: {
           font: {
+            face: 'Roboto',
             align: 'bottom'
           },
           arrows: 'to'
@@ -78,6 +79,9 @@ $(document).ready(function () {
               code: '\uf085',
               size: 30
             }
+          },
+          canary: {
+              color: '#D0BB57'
           },
           service: {
             shape: 'icon',
