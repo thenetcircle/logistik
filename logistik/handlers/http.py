@@ -85,5 +85,6 @@ class HttpHandler(BaseHandler):
         elif response.status_code == 404:
             self.logger.error('shutting down handler, received 404 for conf: {}'.format(self.conf))
             self.stop()
+            return ErrorCodes.NOT_FOUND, response
         else:
             return ErrorCodes.UNKNOWN_ERROR, response

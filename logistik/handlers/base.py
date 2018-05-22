@@ -92,8 +92,10 @@ class BaseHandler(IHandler, IPlugin, ABC):
         if response is None:
             self.logger.warning(
                 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code))
-        else:
+        elif status_code == BaseHandler.OK:
             environ.env.kafka_writer.publish(self.conf, response)
+        else:
+            self.logger.error('not publishing response since request failed: {}'.format(response))
 
     def handle_and_return_response(self, data: dict, activity: Activity) -> (bool, str, Response):
         if not self.enabled:
