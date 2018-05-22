@@ -286,10 +286,10 @@ def index():
 
     for handler in handlers_json:
         if handler['node_id'] in timings['node']:
-            handler['average'] = '%.2f' % timings['node'][handler['node_id']]['average']
-            handler['stddev'] = '%.2f' % timings['node'][handler['node_id']]['stddev']
-            handler['min'] = '%.2f' % timings['node'][handler['node_id']]['min']
-            handler['max'] = '%.2f' % timings['node'][handler['node_id']]['max']
+            handler['average'] = '%.2f' % (timings['node'][handler['node_id']]['average'] or 0)
+            handler['stddev'] = '%.2f' % (timings['node'][handler['node_id']]['stddev'] or 0)
+            handler['min'] = '%.2f' % (timings['node'][handler['node_id']]['min'] or 0)
+            handler['max'] = '%.2f' % (timings['node'][handler['node_id']]['max'] or 0)
         else:
             handler['average'] = '---'
             handler['stddev'] = '---'
