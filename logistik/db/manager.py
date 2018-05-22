@@ -32,6 +32,48 @@ class DatabaseManager(IDatabase):
         return [handler.to_repr() for handler in handlers]
 
     @with_session
+    def demote_model(self, node_id: str) -> Union[HandlerConf, None]:
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
+
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id,
+            hostname=hostname,
+            model_type=model_type,
+            node=node
+        ).first()
+
+        if handler is None:
+            logger.debug('handler with node id "{}" does not exist'.format(node_id))
+            return None
+
+        logger.info('demoting model to canary {}'.format(node_id))
+        handler.model_type = ModelTypes.CANARY
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+        return handler.to_repr()
+
+    @with_session
+    def promote_canary(self, node_id: str) -> Union[HandlerConf, None]:
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
+
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id,
+            hostname=hostname,
+            model_type=model_type,
+            node=node
+        ).first()
+
+        if handler is None:
+            logger.debug('handler with node id "{}" does not exist'.format(node_id))
+            return None
+
+        logger.info('promoting canary model {}'.format(node_id))
+        handler.model_type = ModelTypes.MODEL
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+        return handler.to_repr()
+
+    @with_session
     def timing_per_node(self) -> dict:
         return {
             row.node_id: {
@@ -129,7 +171,30 @@ class DatabaseManager(IDatabase):
         return [stat.to_repr() for stat in stats]
 
     @with_session
-    def disable_handler(self, node_id):
+    def enable_handler(self, node_id) -> None:
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
+
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id,
+            hostname=hostname,
+            model_type=model_type,
+            node=node
+        ).first()
+
+        if handler is None:
+            logger.debug('handler with node id "{}" does not exist'.format(node_id))
+            return
+
+        logger.info('enabling handler with node id "{}"'.format(node_id))
+        handler.enabled = True
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+
+        if handler.event != 'UNMAPPED':
+            self.env.cache.reset_enabled_handlers_for(handler.event)
+
+    @with_session
+    def disable_handler(self, node_id) -> None:
         service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
 
         handler = HandlerConfEntity.query.filter_by(

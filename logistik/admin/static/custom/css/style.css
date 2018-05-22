@@ -27,6 +27,9 @@ h2 {
 .model-card {
     background-color: #53646C;
 }
+.disabled-card {
+    background-color: #C23F38;
+}
 .card {
     float: left;
     width: 280px;
@@ -48,6 +51,9 @@ h2 {
 .canary-card h3 {
     color: #5e5422;
 }
+.disabled-card h3 {
+    color: #000000;
+}
 .card h3 {
   font-size: 20px;
   font-weight: 500;
@@ -61,6 +67,9 @@ h2 {
 .model-card hr {
     background: #D0BB57;
 }
+.disabled-card hr {
+    background: #400000;
+}
 .card hr {
   width: 50px;
   height: 3px;
@@ -73,6 +82,9 @@ h2 {
 }
 .canary-card .model-version {
     color: #1d2326;
+}
+.disabled-card .model-version {
+    color: #400000;
 }
 .model-version {
   width: 250px;
@@ -89,6 +101,9 @@ h2 {
 .model-card .model-info {
   color: #DCE3E7;
 }
+.disabled-card .model-info {
+  color: #400000;
+}
 .model-info {
   width: 100%;
   margin: 0 auto;
@@ -104,6 +119,9 @@ h2 {
 .model-card .footer {
     border-top: 1px solid #D0BB57;
 }
+.disabled-card .footer {
+    border-top: 1px solid #400000;
+}
 .footer {
     margin-top: 10px;
     padding: 10px;
@@ -114,6 +132,9 @@ h2 {
 }
 .model-card .footer a {
     color: #D0BB57 !important;
+}
+.disabled-card .footer a {
+    color: #400000 !important;
 }
 .footer a {
     font-size: 1.5rem;

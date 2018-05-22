@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List
+from typing import List, Union
 from logistik.db.repr.handler import HandlerConf
 from logistik.db.repr.event import EventConf
 
@@ -14,6 +14,12 @@ class IDatabase(ABC):
     def register_runtime(self, conf: HandlerConf, time_ms: float) -> None:
         raise NotImplementedError()
 
+    def demote_model(self, node_id: str) -> Union[HandlerConf, None]:
+        raise NotImplementedError()
+
+    def promote_canary(self, node_id: str) -> Union[HandlerConf, None]:
+        raise NotImplementedError()
+
     def get_all_handlers(self) -> List[HandlerConf]:
         raise NotImplementedError()
 
@@ -24,6 +30,9 @@ class IDatabase(ABC):
         raise NotImplementedError()
 
     def disable_handler(self, node_id) -> None:
+        raise NotImplementedError()
+
+    def enable_handler(self, node_id) -> None:
         raise NotImplementedError()
 
     def register_handler(self, host, port, service_id, name, node, hostname, tags) -> HandlerConf:

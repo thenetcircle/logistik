@@ -56,10 +56,13 @@
                         </div>
                         <div class="footer">
                             <div class="left">
-                                <p><a href="#">Retire</a></p>
+                                <p>
+                                    <a href="#">Retire</a> |
+                                    <a href="/disable/{{ handler['node_id'] }}">Disable</a>
+                                </p>
                             </div>
                             <div class="right">
-                                <p><a href="#">Promote</a></p>
+                                <p><a href="/promote/{{ handler['node_id'] }}">Promote</a></p>
                             </div>
                         </div>
                     </div>
@@ -70,7 +73,7 @@
     </div>
 
     <div>
-        <h2>Enabled Models</h2>
+        <h2>Live Models</h2>
 
         <div id="model-container">
             {% for handler in handlers %}
@@ -91,7 +94,10 @@
                         </div>
                         <div class="footer">
                             <div class="left">
-                                <p><a href="#">Demote</a></p>
+                                <p>
+                                    <a href="/demote/{{ handler['node_id'] }}">Demote</a> |
+                                    <a href="/disable/{{ handler['node_id'] }}">Disable</a>
+                                </p>
                             </div>
                             <div class="right">
                                 <p></p>
@@ -137,6 +143,43 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <div>
+        <h2>Disabled Models</h2>
+
+        <div id="model-container">
+            {% for handler in handlers %}
+                {% if not handler['enabled'] %}
+                    <div class="card disabled-card">
+                        <div class="model-title-version">
+                            <h3>{{ handler['node_id'] }}</h3>
+                            <div class="model-version">
+                                {{ handler['version'] }} ::
+                                <b>{{ handler['model_type'] }}</b> ::
+                                {{ handler['traffic'] }}
+                            </div>
+                            <hr />
+                        </div>
+
+                        <div class="model-info">
+                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
+                            Average: {{ handler['average'] }} ms<br />
+                            Stddev: {{ handler['stddev'] }}
+                        </div>
+                        <div class="footer">
+                            <div class="left">
+                                <p><a href="#">Delete</a></p>
+                            </div>
+                            <div class="right">
+                                <p><a href="/enable/{{ handler['node_id'] }}">Enable</a></p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div style="clear: both;"></div>
     </div>
 
     <div>

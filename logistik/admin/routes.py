@@ -91,6 +91,42 @@ def authorized():
     return environ.env.web_auth.authorized()
 
 
+@app.route('/promote/<node_id>')
+def promote(node_id: str) -> None:
+    environ.env.handlers_manager.stop_handler(node_id)
+    handler_conf = environ.env.db.promote_canary(node_id)
+
+    if handler_conf is not None:
+        environ.env.handlers_manager.start_handler(handler_conf.node_id())
+
+    return redirect('/')
+
+
+@app.route('/enable/<node_id>')
+def enable(node_id: str) -> None:
+    environ.env.db.enable_handler(node_id)
+    environ.env.handlers_manager.start_handler(node_id)
+    return redirect('/')
+
+
+@app.route('/disable/<node_id>')
+def disable(node_id: str) -> None:
+    environ.env.handlers_manager.stop_handler(node_id)
+    environ.env.db.disable_handler(node_id)
+    return redirect('/')
+
+
+@app.route('/demote/<node_id>')
+def demote(node_id: str) -> None:
+    environ.env.handlers_manager.stop_handler(node_id)
+    handler_conf = environ.env.db.demote_model(node_id)
+
+    if handler_conf is not None:
+        environ.env.handlers_manager.start_handler(handler_conf.node_id())
+
+    return redirect('/')
+
+
 @app.route('/api/handlers', methods=['GET'])
 #@requires_auth
 def get_handlers():
