@@ -1,10 +1,12 @@
+from typing import Union
+
 import consul
 import time
 import sys
 import logging
 
 from logistik.environ import GNEnvironment
-from logistik.config import ConfigKeys
+from logistik.config import ConfigKeys, ModelTypes
 from logistik.discover.base import BaseDiscoveryService
 from logistik.db.repr.handler import HandlerConf
 
@@ -50,15 +52,17 @@ class DiscoveryService(BaseDiscoveryService):
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
 
+                model_type = ModelTypes.MODEL  # assuming it's a model initially
                 node = self.get_from_tags('node', service_tags)
-                model_type = self.get_from_tags('model', service_tags)
                 hostname = self.get_from_tags('hostname', service_tags)
                 node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
 
                 if node_id in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(node_id)
 
-                self.enable_handler(service, name)
+                handler_conf = self.enable_handler(service, name)
+                if handler_conf is not None and handler_conf.node_id() in enabled_handlers_to_check:
+                    enabled_handlers_to_check.remove(handler_conf.node_id())
 
         for node_id in enabled_handlers_to_check:
             self.disable_handler(node_id)
@@ -79,7 +83,7 @@ class DiscoveryService(BaseDiscoveryService):
 
         return value
 
-    def enable_handler(self, service, name):
+    def enable_handler(self, service, name) -> Union[HandlerConf, None]:
         host = service.get(DiscoveryService.SERVICE_ADDRESS)
         port = service.get(DiscoveryService.SERVICE_PORT)
         s_id = service.get(DiscoveryService.SERVICE_NAME)
@@ -90,10 +94,11 @@ class DiscoveryService(BaseDiscoveryService):
 
         if node is None or hostname is None:
             self.logger.error('missing node/hostname in: {}'.format(service))
-            return
+            return None
 
         handler_conf = self.env.db.register_handler(host, port, s_id, name, node, hostname, tags)
         self.env.handlers_manager.start_handler(handler_conf.node_id())
+        return handler_conf
 
     def run(self):
         while True:
