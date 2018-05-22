@@ -297,10 +297,10 @@ def index():
             handler['max'] = '---'
 
     for timing in timings['version']:
-        timing['average'] = '%.2f' % timing['average']
-        timing['stddev'] = '%.2f' % timing['stddev']
-        timing['min'] = '%.2f' % timing['min']
-        timing['max'] = '%.2f' % timing['max']
+        timing['average'] = '%.2f' % (timing['average'] or 0)
+        timing['stddev'] = '%.2f' % (timing['stddev'] or 0)
+        timing['min'] = '%.2f' % (timing['min'] or 0)
+        timing['max'] = '%.2f' % (timing['max'] or 0)
 
     return render_template(
         'index_flask.html',
