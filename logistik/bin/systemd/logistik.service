@@ -1,0 +1,16 @@
+[Unit]
+Description=logistik
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/logistik
+ExecStart=/path/to/logistik/bin/logistik.sh /path/to/logistik staging 5656 logistik-conda-env
+Restart=always
+User=myuser
+Group=mygroup
+LimitNOFILE=10240
+LimitFSIZE=infinity
+
+[Install]
+WantedBy=multi-user.target
