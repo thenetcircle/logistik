@@ -18,7 +18,6 @@ GitPython==2.1.9
 greenlet==0.4.13
 gunicorn==19.8.1
 hashin==0.13.0
-ianitor==0.0.5
 idna==2.6
 itsdangerous==0.24
 Jinja2==2.10
@@ -31,7 +30,6 @@ oauthlib==2.0.7
 packaging==17.1
 pip-api==0.0.1
 psycogreen==1.0
-psycopg2==2.7.4
 psycopg2-binary==2.7.4
 pymitter==0.2.3
 pyparsing==2.2.0
