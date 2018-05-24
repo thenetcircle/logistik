@@ -35,6 +35,9 @@ class IDatabase(ABC):
     def enable_handler(self, node_id) -> None:
         raise NotImplementedError()
 
+    def retire_handler(self, node_id) -> None:
+        raise NotImplementedError()
+
     def register_handler(self, host, port, service_id, name, node, hostname, tags) -> HandlerConf:
         raise NotImplementedError()
 

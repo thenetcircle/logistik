@@ -79,7 +79,7 @@ class DiscoveryService(BaseDiscoveryService):
                 value = tag.split('=', 1)[1]
 
         if value is None:
-            self.logger.warning('no "{}" in tags'.format(key))
+            self.logger.warning('no "{}" in tags: {}'.format(key, tags))
 
         return value
 

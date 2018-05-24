@@ -28,8 +28,28 @@ class DatabaseManager(IDatabase):
 
     @with_session
     def get_all_handlers(self) -> List[HandlerConf]:
-        handlers = HandlerConfEntity.query.all()
+        handlers = HandlerConfEntity.query.filter_by(retired=False).all()
         return [handler.to_repr() for handler in handlers]
+
+    @with_session
+    def retire_model(self, node_id: str) -> None:
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
+
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id,
+            hostname=hostname,
+            model_type=model_type,
+            node=node
+        ).first()
+
+        if handler is None:
+            logger.debug('handler with node id "{}" does not exist'.format(node_id))
+            return None
+
+        logger.info('retiring {}'.format(node_id))
+        handler.retired = True
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
 
     @with_session
     def demote_model(self, node_id: str) -> Union[HandlerConf, None]:

@@ -42,11 +42,12 @@ class HandlerConf(object):
                  endpoint=None, version=None, path=None, model_type=None,
                  node=None, method=None, timeout=None, retries=None,
                  service_id=None, tags=None, return_to=None, port=None,
-                 hostname=None, startup=None, traffic=None):
+                 hostname=None, startup=None, traffic=None, retired=None):
         self.identity: int = identity
         self.name: str = name
         self.event: str = event
         self.enabled: bool = enabled
+        self.retired: bool = retired
         self.endpoint: str = endpoint
         self.hostname: str = hostname
         self.port: int = port
@@ -94,14 +95,14 @@ class HandlerConf(object):
             endpoint={}, version={}, path={}, model_type={}, 
             node={}, method={}, timeout={}, retries={}, 
             service_id={}, tags={}, return_to={}, port={}, 
-            hostname={}, startup={}, traffic={}>
+            hostname={}, startup={}, traffic={}, retired={}>
         """
 
         return repr_string.format(
             self.identity, self.name, self.event, self.enabled, self.endpoint,
             self.version, self.path, self.model_type, self.node, self.method,
             self.timeout, self.retries, self.service_id, self.tags, self.return_to,
-            self.port, self.hostname, self.startup, self.traffic
+            self.port, self.hostname, self.startup, self.traffic, self.retired
         )
 
     def to_json(self):
@@ -122,6 +123,7 @@ class HandlerConf(object):
             'retries': self.retries,
             'service_id': self.service_id,
             'startup': '',
+            'retired': self.retired,
             'uptime': '0',
             'node_id': self.node_id(),
             'tags': self.tags,

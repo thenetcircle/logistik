@@ -46,7 +46,8 @@ class HandlerConfEntity(env.dbman.Model):
     service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False)
+    enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
+    retired = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
     endpoint = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     port = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
@@ -70,6 +71,7 @@ class HandlerConfEntity(env.dbman.Model):
             name=self.name,
             service_id=self.service_id,
             enabled=self.enabled,
+            retired=self.retired,
             event=self.event,
             endpoint=self.endpoint,
             hostname=self.hostname,
@@ -93,10 +95,10 @@ class HandlerConfEntity(env.dbman.Model):
                 id={}, name={}, event={}, enabled={}, endpoint={}, 
                 version={}, path={}, method={}, retries={}, timeout={}, 
                 service_id={}, tags={}, return_to={}, port={}, hostname={}. 
-                startup={}, traffic={}>
+                startup={}, traffic={}, retired={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
             self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
-            self.port, self.hostname, self.startup, self.traffic
+            self.port, self.hostname, self.startup, self.traffic, self.retired
         )
