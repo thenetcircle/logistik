@@ -51,7 +51,7 @@ if ! source activate ${LK_CONDA_ENV}; then
     exit 1
 fi
 
-STATSD_HOST=$(grep STATSD ${LK_HOME}/secrets/${LK_ENV}.yaml | sed "s/.*'\(.*\)'$/\1/g")
+STATSD_HOST=$(grep STATSD_HOST ${LK_HOME}/secrets/${LK_ENV}.yaml | sed "s/.*'\(.*\)'$/\1/g")
 if [[ -z "$STATSD_HOST" ]]; then
     STATSD_HOST="localhost"
 fi
