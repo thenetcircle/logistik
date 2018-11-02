@@ -12,6 +12,7 @@ from logistik.environ import GNEnvironment
 from logistik.handlers.base import BaseHandler
 from logistik.db.repr.handler import HandlerConf
 from logistik.queue.kafka_reader import KafkaReader
+from logistik.queue.rest_reader import RestReader
 
 
 class HttpHandler(BaseHandler):
@@ -68,14 +69,29 @@ class HttpHandler(BaseHandler):
             self.logger.info('no config enabled for {}, not enabling plugin'.format(self.__class__.__name__))
             return
 
-        self.reader = KafkaReader(env, self.conf, self)
-        self.reader_thread = eventlet.spawn(self.reader.run)
+        self.logger.info(self.conf)
+
+        if self.conf.reader_type == 'kafka':
+            self.reader = KafkaReader(env, self.conf, self)
+            self.reader_thread = eventlet.spawn(self.reader.run)
+        elif self.conf.reader_type == 'rest':
+            self.reader = RestReader(env, self.conf, self)
+            self.reader_thread = eventlet.spawn_after(func=self.reader.run, seconds=1)
+        else:
+            raise ValueError('unknown reader type {}'.format(self.conf.reader_type))
+
         self.enabled = True
+
+    def start(self):
+        self.reader.start()
 
     def stop(self):
         self.reader.stop()
 
     def handle_once(self, data: dict, _: Activity) -> (ErrorCodes, Union[None, Response]):
+        self.logger.debug(f'data to send: {data}')
+        self.logger.debug(f'method={self.method}, url={self.url}, json=<data>, headers={self.json_header}')
+
         response = requests.request(
             method=self.method, url=self.url,
             json=data, headers=self.json_header

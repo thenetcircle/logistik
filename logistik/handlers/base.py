@@ -71,7 +71,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
     def is_canary(self):
         return self.conf.model_type == ModelTypes.CANARY
 
-    def handle(self, data: dict, activity: Activity) -> (bool, str):
+    def handle(self, data: dict, activity: Activity):
         if self.is_canary():
             # only handle part of the traffic for canary models
             r = random.randint(0, 99)
@@ -81,7 +81,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
                     'dice shows {}, traffic is {}, skipping event'
                     .format(r, int(self.conf.traffic*100)))
 
-                return
+                return ErrorCodes.OK, 'skipped, canary'
 
             self.logger.debug(
                 'dice shows {}, traffic is {}, processing event'
@@ -90,12 +90,18 @@ class BaseHandler(IHandler, IPlugin, ABC):
         status_code, error_code, response = self.handle_and_return_response(data, activity)
 
         if response is None:
-            self.logger.warning(
-                'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code))
+            error_msg = 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code)
+            self.logger.warning(error_msg)
+            return ErrorCodes.HANDLER_ERROR, error_msg
+
         elif status_code == BaseHandler.OK:
             environ.env.kafka_writer.publish(self.conf, response)
+            return ErrorCodes.OK, response
+
         else:
-            self.logger.error('not publishing response since request failed: {}'.format(response))
+            error_msg = 'not publishing response since request failed: {}'.format(response)
+            self.logger.error(error_msg)
+            return ErrorCodes.HANDLER_ERROR, error_msg
 
     def handle_and_return_response(self, data: dict, activity: Activity) -> (bool, str, Response):
         if not self.enabled:

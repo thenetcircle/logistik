@@ -62,6 +62,8 @@ class HandlerConfEntity(env.dbman.Model):
     return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
     startup = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=True)
     traffic = env.dbman.Column(env.dbman.Float(), unique=False, nullable=False, server_default='0.1')
+    reader_type = env.dbman.Column(env.dbman.String(), unique=False, nullable=False, server_default='kafka')
+    reader_endpoint = env.dbman.Column(env.dbman.String(), unique=False, nullable=True)
 
     UniqueConstraint('service_id', 'hostname', 'node', 'model_type', name='uix_1')
 
@@ -86,7 +88,9 @@ class HandlerConfEntity(env.dbman.Model):
             tags=self.tags,
             return_to=self.return_to,
             startup=self.startup,
-            traffic=self.traffic
+            traffic=self.traffic,
+            reader_type=self.reader_type,
+            reader_endpoint=self.reader_endpoint
         )
 
     def __str__(self):
@@ -95,10 +99,11 @@ class HandlerConfEntity(env.dbman.Model):
                 id={}, name={}, event={}, enabled={}, endpoint={}, 
                 version={}, path={}, method={}, retries={}, timeout={}, 
                 service_id={}, tags={}, return_to={}, port={}, hostname={}. 
-                startup={}, traffic={}, retired={}>
+                startup={}, traffic={}, retired={}, reader_type={}, reader_endpoint={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
             self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
-            self.port, self.hostname, self.startup, self.traffic, self.retired
+            self.port, self.hostname, self.startup, self.traffic, self.retired, self.reader_type,
+            self.reader_endpoint
         )

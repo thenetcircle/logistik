@@ -154,6 +154,7 @@ class GNEnvironment(object):
 
         self.dbman = None
         self.app = None
+        self.api = None
         self.root_path = root_path
         self.config = config
         self.cache: ICache = None

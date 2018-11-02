@@ -4,6 +4,14 @@ from requests import Response
 from logistik.db.repr.handler import HandlerConf
 
 
+class IRestReader(ABC):
+    def run(self):
+        raise NotImplementedError()
+
+    def stop(self):
+        raise NotImplementedError()
+
+
 class IKafkaReader(ABC):
     def run(self):
         raise NotImplementedError()

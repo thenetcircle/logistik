@@ -42,7 +42,8 @@ class HandlerConf(object):
                  endpoint=None, version=None, path=None, model_type=None,
                  node=None, method=None, timeout=None, retries=None,
                  service_id=None, tags=None, return_to=None, port=None,
-                 hostname=None, startup=None, traffic=None, retired=None):
+                 hostname=None, startup=None, traffic=None, retired=None,
+                 reader_type=None, reader_endpoint=None):
         self.identity: int = identity
         self.name: str = name
         self.event: str = event
@@ -63,6 +64,8 @@ class HandlerConf(object):
         self.tags: str = tags
         self.startup: datetime.datetime = startup
         self.traffic: float = traffic
+        self.reader_type: str = reader_type
+        self.reader_endpoint: str = reader_endpoint
 
     def node_id(self):
         return '{}-{}-{}-{}'.format(
@@ -84,6 +87,7 @@ class HandlerConf(object):
     @staticmethod
     def from_node_id(node_id) -> (str, str, str, str):
         parts = node_id.rsplit('-', maxsplit=3)
+        parts = node_id.rsplit('-', maxsplit=3)
         if len(parts) != 4:
             raise AttributeError('invalid node id "{}": needs to have exactly 4 parts'.format(node_id))
         return parts[0], parts[1], parts[2], parts[3]
@@ -95,14 +99,16 @@ class HandlerConf(object):
             endpoint={}, version={}, path={}, model_type={}, 
             node={}, method={}, timeout={}, retries={}, 
             service_id={}, tags={}, return_to={}, port={}, 
-            hostname={}, startup={}, traffic={}, retired={}>
+            hostname={}, startup={}, traffic={}, retired={}, 
+            reader_type={}, reader_endpoint={}>
         """
 
         return repr_string.format(
             self.identity, self.name, self.event, self.enabled, self.endpoint,
             self.version, self.path, self.model_type, self.node, self.method,
             self.timeout, self.retries, self.service_id, self.tags, self.return_to,
-            self.port, self.hostname, self.startup, self.traffic, self.retired
+            self.port, self.hostname, self.startup, self.traffic, self.retired,
+            self.reader_type, self.reader_endpoint
         )
 
     def to_json(self):
@@ -127,6 +133,8 @@ class HandlerConf(object):
             'uptime': '0',
             'node_id': self.node_id(),
             'tags': self.tags,
+            'reader_type': self.reader_type,
+            'reader_endpoint': self.reader_endpoint,
             'traffic': '%s%%' % int(self.traffic * 100),
             'return_to': self.return_to or ''
         }
