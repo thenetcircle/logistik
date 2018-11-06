@@ -194,7 +194,15 @@ def get_graph():
         HandlerConf.to_node_id(h.service_id, h.hostname, h.model_type, h.node): h.enabled
         for h in handlers
     }
-    service_id_event = {h.service_id: h.event for h in handlers}
+
+    # TODO: just use a display name column in the handler conf
+    def short(event_name):
+        event_name = event_name.replace('event-v2-', 'e2-')
+        if len(event_name) > 14:
+            event_name = f'{event_name[:len(event_name) // 2]}\n{event_name[len(event_name) // 2]:}'
+        return event_name
+
+    service_id_event = {h.service_id: short(h.event) for h in handlers}
     from uuid import uuid4 as uuid
 
     data = {
