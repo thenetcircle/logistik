@@ -50,7 +50,7 @@ class KafkaWriter(IKafkaWriter):
     def publish(self, conf: HandlerConf, message: Response) -> None:
         str_msg = None
         try:
-            str_msg = str(message.content, 'utf-8')
+            str_msg = message.json()
         except Exception as e:
             self.logger.error('could not decode response: {}'.format(str(e)))
             self.logger.exception(e)
@@ -78,5 +78,5 @@ class KafkaWriter(IKafkaWriter):
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
 
-    def try_to_publish(self, conf: HandlerConf, message: str) -> None:
+    def try_to_publish(self, conf: HandlerConf, message) -> None:
         self.producer.send(conf.return_to, message)
