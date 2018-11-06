@@ -199,7 +199,7 @@ def get_graph():
     def short(event_name):
         event_name = event_name.replace('event-v2-', 'e2-')
         if len(event_name) > 14:
-            event_name = f'{event_name[:len(event_name) // 2]}\n{event_name[len(event_name) // 2]:}'
+            event_name = f'{event_name[:len(event_name) // 2]}\n{event_name[len(event_name) // 2:]}'
         return event_name
 
     service_id_event = {h.service_id: short(h.event) for h in handlers}
