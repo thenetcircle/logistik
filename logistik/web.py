@@ -80,7 +80,7 @@ def create_app():
 
 
 app, socketio = create_app()
-environ.init_web_auth(environ.env)
+#environ.init_web_auth(environ.env)
 
 # keep this, otherwise flask won't find any routes
 import logistik.admin.routes

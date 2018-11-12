@@ -40,6 +40,7 @@ web:
   type: 'oauth'
   root_url: '$LK_WEB_ROOT_URL'
   insecure: '$LK_WEB_AUTH_INSECURE'
+  oauth_enabled: '$LK_WEB_AUTH_ENABLED'
   base: '$LK_WEB_AUTH_BASE'
   path: '$LK_WEB_AUTH_PATH'
   service_id: '$LK_WEB_AUTH_SERVICE_ID'
