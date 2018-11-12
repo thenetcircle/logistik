@@ -43,7 +43,7 @@ class HandlerConf(object):
                  node=None, method=None, timeout=None, retries=None,
                  service_id=None, tags=None, return_to=None, port=None,
                  hostname=None, startup=None, traffic=None, retired=None,
-                 reader_type=None, reader_endpoint=None):
+                 reader_type=None, reader_endpoint=None, event_display_name=None):
         self.identity: int = identity
         self.name: str = name
         self.event: str = event
@@ -62,6 +62,7 @@ class HandlerConf(object):
         self.service_id: str = service_id
         self.return_to: str = return_to
         self.tags: str = tags
+        self.event_display_name: str = event_display_name
         self.startup: datetime.datetime = startup
         self.traffic: float = traffic
         self.reader_type: str = reader_type
@@ -100,7 +101,7 @@ class HandlerConf(object):
             node={}, method={}, timeout={}, retries={}, 
             service_id={}, tags={}, return_to={}, port={}, 
             hostname={}, startup={}, traffic={}, retired={}, 
-            reader_type={}, reader_endpoint={}>
+            reader_type={}, reader_endpoint={}, event_display_name={}>
         """
 
         return repr_string.format(
@@ -108,7 +109,7 @@ class HandlerConf(object):
             self.version, self.path, self.model_type, self.node, self.method,
             self.timeout, self.retries, self.service_id, self.tags, self.return_to,
             self.port, self.hostname, self.startup, self.traffic, self.retired,
-            self.reader_type, self.reader_endpoint
+            self.reader_type, self.reader_endpoint, self.event_display_name
         )
 
     def to_json(self):
@@ -132,6 +133,7 @@ class HandlerConf(object):
             'retired': self.retired,
             'uptime': '0',
             'node_id': self.node_id(),
+            'event_display_name': self.event_display_name,
             'tags': self.tags,
             'reader_type': self.reader_type,
             'reader_endpoint': self.reader_endpoint,

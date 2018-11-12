@@ -60,6 +60,7 @@ class HandlerConfEntity(env.dbman.Model):
     timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
     tags = env.dbman.Column(env.dbman.String(256), unique=False, nullable=True)
     return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+    event_display_name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='event')
     startup = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=True)
     traffic = env.dbman.Column(env.dbman.Float(), unique=False, nullable=False, server_default='0.1')
     reader_type = env.dbman.Column(env.dbman.String(), unique=False, nullable=False, server_default='kafka')
@@ -86,6 +87,7 @@ class HandlerConfEntity(env.dbman.Model):
             model_type=self.model_type,
             timeout=self.timeout,
             tags=self.tags,
+            event_display_name=self.event_display_name,
             return_to=self.return_to,
             startup=self.startup,
             traffic=self.traffic,
@@ -99,11 +101,12 @@ class HandlerConfEntity(env.dbman.Model):
                 id={}, name={}, event={}, enabled={}, endpoint={}, 
                 version={}, path={}, method={}, retries={}, timeout={}, 
                 service_id={}, tags={}, return_to={}, port={}, hostname={}. 
-                startup={}, traffic={}, retired={}, reader_type={}, reader_endpoint={}>
+                startup={}, traffic={}, retired={}, reader_type={}, 
+                reader_endpoint={}, event_display_name={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
             self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
             self.port, self.hostname, self.startup, self.traffic, self.retired, self.reader_type,
-            self.reader_endpoint
+            self.reader_endpoint, self.event_display_name
         )

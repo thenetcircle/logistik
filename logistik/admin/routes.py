@@ -195,19 +195,7 @@ def get_graph():
         for h in handlers
     }
 
-    # TODO: just use a display name column in the handler conf
-    def short(event_name):
-        event_name = event_name.replace('event-v2-', '')
-        parts = event_name.split('-')
-
-        if len(parts) > 1:
-            first = '-'.join(parts[:len(parts)//2])
-            second = '-'.join(parts[len(parts)//2:])
-            event_name = '{}-\n{}'.format(first, second)
-
-        return event_name
-
-    service_id_event = {h.service_id: short(h.event) for h in handlers}
+    service_id_event = {h.service_id: h.event_display_name for h in handlers}
     from uuid import uuid4 as uuid
 
     data = {
