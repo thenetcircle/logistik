@@ -259,11 +259,11 @@ class DatabaseManager(IDatabase):
             node=node
         ).first()
 
-        version = None
+        tags_dict = dict()
+
         for tag in tags:
-            if 'version=' in tag:
-                version = tag.split('=', maxsplit=1)[1]
-                break
+            k, v = tag.split('=', maxsplit=1)
+            tags_dict[k] = v
 
         if handler is not None:
             if handler.enabled:
@@ -273,7 +273,12 @@ class DatabaseManager(IDatabase):
             handler.enabled = True
             handler.startup = datetime.datetime.utcnow()
             handler.name = name
-            handler.version = version or handler.version
+            handler.version = tags.get('version', None) or handler.version
+            handler.path = tags.get('path', None) or handler.path
+            handler.event = tags.get('event', None) or handler.event
+            handler.return_to = tags.get('returnto', None) or handler.return_to
+            handler.reader_type = tags.get('readertype', None) or handler.reader_type
+            handler.reader_endpoint = tags.get('readerendpoint', None) or handler.reader_endpoint
             handler.node = node
             handler.hostname = hostname
             handler.endpoint = host
@@ -297,13 +302,43 @@ class DatabaseManager(IDatabase):
         handler.event = 'UNMAPPED'
         handler.service_id = service_id
         handler.name = name
-        handler.version = version or ''
+        handler.version = tags.get('version', None) or ''
         handler.node = node
         handler.model_type = ModelTypes.CANARY
         handler.hostname = hostname
         handler.endpoint = host
         handler.port = port
         handler.enabled = False
+        handler.path = tags.get('path', '')
+        handler.event = tags.get('event', 'UNMAPPED')
+        handler.return_to = tags.get('returnto', '')
+        handler.reader_type = tags.get('readertype', 'kafka')
+        handler.reader_endpoint = tags.get('readerendpoint', '')
+
+        """
+        service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+        name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+        event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+        enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
+        retired = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
+        endpoint = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+        hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+        port = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
+        version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='')
+        path = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+        node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
+        method = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+        model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default=ModelTypes.MODEL)
+        retries = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='1')
+        timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
+        tags = env.dbman.Column(env.dbman.String(256), unique=False, nullable=True)
+        return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+        event_display_name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='event')
+        startup = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=True)
+        traffic = env.dbman.Column(env.dbman.Float(), unique=False, nullable=False, server_default='0.1')
+        reader_type = env.dbman.Column(env.dbman.String(), unique=False, nullable=False, server_default='kafka')
+        reader_endpoint = env.dbman.Column(env.dbman.String(), unique=False, nullable=True)
+        """
 
         # copy known values form previous handler, except return-to, might be different
         if other_service_handler is not None:
