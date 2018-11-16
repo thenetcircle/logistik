@@ -299,6 +299,16 @@ class DatabaseManager(IDatabase):
         ).first()
 
         handler = HandlerConfEntity()
+
+        # copy known values form previous handler
+        if other_service_handler is not None:
+            if 'event' not in tags:
+                handler.event = other_service_handler.event
+            if 'path' not in tags:
+                handler.path = other_service_handler.path
+            if 'method' not in tags:
+                handler.method = other_service_handler.method
+
         handler.event = 'UNMAPPED'
         handler.service_id = service_id
         handler.name = name
@@ -309,11 +319,11 @@ class DatabaseManager(IDatabase):
         handler.endpoint = host
         handler.port = port
         handler.enabled = False
-        handler.path = tags.get('path', '')
-        handler.event = tags.get('event', 'UNMAPPED')
-        handler.return_to = tags.get('returnto', '')
-        handler.reader_type = tags.get('readertype', 'kafka')
-        handler.reader_endpoint = tags.get('readerendpoint', '')
+        handler.path = tags.get('path', handler.path)
+        handler.event = tags.get('event', handler.path) or 'UNMAPPED'
+        handler.return_to = tags.get('returnto', handler.return_to)
+        handler.reader_type = tags.get('readertype', handler.reader_type) or 'kafka'
+        handler.reader_endpoint = tags.get('readerendpoint', handler.reader_endpoint)
 
         """
         service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
@@ -339,12 +349,6 @@ class DatabaseManager(IDatabase):
         reader_type = env.dbman.Column(env.dbman.String(), unique=False, nullable=False, server_default='kafka')
         reader_endpoint = env.dbman.Column(env.dbman.String(), unique=False, nullable=True)
         """
-
-        # copy known values form previous handler, except return-to, might be different
-        if other_service_handler is not None:
-            handler.event = other_service_handler.event
-            handler.path = other_service_handler.path
-            handler.method = other_service_handler.method
 
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()
