@@ -262,6 +262,9 @@ class DatabaseManager(IDatabase):
         tags_dict = dict()
 
         for tag in tags:
+            if '=' not in tag:
+                continue
+
             k, v = tag.split('=', maxsplit=1)
             tags_dict[k] = v
 
