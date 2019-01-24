@@ -315,18 +315,18 @@ class DatabaseManager(IDatabase):
         handler.event = 'UNMAPPED'
         handler.service_id = service_id
         handler.name = name
-        handler.version = tags.get('version', None) or ''
+        handler.version = tags_dict.get('version', None) or ''
         handler.node = node
         handler.model_type = ModelTypes.CANARY
         handler.hostname = hostname
         handler.endpoint = host
         handler.port = port
         handler.enabled = False
-        handler.path = tags.get('path', handler.path)
-        handler.event = tags.get('event', handler.path) or 'UNMAPPED'
-        handler.return_to = tags.get('returnto', handler.return_to)
-        handler.reader_type = tags.get('readertype', handler.reader_type) or 'kafka'
-        handler.reader_endpoint = tags.get('readerendpoint', handler.reader_endpoint)
+        handler.path = tags_dict.get('path', handler.path)
+        handler.event = tags_dict.get('event', handler.path) or 'UNMAPPED'
+        handler.return_to = tags_dict.get('returnto', handler.return_to)
+        handler.reader_type = tags_dict.get('readertype', handler.reader_type) or 'kafka'
+        handler.reader_endpoint = tags_dict.get('readerendpoint', handler.reader_endpoint)
 
         """
         service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
