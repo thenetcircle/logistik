@@ -95,6 +95,30 @@ class HandlerConfEntity(env.dbman.Model):
             reader_endpoint=self.reader_endpoint
         )
 
+    def update(self, handler_conf: HandlerConf):
+        self.name = handler_conf.name or self.name
+        self.event = handler_conf.event or self.event
+        self.enabled = handler_conf.enabled or self.enabled
+        self.retired = handler_conf.retired or self.retired
+        self.endpoint = handler_conf.endpoint or self.endpoint
+        self.hostname = handler_conf.hostname or self.hostname
+        self.port = handler_conf.port or self.port
+        self.version = handler_conf.version or self.version
+        self.path = handler_conf.path or self.path
+        self.model_type = handler_conf.model_type or self.model_type
+        self.node = handler_conf.node or self.node
+        self.method = handler_conf.method or self.method
+        self.timeout = handler_conf.timeout or self.timeout
+        self.retries = handler_conf.retries or self.retries
+        self.service_id = handler_conf.service_id or self.service_id
+        self.return_to = handler_conf.return_to or self.return_to
+        self.tags = handler_conf.tags or self.tags
+        self.event_display_name = handler_conf.event_display_name or self.event_display_name
+        self.startup = handler_conf.startup or self.startup
+        self.traffic = handler_conf.traffic or self.traffic
+        self.reader_type = handler_conf.reader_type or self.reader_type
+        self.reader_endpoint = handler_conf.reader_endpoint or self.reader_endpoint
+
     def __str__(self):
         repr_string = """
         <HandlerConfEntity 

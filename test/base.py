@@ -55,6 +55,17 @@ class MockStats(IStats):
         pass
 
 
+class MockHandlersManager(object):
+    def __init__(self):
+        self.started = set()
+        self.stopped = set()
+
+    def start_handler(self, node_id):
+        if node_id in self.stopped:
+            self.stopped.remove(node_id)
+        self.started.add(node_id)
+
+
 class MockEnv(GNEnvironment):
     def __init__(self, db=None, consul=None):
         super().__init__(None, ConfigDict(dict()))
@@ -65,7 +76,7 @@ class MockEnv(GNEnvironment):
         self.db = db
         self.consul = consul
         self.event_handler_map = dict()
-        self.handlers_manager = None
+        self.handlers_manager = MockHandlersManager()
         self.enrichment_manager = None
         self.enrichers = [
             ('published', PublishedEnrichment()),

@@ -38,7 +38,13 @@ class IDatabase(ABC):
     def retire_handler(self, node_id) -> None:
         raise NotImplementedError()
 
-    def register_handler(self, host, port, service_id, name, node, hostname, tags) -> HandlerConf:
+    def find_one_handler(self, service_id, hostname, node) -> Union[HandlerConf, None]:
+        raise NotImplementedError()
+
+    def find_one_similar_handler(self, service_id):
+        raise NotImplementedError()
+
+    def register_handler(self, handler_conf: HandlerConf) -> HandlerConf:
         raise NotImplementedError()
 
     def timing_per_node(self) -> dict:

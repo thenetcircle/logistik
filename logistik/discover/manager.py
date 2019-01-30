@@ -1,3 +1,4 @@
+import datetime
 from typing import Union
 
 import time
@@ -43,11 +44,8 @@ class DiscoveryService(BaseDiscoveryService):
     def poll_services(self):
         enabled_handlers_to_check = self._get_enabled_handlers()
         _, services = self.env.consul.get_services()
-        from pprint import pprint
 
-        if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug(f'found {len(services)} consul service(s):')
-            pprint(services)
+        self.logger.debug(f'found {len(services)} consul service(s)')
 
         for name, tags in services.items():
             if f'{self.tag}={self.tag}' not in tags.get(DiscoveryService.SERVICE_TAGS):
@@ -104,9 +102,81 @@ class DiscoveryService(BaseDiscoveryService):
             self.logger.error('missing node/hostname in: {}'.format(service))
             return None
 
-        handler_conf = self.env.db.register_handler(host, port, s_id, name, node, hostname, tags)
+        handler_conf = self.create_or_update_handler(host, port, s_id, name, node, hostname, tags)
+        self.env.db.register_handler(handler_conf)
+
+        if handler_conf.event != 'UNMAPPED':
+            self.env.cache.reset_enabled_handlers_for(handler_conf.event)
+
         self.env.handlers_manager.start_handler(handler_conf.node_id())
         return handler_conf
+
+    def create_or_update_handler(self, host, port, service_id, name, node, hostname, tags):
+        handler = self.env.db.find_one_handler(service_id, hostname, node)
+
+        tags_dict = dict()
+        for tag in tags:
+            if '=' not in tag:
+                continue
+            k, v = tag.split('=', maxsplit=1)
+            tags_dict[k] = v
+
+        if handler is not None:
+            return self._update_existing_handler(handler, service_id, node, name, hostname, port, host, tags_dict)
+        return self._create_new_handler(service_id, node, name, hostname, port, host, tags_dict)
+
+    def _update_existing_handler(
+            self, handler: HandlerConf, service_id, node, name, hostname, port, host, tags_dict: dict
+    ):
+        if handler.enabled:
+            return handler
+
+        self.logger.info('registering updated handler "{}": address "{}", port "{}", id: "{}"'.format(
+            name, host, port, service_id
+        ))
+
+        return self._create_handler(handler, service_id, node, name, hostname, port, host, tags_dict)
+
+    def _create_new_handler(self, service_id, node, name, hostname, port, host, tags_dict: dict):
+        self.logger.info('registering new handler "{}": address "{}", port "{}", id: "{}"'.format(
+            name, host, port, service_id
+        ))
+
+        handler = self._create_handler(HandlerConf(), service_id, node, name, hostname, port, host, tags_dict)
+        other_service_handler = self.env.db.find_one_similar_handler(service_id)
+
+        # copy known values form previous handler
+        if other_service_handler is not None:
+            if 'event' not in tags_dict.keys():
+                handler.event = other_service_handler.event
+            if 'path' not in tags_dict.keys():
+                handler.path = other_service_handler.path
+            if 'method' not in tags_dict.keys():
+                handler.method = other_service_handler.method
+
+        handler.model_type = ModelTypes.CANARY
+        handler.enabled = False
+        return handler
+
+    def _create_handler(
+            self, handler: HandlerConf, service_id, node, name, hostname, port, host, tags_dict: dict
+    ):
+        handler.enabled = True
+        handler.startup = datetime.datetime.utcnow()
+        handler.name = name
+        handler.service_id = service_id
+        handler.version = tags_dict.get('version', None) or handler.version
+        handler.path = tags_dict.get('path', None) or handler.path
+        handler.event = tags_dict.get('event', handler.event) or 'UNMAPPED'
+        handler.return_to = tags_dict.get('returnto', None) or handler.return_to
+        handler.reader_type = tags_dict.get('readertype', handler.reader_type) or 'kafka'
+        handler.reader_endpoint = tags_dict.get('readerendpoint', None) or handler.reader_endpoint
+        handler.node = node
+        handler.hostname = hostname
+        handler.endpoint = host
+        handler.port = port
+
+        return handler
 
     def run(self):
         while True:

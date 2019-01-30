@@ -136,7 +136,7 @@ class HandlerConf(object):
             'tags': self.tags,
             'reader_type': self.reader_type,
             'reader_endpoint': self.reader_endpoint,
-            'traffic': '%s%%' % int(self.traffic * 100),
+            'traffic': '%s%%' % int(float(self.traffic or 0) * 100),
             'return_to': self.return_to or ''
         }
 

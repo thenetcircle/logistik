@@ -251,87 +251,45 @@ class DatabaseManager(IDatabase):
             raise HandlerNotFoundException(node_id)
         return handler.to_repr()
 
-    def _create_handler(
-            self, handler: HandlerConfEntity, service_id, node, name, hostname, port, host, tags_dict: dict
-    ):
-        handler.enabled = True
-        handler.startup = datetime.datetime.utcnow()
-        handler.name = name
-        handler.service_id = service_id
-        handler.version = tags_dict.get('version', None) or handler.version
-        handler.path = tags_dict.get('path', None) or handler.path
-        handler.event = tags_dict.get('event', handler.event) or 'UNMAPPED'
-        handler.return_to = tags_dict.get('returnto', None) or handler.return_to
-        handler.reader_type = tags_dict.get('readertype', handler.reader_type) or 'kafka'
-        handler.reader_endpoint = tags_dict.get('readerendpoint', None) or handler.reader_endpoint
-        handler.node = node
-        handler.hostname = hostname
-        handler.endpoint = host
-        handler.port = port
-
-        return handler
-
-    def _update_existing_handler(
-            self, handler: HandlerConfEntity, service_id, node, name, hostname, port, host, tags_dict: dict
-    ):
-        if handler.enabled:
-            return handler.to_repr()
-        handler = self._create_handler(handler, service_id, node, name, hostname, port, host, tags_dict)
-
-        self.env.dbman.session.add(handler)
-        self.env.dbman.session.commit()
-        if handler.event != 'UNMAPPED':
-            self.env.cache.reset_enabled_handlers_for(handler.event)
-
-        return handler.to_repr()
-
-    def _create_new_handler(self, service_id, node, name, hostname, port, host, tags_dict: dict):
-        logger.info('registering handler "{}": address "{}", port "{}", id: "{}"'.format(
-            name, host, port, service_id
-        ))
-
-        other_service_handler = HandlerConfEntity.query.filter_by(
-            service_id=service_id
-        ).first()
-
-        handler = self._create_handler(HandlerConfEntity(), service_id, node, name, hostname, port, host, tags_dict)
-
-        # copy known values form previous handler
-        if other_service_handler is not None:
-            if 'event' not in tags_dict.keys():
-                handler.event = other_service_handler.event
-            if 'path' not in tags_dict.keys():
-                handler.path = other_service_handler.path
-            if 'method' not in tags_dict.keys():
-                handler.method = other_service_handler.method
-
-        handler.model_type = ModelTypes.CANARY
-        handler.enabled = False
-
-        self.env.dbman.session.add(handler)
-        self.env.dbman.session.commit()
-
-        return handler.to_repr()
-
     @with_session
-    def register_handler(self, host, port, service_id, name, node, hostname, tags) -> HandlerConf:
+    def find_one_handler(self, service_id, hostname, node) -> Union[HandlerConf, None]:
         handler = HandlerConfEntity.query.filter_by(
             service_id=service_id,
             hostname=hostname,
             node=node
         ).first()
 
-        tags_dict = dict()
-        for tag in tags:
-            if '=' not in tag:
-                continue
-            k, v = tag.split('=', maxsplit=1)
-            tags_dict[k] = v
-
         if handler is not None:
-            return self._update_existing_handler(handler, service_id, node, name, hostname, port, host, tags_dict)
+            return handler.to_repr()
+        return None
 
-        return self._create_new_handler(service_id, node, name, hostname, port, host, tags_dict)
+    @with_session
+    def find_one_similar_handler(self, service_id):
+        other_service_handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id
+        ).first()
+
+        if other_service_handler is not None:
+            return other_service_handler.to_repr()
+        return None
+
+    @with_session
+    def register_handler(self, handler_conf: HandlerConf) -> HandlerConf:
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=handler_conf.service_id,
+            hostname=handler_conf.hostname,
+            node=handler_conf.node
+        ).first()
+
+        if handler is None:
+            handler = HandlerConfEntity()
+
+        handler.update(handler_conf)
+
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+
+        return handler.to_repr()
 
     @with_session
     def get_enabled_handlers_for(self, event_name: str) -> List[HandlerConf]:
