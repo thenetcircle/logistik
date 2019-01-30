@@ -251,7 +251,9 @@ class DatabaseManager(IDatabase):
             raise HandlerNotFoundException(node_id)
         return handler.to_repr()
 
-    def _create_handler(self, handler: HandlerConfEntity, service_id, node, name, hostname, port, host, tags_dict: dict):
+    def _create_handler(
+            self, handler: HandlerConfEntity, service_id, node, name, hostname, port, host, tags_dict: dict
+    ):
         handler.enabled = True
         handler.startup = datetime.datetime.utcnow()
         handler.name = name
