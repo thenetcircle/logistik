@@ -88,7 +88,6 @@ class HandlerConf(object):
     @staticmethod
     def from_node_id(node_id) -> (str, str, str, str):
         parts = node_id.rsplit('-', maxsplit=3)
-        parts = node_id.rsplit('-', maxsplit=3)
         if len(parts) != 4:
             raise AttributeError('invalid node id "{}": needs to have exactly 4 parts'.format(node_id))
         return parts[0], parts[1], parts[2], parts[3]

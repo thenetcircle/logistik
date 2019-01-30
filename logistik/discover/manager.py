@@ -43,13 +43,18 @@ class DiscoveryService(BaseDiscoveryService):
     def poll_services(self):
         enabled_handlers_to_check = self._get_enabled_handlers()
         _, services = self.env.consul.get_services()
+        from pprint import pprint
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(f'found {len(services)} consul service(s):')
+            pprint(services)
 
         for name, tags in services.items():
-            if self.tag not in tags:
+            if f'{self.tag}={self.tag}' not in tags.get(DiscoveryService.SERVICE_TAGS):
+                self.logger.debug(f'no "{self.tag}" in "{str(tags)}"')
                 continue
 
-            _, services = self.env.consul.get_service(name)
-            for service in services:
+            for service in services.values():
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
 

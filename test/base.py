@@ -56,12 +56,14 @@ class MockStats(IStats):
 
 
 class MockEnv(GNEnvironment):
-    def __init__(self):
+    def __init__(self, db=None, consul=None):
         super().__init__(None, ConfigDict(dict()))
         self.dropped_msg_log = MockLogger()
         self.failed_msg_log = MockLogger()
         self.stats = MockStats()
         self.cache = ICache
+        self.db = db
+        self.consul = consul
         self.event_handler_map = dict()
         self.handlers_manager = None
         self.enrichment_manager = None
