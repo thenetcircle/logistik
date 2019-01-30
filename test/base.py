@@ -65,6 +65,11 @@ class MockHandlersManager(object):
             self.stopped.remove(node_id)
         self.started.add(node_id)
 
+    def stop_handler(self, node_id):
+        if node_id in self.started:
+            self.started.remove(node_id)
+        self.stopped.add(node_id)
+
 
 class MockEnv(GNEnvironment):
     def __init__(self, db=None, consul=None, cache=None):
