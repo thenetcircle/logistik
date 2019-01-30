@@ -44,15 +44,15 @@ class DiscoveryService(BaseDiscoveryService):
     def poll_services(self):
         enabled_handlers_to_check = self._get_enabled_handlers()
         _, services = self.env.consul.get_services()
+        _, data = self.env.consul.get_services()
 
-        self.logger.debug(f'found {len(services)} consul service(s)')
-
-        for name, tags in services.items():
-            if f'{self.tag}={self.tag}' not in tags.get(DiscoveryService.SERVICE_TAGS):
-                self.logger.debug(f'no "{self.tag}" in "{str(tags)}"')
+        for name, tags in data.items():
+            if self.tag not in tags:
                 continue
 
-            for service in services.values():
+            _, services = self.env.consul.get_service(name)
+
+            for service in services:
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
 
@@ -61,11 +61,9 @@ class DiscoveryService(BaseDiscoveryService):
                 hostname = self.get_from_tags('hostname', service_tags)
                 node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
 
-                logging.info(f'checking if {node_id} is enabled in db: [{",".join(enabled_handlers_to_check)}]')
                 if node_id in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(node_id)
 
-                logging.info(f'enabling {node_id}')
                 handler_conf = self.enable_handler(service, name)
                 if handler_conf is not None and handler_conf.node_id() in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(handler_conf.node_id())
@@ -115,10 +113,6 @@ class DiscoveryService(BaseDiscoveryService):
 
     def create_or_update_handler(self, host, port, service_id, name, node, hostname, tags):
         handler = self.env.db.find_one_handler(service_id, hostname, node)
-        if handler is None:
-            self.logger.info(f'in create_or_update, found 0 handlers for {service_id}-{hostname}-{node}')
-        else:
-            self.logger.info(f'in create_or_update, found 1 handler: {handler.to_json()}')
 
         tags_dict = dict()
         for tag in tags:
