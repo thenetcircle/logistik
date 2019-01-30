@@ -67,12 +67,12 @@ class MockHandlersManager(object):
 
 
 class MockEnv(GNEnvironment):
-    def __init__(self, db=None, consul=None):
+    def __init__(self, db=None, consul=None, cache=None):
         super().__init__(None, ConfigDict(dict()))
         self.dropped_msg_log = MockLogger()
         self.failed_msg_log = MockLogger()
         self.stats = MockStats()
-        self.cache = ICache
+        self.cache = cache
         self.db = db
         self.consul = consul
         self.event_handler_map = dict()

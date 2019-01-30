@@ -61,9 +61,11 @@ class DiscoveryService(BaseDiscoveryService):
                 hostname = self.get_from_tags('hostname', service_tags)
                 node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
 
+                logging.info(f'checking if {node_id} is enabled in db: [{",".join(enabled_handlers_to_check)}]')
                 if node_id in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(node_id)
 
+                logging.info(f'enabling {node_id}')
                 handler_conf = self.enable_handler(service, name)
                 if handler_conf is not None and handler_conf.node_id() in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(handler_conf.node_id())
@@ -113,6 +115,10 @@ class DiscoveryService(BaseDiscoveryService):
 
     def create_or_update_handler(self, host, port, service_id, name, node, hostname, tags):
         handler = self.env.db.find_one_handler(service_id, hostname, node)
+        if handler is None:
+            self.logger.info(f'in create_or_update, found 0 handlers for {service_id}-{hostname}-{node}')
+        else:
+            self.logger.info(f'in create_or_update, found 1 handler: {handler.to_json()}')
 
         tags_dict = dict()
         for tag in tags:
@@ -171,6 +177,7 @@ class DiscoveryService(BaseDiscoveryService):
         handler.return_to = tags_dict.get('returnto', None) or handler.return_to
         handler.reader_type = tags_dict.get('readertype', handler.reader_type) or 'kafka'
         handler.reader_endpoint = tags_dict.get('readerendpoint', None) or handler.reader_endpoint
+        handler.model_type = ModelTypes.MODEL
         handler.node = node
         handler.hostname = hostname
         handler.endpoint = host
