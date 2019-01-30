@@ -1,6 +1,5 @@
 from typing import Union
 
-import consul
 import time
 import sys
 import logging
@@ -20,11 +19,7 @@ class DiscoveryService(BaseDiscoveryService):
     SERVICE_NAME = 'ServiceName'
 
     def __init__(self, env: GNEnvironment):
-        host = env.config.get(ConfigKeys.HOST, domain=ConfigKeys.DISCOVERY, default='127.0.0.1')
-        port = env.config.get(ConfigKeys.PORT, domain=ConfigKeys.DISCOVERY, default=8500)
-
         self.env = env
-        self.consul = consul.Consul(host=host, port=port)
         self.logger = logging.getLogger(__name__)
         self.tag = env.config.get(ConfigKeys.TAG, domain=ConfigKeys.DISCOVERY, default='logistik')
         self.interval = env.config.get(ConfigKeys.INTERVAL, domain=ConfigKeys.DISCOVERY, default=30)
@@ -34,20 +29,26 @@ class DiscoveryService(BaseDiscoveryService):
         elif self.interval > 3600:
             self.interval = 3600
 
-    def poll_services(self):
+    def _get_enabled_handlers(self):
         handlers = self.env.db.get_all_handlers()
         enabled_handlers_to_check = set()
+
         for handler in handlers:
             if not handler.enabled:
                 continue
             enabled_handlers_to_check.add(handler.node_id())
 
-        _, data = self.consul.catalog.services()
-        for name, tags in data.items():
+        return enabled_handlers_to_check
+
+    def poll_services(self):
+        enabled_handlers_to_check = self._get_enabled_handlers()
+        _, services = self.env.consul.get_services()
+
+        for name, tags in services.items():
             if self.tag not in tags:
                 continue
 
-            _, services = self.consul.catalog.service(name)
+            _, services = self.env.consul.get_service(name)
             for service in services:
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
@@ -65,6 +66,8 @@ class DiscoveryService(BaseDiscoveryService):
                     enabled_handlers_to_check.remove(handler_conf.node_id())
 
         for node_id in enabled_handlers_to_check:
+            handlers_str = ",".join(enabled_handlers_to_check)
+            self.logger.debug(f'node {node_id} from consul not in db [{handlers_str}], disabling')
             self.disable_handler(node_id)
 
     def disable_handler(self, node_id: str):

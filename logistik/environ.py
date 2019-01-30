@@ -10,6 +10,7 @@ import pkg_resources
 import yaml
 
 from logistik.config import ConfigKeys
+from logistik.consul import IConsulService
 from logistik.handlers import IHandlersManager
 from logistik.handlers import IHandlerStats
 from logistik.enrich import IEnrichmentManager
@@ -175,6 +176,7 @@ class GNEnvironment(object):
         self.kafka_writer: IKafkaWriter = None
         self.event_handler_map = dict()
         self.event_handlers = dict()
+        self.consul: IConsulService = None
 
 
 def b64e(s: str) -> str:
@@ -555,6 +557,17 @@ def init_kafka_writer(gn_env: GNEnvironment):
     gn_env.kafka_writer = KafkaWriter(gn_env)
 
 
+@timeit(logger, 'init consul service')
+def init_consul(gn_env: GNEnvironment):
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+
+        return
+
+    from logistik.consul.consul import ConsulService
+    gn_env.consul = ConsulService(gn_env)
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
@@ -563,6 +576,7 @@ def initialize_env(lk_env):
     init_cache_service(lk_env)
     init_stats_service(lk_env)
     init_plugins(lk_env)
+    init_consul(lk_env)
     init_enrichment_service(lk_env)
     init_discovery_service(lk_env)
     init_handler_stats(lk_env)

@@ -251,6 +251,66 @@ class DatabaseManager(IDatabase):
             raise HandlerNotFoundException(node_id)
         return handler.to_repr()
 
+    def _create_handler(self, handler: HandlerConfEntity, service_id, node, name, hostname, port, host, tags_dict: dict):
+        handler.enabled = True
+        handler.startup = datetime.datetime.utcnow()
+        handler.name = name
+        handler.service_id = service_id
+        handler.version = tags_dict.get('version', None) or handler.version
+        handler.path = tags_dict.get('path', None) or handler.path
+        handler.event = tags_dict.get('event', handler.event) or 'UNMAPPED'
+        handler.return_to = tags_dict.get('returnto', None) or handler.return_to
+        handler.reader_type = tags_dict.get('readertype', handler.reader_type) or 'kafka'
+        handler.reader_endpoint = tags_dict.get('readerendpoint', None) or handler.reader_endpoint
+        handler.node = node
+        handler.hostname = hostname
+        handler.endpoint = host
+        handler.port = port
+
+        return handler
+
+    def _update_existing_handler(
+            self, handler: HandlerConfEntity, service_id, node, name, hostname, port, host, tags_dict: dict
+    ):
+        if handler.enabled:
+            return handler.to_repr()
+        handler = self._create_handler(handler, service_id, node, name, hostname, port, host, tags_dict)
+
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+        if handler.event != 'UNMAPPED':
+            self.env.cache.reset_enabled_handlers_for(handler.event)
+
+        return handler.to_repr()
+
+    def _create_new_handler(self, service_id, node, name, hostname, port, host, tags_dict: dict):
+        logger.info('registering handler "{}": address "{}", port "{}", id: "{}"'.format(
+            name, host, port, service_id
+        ))
+
+        other_service_handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id
+        ).first()
+
+        handler = self._create_handler(HandlerConfEntity(), service_id, node, name, hostname, port, host, tags_dict)
+
+        # copy known values form previous handler
+        if other_service_handler is not None:
+            if 'event' not in tags_dict.keys():
+                handler.event = other_service_handler.event
+            if 'path' not in tags_dict.keys():
+                handler.path = other_service_handler.path
+            if 'method' not in tags_dict.keys():
+                handler.method = other_service_handler.method
+
+        handler.model_type = ModelTypes.CANARY
+        handler.enabled = False
+
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+
+        return handler.to_repr()
+
     @with_session
     def register_handler(self, host, port, service_id, name, node, hostname, tags) -> HandlerConf:
         handler = HandlerConfEntity.query.filter_by(
@@ -260,103 +320,16 @@ class DatabaseManager(IDatabase):
         ).first()
 
         tags_dict = dict()
-
         for tag in tags:
             if '=' not in tag:
                 continue
-
             k, v = tag.split('=', maxsplit=1)
             tags_dict[k] = v
 
         if handler is not None:
-            if handler.enabled:
-                return handler.to_repr()
-            node_id = HandlerConf.to_node_id(service_id, hostname, handler.model_type, node)
-            logger.info('enabling handler with node id "{}"'.format(node_id))
-            handler.enabled = True
-            handler.startup = datetime.datetime.utcnow()
-            handler.name = name
-            handler.version = tags_dict.get('version', None) or handler.version
-            handler.path = tags_dict.get('path', None) or handler.path
-            handler.event = tags_dict.get('event', None) or handler.event
-            handler.return_to = tags_dict.get('returnto', None) or handler.return_to
-            handler.reader_type = tags_dict.get('readertype', None) or handler.reader_type
-            handler.reader_endpoint = tags_dict.get('readerendpoint', None) or handler.reader_endpoint
-            handler.node = node
-            handler.hostname = hostname
-            handler.endpoint = host
-            handler.port = port
-            self.env.dbman.session.add(handler)
-            self.env.dbman.session.commit()
+            return self._update_existing_handler(handler, service_id, node, name, hostname, port, host, tags_dict)
 
-            if handler.event != 'UNMAPPED':
-                self.env.cache.reset_enabled_handlers_for(handler.event)
-            return handler.to_repr()
-
-        logger.info('registering handler "{}": address "{}", port "{}", id: "{}"'.format(
-            name, host, port, service_id
-        ))
-
-        other_service_handler = HandlerConfEntity.query.filter_by(
-            service_id=service_id
-        ).first()
-
-        handler = HandlerConfEntity()
-
-        # copy known values form previous handler
-        if other_service_handler is not None:
-            if 'event' not in tags:
-                handler.event = other_service_handler.event
-            if 'path' not in tags:
-                handler.path = other_service_handler.path
-            if 'method' not in tags:
-                handler.method = other_service_handler.method
-
-        handler.event = 'UNMAPPED'
-        handler.service_id = service_id
-        handler.name = name
-        handler.version = tags_dict.get('version', None) or ''
-        handler.node = node
-        handler.model_type = ModelTypes.CANARY
-        handler.hostname = hostname
-        handler.endpoint = host
-        handler.port = port
-        handler.enabled = False
-        handler.path = tags_dict.get('path', handler.path)
-        handler.event = tags_dict.get('event', handler.path) or 'UNMAPPED'
-        handler.return_to = tags_dict.get('returnto', handler.return_to)
-        handler.reader_type = tags_dict.get('readertype', handler.reader_type) or 'kafka'
-        handler.reader_endpoint = tags_dict.get('readerendpoint', handler.reader_endpoint)
-
-        """
-        service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-        name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-        event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-        enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
-        retired = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
-        endpoint = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-        hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-        port = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
-        version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='')
-        path = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
-        node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
-        method = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
-        model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default=ModelTypes.MODEL)
-        retries = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='1')
-        timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
-        tags = env.dbman.Column(env.dbman.String(256), unique=False, nullable=True)
-        return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
-        event_display_name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='event')
-        startup = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=True)
-        traffic = env.dbman.Column(env.dbman.Float(), unique=False, nullable=False, server_default='0.1')
-        reader_type = env.dbman.Column(env.dbman.String(), unique=False, nullable=False, server_default='kafka')
-        reader_endpoint = env.dbman.Column(env.dbman.String(), unique=False, nullable=True)
-        """
-
-        self.env.dbman.session.add(handler)
-        self.env.dbman.session.commit()
-
-        return handler.to_repr()
+        return self._create_new_handler(service_id, node, name, hostname, port, host, tags_dict)
 
     @with_session
     def get_enabled_handlers_for(self, event_name: str) -> List[HandlerConf]:
