@@ -259,9 +259,9 @@ class DatabaseManager(IDatabase):
             node=node
         ).first()
 
-        if handler is not None:
-            return handler.to_repr()
-        return None
+        if handler is None:
+            return None
+        return handler.to_repr()
 
     @with_session
     def find_one_similar_handler(self, service_id):
@@ -269,9 +269,9 @@ class DatabaseManager(IDatabase):
             service_id=service_id
         ).first()
 
-        if other_service_handler is not None:
-            return other_service_handler.to_repr()
-        return None
+        if other_service_handler is None:
+            return None
+        return other_service_handler.to_repr()
 
     @with_session
     def register_handler(self, handler_conf: HandlerConf) -> HandlerConf:
