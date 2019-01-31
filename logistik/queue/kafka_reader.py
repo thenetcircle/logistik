@@ -4,6 +4,7 @@ import logging
 import time
 import traceback
 from collections import defaultdict
+from typing import Union
 from uuid import uuid4 as uuid
 
 from kafka import KafkaConsumer
@@ -125,7 +126,7 @@ class KafkaReader(IKafkaReader):
                 self.logger.error('failed to handle message: {}'.format(str(e)))
                 self.logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
-                self.fail_msg(message)
+                self.fail_msg(message, original_topic=None, decoded_value=None)
                 time.sleep(1)
 
     def get_consumer_config(self):
@@ -211,12 +212,15 @@ class KafkaReader(IKafkaReader):
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
 
-    def fail_msg(self, message, original_topic: str, decoded_value: dict):
+    def fail_msg(self, message, original_topic: Union[str, None], decoded_value: Union[dict, None]):
         try:
             self.failed_msg_log.info(str(message))
 
-            fail_topic = f'{original_topic}-failed'
-            self.env.kafka_writer.fail(fail_topic, decoded_value)
+            # in case even decoding failed, we can't publish back to kafka, something
+            # odd happened, so just log to the failed message log...
+            if decoded_value is not None:
+                fail_topic = f'{original_topic}-failed'
+                self.env.kafka_writer.fail(fail_topic, decoded_value)
         except Exception as e:
             self.logger.error('could not log failed message: {}'.format(str(e)))
             self.logger.exception(e)
