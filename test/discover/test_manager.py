@@ -166,7 +166,7 @@ class TestDiscoveryManager(TestCase):
             'ServiceAddress': 'machine_b',
             'ServicePort': '8888',
             'ServiceTags': [
-                'logistik=logistik',
+                'logistik',
                 'node=0',
                 'hostname={}'.format(hostname)
             ],

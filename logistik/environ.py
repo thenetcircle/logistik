@@ -564,7 +564,7 @@ def init_consul(gn_env: GNEnvironment):
 
         return
 
-    from logistik.discover.consul import ConsulService
+    from logistik.discover.consul.consul import ConsulService
     gn_env.consul = ConsulService(gn_env)
 
 

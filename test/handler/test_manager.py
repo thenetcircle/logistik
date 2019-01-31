@@ -1,8 +1,9 @@
 from unittest import TestCase
+from uuid import uuid4 as uuid
 
-from logistik.handlers.manager import HandlersManager
-from logistik.db.repr.handler import HandlerConf
 from logistik.config import ModelTypes
+from logistik.db.repr.handler import HandlerConf
+from logistik.handlers.manager import HandlersManager
 from test.base import MockEnv
 
 
@@ -13,53 +14,12 @@ class ManagerTest(TestCase):
     def test_get_handler_configs(self):
         all_confs = list()
         for _ in range(10):
-            all_confs.append(HandlerConf(model_type=ModelTypes.MODEL))
-        all_confs.append(HandlerConf(model_type=ModelTypes.CANARY))
-        all_confs.append(HandlerConf(model_type=ModelTypes.DECOY))
+            all_confs.append(HandlerConf(model_type=ModelTypes.MODEL, reader_type='mock', service_id=str(uuid())))
+        all_confs.append(HandlerConf(model_type=ModelTypes.CANARY, reader_type='mock', service_id=str(uuid())))
+        all_confs.append(HandlerConf(model_type=ModelTypes.DECOY, reader_type='mock', service_id=str(uuid())))
 
-        handlers, canary, decoy = self.manager.get_handler_configs(all_confs)
-        self.assertEqual(10, len(handlers))
-        self.assertIsNotNone(canary)
-        self.assertIsNotNone(decoy)
+        for conf in all_confs:
+            self.manager.add_handler(conf)
 
-    def test_get_handler_configs_no_canary(self):
-        all_confs = list()
-        for _ in range(10):
-            all_confs.append(HandlerConf(model_type=ModelTypes.MODEL))
-        all_confs.append(HandlerConf(model_type=ModelTypes.DECOY))
-
-        handlers, canary, decoy = self.manager.get_handler_configs(all_confs)
-        self.assertEqual(10, len(handlers))
-        self.assertIsNone(canary)
-        self.assertIsNotNone(decoy)
-
-    def test_get_handler_configs_no_decoy(self):
-        all_confs = list()
-        for _ in range(10):
-            all_confs.append(HandlerConf(model_type=ModelTypes.MODEL))
-        all_confs.append(HandlerConf(model_type=ModelTypes.CANARY))
-
-        handlers, canary, decoy = self.manager.get_handler_configs(all_confs)
-        self.assertEqual(10, len(handlers))
-        self.assertIsNotNone(canary)
-        self.assertIsNone(decoy)
-
-    def test_get_handler_configs_no_decoy_no_canary(self):
-        all_confs = list()
-        for _ in range(10):
-            all_confs.append(HandlerConf(model_type=ModelTypes.MODEL))
-
-        handlers, canary, decoy = self.manager.get_handler_configs(all_confs)
-        self.assertEqual(10, len(handlers))
-        self.assertIsNone(canary)
-        self.assertIsNone(decoy)
-
-    def test_get_handler_configs_only_decoy_and_canary(self):
-        all_confs = list()
-        all_confs.append(HandlerConf(model_type=ModelTypes.CANARY))
-        all_confs.append(HandlerConf(model_type=ModelTypes.DECOY))
-
-        handlers, canary, decoy = self.manager.get_handler_configs(all_confs)
-        self.assertEqual(0, len(handlers))
-        self.assertIsNotNone(canary)
-        self.assertIsNotNone(decoy)
+        handler_configs = self.manager.get_handlers()
+        self.assertEqual(12, len(handler_configs))

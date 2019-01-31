@@ -12,6 +12,7 @@ from logistik.environ import GNEnvironment
 from logistik.handlers.base import BaseHandler
 from logistik.db.repr.handler import HandlerConf
 from logistik.queue.kafka_reader import KafkaReader
+from logistik.queue.mock_reader import MockReader
 from logistik.queue.rest_reader import RestReader
 
 
@@ -23,6 +24,8 @@ class HttpHandler(BaseHandler):
         self.json_header = {'Context-Type': 'application/json'}
         self.schema = 'http://'
         self.logger = logging.getLogger(__name__)
+        self.enabled = False
+        self.name = ''
 
     def __str__(self):
         return HttpHandler.__class__.__name__
@@ -76,6 +79,9 @@ class HttpHandler(BaseHandler):
             self.reader_thread = eventlet.spawn(self.reader.run)
         elif self.conf.reader_type == 'rest':
             self.reader = RestReader(env, self.conf, self)
+            self.reader_thread = eventlet.spawn_after(func=self.reader.run, seconds=1)
+        elif self.conf.reader_type == 'mock':
+            self.reader = MockReader(env, self.conf, self)
             self.reader_thread = eventlet.spawn_after(func=self.reader.run, seconds=1)
         else:
             raise ValueError('unknown reader type {}'.format(self.conf.reader_type))

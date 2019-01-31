@@ -1,6 +1,5 @@
 import logging
 
-from logistik.environ import GNEnvironment
 from logistik.handlers import IHandlersManager
 from logistik.handlers.http import HttpHandler
 from logistik.utils.exceptions import HandlerNotFoundException
@@ -9,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class HandlersManager(IHandlersManager):
-    def __init__(self, env: GNEnvironment):
+    def __init__(self, env):
         self.env = env
         self.handlers = dict()
 

@@ -53,11 +53,30 @@ class DiscoveryService(BaseDiscoveryService):
         enabled_handlers_to_check = self.get_enabled_handlers()
         _, data = self.env.consul.get_services()
 
-        for name, tags in data.items():
-            if self.tag not in tags:
+        for name, metadata in data.items():
+            if self.tag not in metadata:
+                """
+                metadata example: [
+                    'node=0', 'hostname=pc207', 'version=v0.1.2-9-g3bafd7f', 
+                    'logistik', 'event=event-test-face', 'model=model'
+                ]
+                """
+                self.logger.info(f'{self.tag} not in {metadata}')
                 continue
 
+            """
+            services example: [{
+                'Node': 'pc207', 'Address': '10.60.0.23', 'ServiceID': 'e40f3763', 
+                'ServiceName': 'face', 'ServiceTags': [
+                    'logistik', 'event=event-test-face', 'model=model', 'node=0', 'hostname=pc207', 
+                    'version=v0.1.2-9-g3bafd7f'
+                ], 
+                'ServiceAddress': '10.60.0.23', 'ServicePort': 5151, 'ServiceEnableTagOverride': False, 
+                'CreateIndex': 3979, 'ModifyIndex': 3981
+            }]
+            """
             _, services = self.env.consul.get_service(name)
+            self.logger.info(f'found services: {services}')
 
             for service in services:
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
@@ -80,7 +99,7 @@ class DiscoveryService(BaseDiscoveryService):
                     enabled_handlers_to_check.remove(node_id)
 
                 # might be an existing model, in which case the node id might change.so check again
-                handler_conf = self.enable_handler(service, name, node, hostname, tags)
+                handler_conf = self.enable_handler(service, name, node, hostname, service_tags)
                 if handler_conf is not None and handler_conf.node_id() in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(handler_conf.node_id())
 
