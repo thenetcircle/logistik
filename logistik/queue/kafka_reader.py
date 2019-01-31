@@ -136,31 +136,6 @@ class KafkaReader(IKafkaReader):
     def stop(self):
         self.enabled = False
 
-    def log_pre_processed_request(self, original_topic: str, data: dict):
-        log_topic = '{}-preprocessed'.format(original_topic)
-        try:
-            self.env.kafka_writer.log(log_topic, data)
-        except Exception as e:
-            self.logger.error('could not publish pre-processed request to kafka: {}'.format(str(e)))
-            self.logger.exception(e)
-            self.env.capture_exception(sys.exc_info())
-
-    def fail_msg(self, message):
-        try:
-            self.failed_msg_log.info(str(message))
-        except Exception as e:
-            self.logger.error('could not log failed message: {}'.format(str(e)))
-            self.logger.exception(e)
-            self.env.capture_exception(sys.exc_info())
-
-    def drop_msg(self, message):
-        try:
-            self.dropped_msg_log.info(str(message))
-        except Exception as e:
-            self.logger.error('could not log dropped message: {}'.format(str(e)))
-            self.logger.exception(e)
-            self.env.capture_exception(sys.exc_info())
-
     def handle_message(self, message) -> None:
         self.logger.debug("%s:%d:%d: key=%s" % (
             message.topic, message.partition,
@@ -185,14 +160,14 @@ class KafkaReader(IKafkaReader):
         except InterruptedError:
             self.logger.warning('got interrupt, dropping message'.format(str(message.value)))
             self.env.handler_stats.failure(self.conf, None)
-            self.drop_msg(message_value)
+            self.drop_msg(message, message.topic, message_value)
             raise
         except ParseException:
             self.logger.error('could not enrich/parse data, original data was: {}'.format(str(message.value)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
             self.env.handler_stats.error(self.conf, None)
-            self.fail_msg(message_value)
+            self.fail_msg(message, message.topic, message_value)
             return
         except Exception as e:
             self.logger.error('got uncaught exception: {}'.format(str(e)))
@@ -200,7 +175,7 @@ class KafkaReader(IKafkaReader):
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
             self.env.handler_stats.error(self.conf, None)
-            self.fail_msg(message_value)
+            self.fail_msg(message, message.topic, message_value)
             return
 
         try:
@@ -213,7 +188,7 @@ class KafkaReader(IKafkaReader):
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
             self.env.handler_stats.error(self.conf, None)
-            self.fail_msg(data)
+            self.fail_msg(message, message.topic, message_value)
 
     def try_to_parse(self, data) -> (dict, Activity):
         try:
@@ -226,3 +201,34 @@ class KafkaReader(IKafkaReader):
             return enriched_data, activity
         except Exception as e:
             raise ParseException(e)
+
+    def log_pre_processed_request(self, original_topic: str, decoded_value: dict):
+        try:
+            log_topic = f'{original_topic}-preprocessed'
+            self.env.kafka_writer.log(log_topic, decoded_value)
+        except Exception as e:
+            self.logger.error('could not publish pre-processed request to kafka: {}'.format(str(e)))
+            self.logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+
+    def fail_msg(self, message, original_topic: str, decoded_value: dict):
+        try:
+            self.failed_msg_log.info(str(message))
+
+            fail_topic = f'{original_topic}-failed'
+            self.env.kafka_writer.fail(fail_topic, decoded_value)
+        except Exception as e:
+            self.logger.error('could not log failed message: {}'.format(str(e)))
+            self.logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+
+    def drop_msg(self, message, original_topic: str, decoded_value: dict):
+        try:
+            self.dropped_msg_log.info(str(message))
+
+            drop_topic = f'{original_topic}-dropped'
+            self.env.kafka_writer.drop(drop_topic, decoded_value)
+        except Exception as e:
+            self.logger.error('could not log dropped message: {}'.format(str(e)))
+            self.logger.exception(e)
+            self.env.capture_exception(sys.exc_info())

@@ -27,5 +27,11 @@ class IKafkaWriter(ABC):
     def log(self, topic: str, data: dict) -> None:
         raise NotImplementedError()
 
+    def fail(self, topic: str, data: dict) -> None:
+        raise NotImplementedError()
+
+    def drop(self, topic: str, data: dict) -> None:
+        raise NotImplementedError()
+
     def publish(self, conf: HandlerConf, message: Response) -> None:
         raise NotImplementedError()
