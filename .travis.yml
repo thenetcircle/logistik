@@ -9,7 +9,7 @@ install:
   - "pip install --no-deps ."
 
 script:
-  - nosetests-3.4 --with-coverage --cover-package dino -s test
+  - nosetests-3.4 --with-coverage --cover-package logistik -s test
   - coverage-3.6 report --omit=env -m
 
 after_success:
