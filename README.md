@@ -1,6 +1,10 @@
 # Machine Learning Model Logistics
 
 [![Requirements Status](https://requires.io/github/thenetcircle/logistik/requirements.svg?branch=master)](https://requires.io/github/thenetcircle/logistik/requirements/?branch=master)
+[![Build Status](https://travis-ci.org/thenetcircle/logistik.svg?branch=master)](https://travis-ci.org/thenetcircle/logistik)
+[![coverage](https://codecov.io/gh/thenetcircle/logistik/branch/master/graph/badge.svg)](https://codecov.io/gh/thenetcircle/logistik)
+[![Code Climate](https://codeclimate.com/github/thenetcircle/logistik/badges/gpa.svg)](https://codeclimate.com/github/thenetcircle/logistik)
+[![License](https://img.shields.io/github/license/thenetcircle/logistik.svg)](LICENSE)
 
 "90% of the effort in successful machine learning is not about the algorithm or the model or the learning. It’s about logistics."
 
