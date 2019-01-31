@@ -50,6 +50,12 @@ class ModelTypes(object):
     MODEL = 'model'
 
 
+class ServiceTags(object):
+    NODE = 'node'
+    HOSTNAME = 'hostname'
+    MODEL = 'model'
+
+
 class ConfigKeys(object):
     FAILED_MESSAGE_LOG = 'failed_msg_log'
     DROPPED_MESSAGE_LOG = 'dropped_msg_log'

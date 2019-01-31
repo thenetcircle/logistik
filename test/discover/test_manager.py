@@ -6,7 +6,7 @@ from logistik.config import ModelTypes
 from logistik.db import HandlerConf, EventConf
 from test.base import MockEnv
 from logistik.discover.manager import DiscoveryService
-from logistik.consul.mock import MockConsulService
+from logistik.discover.consul.mock import MockConsulService
 
 
 class MockDb(object):

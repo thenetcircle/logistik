@@ -10,7 +10,7 @@ import pkg_resources
 import yaml
 
 from logistik.config import ConfigKeys
-from logistik.consul import IConsulService
+from logistik.discover.consul import IConsulService
 from logistik.handlers import IHandlersManager
 from logistik.handlers import IHandlerStats
 from logistik.enrich import IEnrichmentManager
@@ -564,7 +564,7 @@ def init_consul(gn_env: GNEnvironment):
 
         return
 
-    from logistik.consul.consul import ConsulService
+    from logistik.discover.consul import ConsulService
     gn_env.consul = ConsulService(gn_env)
 
 

@@ -1,4 +1,4 @@
-from logistik.consul import IConsulService
+from logistik.discover.consul import IConsulService
 
 
 class MockConsulService(IConsulService):

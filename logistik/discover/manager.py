@@ -6,7 +6,7 @@ import sys
 import logging
 
 from logistik.environ import GNEnvironment
-from logistik.config import ConfigKeys, ModelTypes
+from logistik.config import ConfigKeys, ModelTypes, ServiceTags
 from logistik.discover.base import BaseDiscoveryService
 from logistik.db.repr.handler import HandlerConf
 
@@ -42,6 +42,14 @@ class DiscoveryService(BaseDiscoveryService):
         return enabled_handlers_to_check
 
     def poll_services(self):
+        """
+        poll services reported by the discovery service as running,
+        match against the currently running handlers in logistik;
+        disable any running handlers no longer in discovery service,
+        and enable any new services with no running handler
+
+        :return: nothing
+        """
         enabled_handlers_to_check = self._get_enabled_handlers()
         _, services = self.env.consul.get_services()
         _, data = self.env.consul.get_services()
@@ -55,39 +63,60 @@ class DiscoveryService(BaseDiscoveryService):
             for service in services:
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
+                service_tags = self.convert_to_dict(service_id, service_tags)
 
-                model_type = ModelTypes.MODEL  # assuming it's a model initially
-                node = self.get_from_tags('node', service_tags)
-                hostname = self.get_from_tags('hostname', service_tags)
+                # assuming it's a model initially that might already exist,
+                # and if it doesn't the type will be set to canary when enabling it
+                model_type = ModelTypes.MODEL
+
+                node = service_tags.get(ServiceTags.NODE, '0')
+                hostname = service_tags.get(ServiceTags.HOSTNAME, None)
+
+                if hostname is None:
+                    self.logger.warning(f'hostname is not specified in tags for "{service_id}", ignoring service')
+                    continue
+
                 node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
-
                 if node_id in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(node_id)
 
+                # might be an existing model, in which case the node id might change.so check again
                 handler_conf = self.enable_handler(service, name)
                 if handler_conf is not None and handler_conf.node_id() in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(handler_conf.node_id())
 
-        for node_id in enabled_handlers_to_check:
-            handlers_str = ",".join(enabled_handlers_to_check)
-            self.logger.debug(f'node {node_id} from consul not in db [{handlers_str}], disabling')
+        self.disable_handlers_no_longer_in_discovery_service(enabled_handlers_to_check)
+
+    def disable_handlers_no_longer_in_discovery_service(self, enabled_handlers: set):
+        """
+        when a service stops reporting to the discovery service that it is running, we have to disable the reader in
+        logistik, so disable the handler.
+
+        :param enabled_handlers: a set of node IDs
+        :return: nothing
+        """
+        for node_id in enabled_handlers:
+            self.logger.info(f'enabled node {node_id} no longer in discovery service, disabling')
             self.disable_handler(node_id)
+
+    def convert_to_dict(self, service_id, service_tags):
+        tags = dict()
+
+        for tag in service_tags:
+            if '=' not in tag:
+                continue
+
+            k, v = tag.split('=', maxsplit=1)
+            if k in tags:
+                self.logger.warning(
+                    f'[{service_id}] key "{k}" already in tags dict with value "{tags[k]}", overwriting with "{v}"')
+            tags[k] = v
+
+        return tags
 
     def disable_handler(self, node_id: str):
         self.env.db.disable_handler(node_id)
         self.env.handlers_manager.stop_handler(node_id)
-
-    def get_from_tags(self, key, tags):
-        value = None
-
-        for tag in tags:
-            if '{}='.format(key) in tag:
-                value = tag.split('=', 1)[1]
-
-        if value is None:
-            self.logger.warning('no "{}" in tags: {}'.format(key, tags))
-
-        return value
 
     def enable_handler(self, service, name) -> Union[HandlerConf, None]:
         host = service.get(DiscoveryService.SERVICE_ADDRESS)

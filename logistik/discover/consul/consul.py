@@ -1,7 +1,7 @@
 import consul
 
 from logistik.config import ConfigKeys
-from logistik.consul import IConsulService
+from logistik.discover.consul import IConsulService
 from logistik.environ import GNEnvironment
 
 
