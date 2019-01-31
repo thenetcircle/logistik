@@ -30,7 +30,7 @@ class DiscoveryService(BaseDiscoveryService):
         elif self.interval > 3600:
             self.interval = 3600
 
-    def _get_enabled_handlers(self):
+    def get_enabled_handlers(self):
         handlers = self.env.db.get_all_handlers()
         enabled_handlers_to_check = set()
 
@@ -50,8 +50,7 @@ class DiscoveryService(BaseDiscoveryService):
 
         :return: nothing
         """
-        enabled_handlers_to_check = self._get_enabled_handlers()
-        _, services = self.env.consul.get_services()
+        enabled_handlers_to_check = self.get_enabled_handlers()
         _, data = self.env.consul.get_services()
 
         for name, tags in data.items():
@@ -81,7 +80,7 @@ class DiscoveryService(BaseDiscoveryService):
                     enabled_handlers_to_check.remove(node_id)
 
                 # might be an existing model, in which case the node id might change.so check again
-                handler_conf = self.enable_handler(service, name)
+                handler_conf = self.enable_handler(service, name, node, hostname, tags)
                 if handler_conf is not None and handler_conf.node_id() in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(handler_conf.node_id())
 
@@ -99,37 +98,14 @@ class DiscoveryService(BaseDiscoveryService):
             self.logger.info(f'enabled node {node_id} no longer in discovery service, disabling')
             self.disable_handler(node_id)
 
-    def convert_to_dict(self, service_id, service_tags):
-        tags = dict()
-
-        for tag in service_tags:
-            if '=' not in tag:
-                continue
-
-            k, v = tag.split('=', maxsplit=1)
-            if k in tags:
-                self.logger.warning(
-                    f'[{service_id}] key "{k}" already in tags dict with value "{tags[k]}", overwriting with "{v}"')
-            tags[k] = v
-
-        return tags
-
     def disable_handler(self, node_id: str):
         self.env.db.disable_handler(node_id)
         self.env.handlers_manager.stop_handler(node_id)
 
-    def enable_handler(self, service, name) -> Union[HandlerConf, None]:
+    def enable_handler(self, service, name, node, hostname, tags: dict) -> Union[HandlerConf, None]:
         host = service.get(DiscoveryService.SERVICE_ADDRESS)
         port = service.get(DiscoveryService.SERVICE_PORT)
         s_id = service.get(DiscoveryService.SERVICE_NAME)
-        tags = service.get(DiscoveryService.SERVICE_TAGS)
-
-        node = self.get_from_tags('node', tags)
-        hostname = self.get_from_tags('hostname', tags)
-
-        if node is None or hostname is None:
-            self.logger.error('missing node/hostname in: {}'.format(service))
-            return None
 
         handler_conf = self.create_or_update_handler(host, port, s_id, name, node, hostname, tags)
         self.env.db.register_handler(handler_conf)
@@ -140,66 +116,103 @@ class DiscoveryService(BaseDiscoveryService):
         self.env.handlers_manager.start_handler(handler_conf.node_id())
         return handler_conf
 
-    def create_or_update_handler(self, host, port, service_id, name, node, hostname, tags):
+    def create_or_update_handler(self, host, port, service_id, name, node, hostname, tags: dict):
+        """
+        if the handler already exists, we'll update it in case the reported metadata
+        differs, otherwise we'll create a new disabled canary model handler
+
+        :param host: the service address used to invoke the model (can differ from 'hostname')
+        :param port: the port to invoke the model at
+        :param service_id: the ID of the service
+        :param name: user-friendly name of the service
+        :param node: the node number in case multiple nodes running, 0 is the default
+        :param hostname: user-friendly name to display as the upstream in the ui
+        :param tags: additional metadata about the model
+        :return: nothing
+        """
         handler = self.env.db.find_one_handler(service_id, hostname, node)
 
-        tags_dict = dict()
-        for tag in tags:
-            if '=' not in tag:
-                continue
-            k, v = tag.split('=', maxsplit=1)
-            tags_dict[k] = v
-
         if handler is not None:
-            return self._update_existing_handler(handler, service_id, node, name, hostname, port, host, tags_dict)
-        return self._create_new_handler(service_id, node, name, hostname, port, host, tags_dict)
+            return self._update_existing_handler(handler, service_id, node, name, hostname, port, host, tags)
+
+        return self._create_new_handler(service_id, node, name, hostname, port, host, tags)
 
     def _update_existing_handler(
-            self, handler: HandlerConf, service_id, node, name, hostname, port, host, tags_dict: dict
-    ):
+            self, handler: HandlerConf, service_id, node, name, hostname, port, host, tags: dict
+    ) -> HandlerConf:
+        """
+        update the existing handler with possibly updated metadata about the model
+
+        :param handler: the existing handler conf representation
+        :param service_id: the ID of the service
+        :param node: the node number in case multiple nodes running, 0 is the default
+        :param name: user-friendly name of the service
+        :param hostname: user-friendly name to display as the upstream in the ui
+        :param port: the port to invoke the model at
+        :param host: the service address used to invoke the model (can differ from 'hostname')
+        :param tags: additional metadata about the model
+        :return: the updated handler conf representation
+        """
         if handler.enabled:
             return handler
 
         self.logger.info('registering updated handler "{}": address "{}", port "{}", id: "{}"'.format(
             name, host, port, service_id
         ))
+        return self._create_handler(handler, service_id, node, name, hostname, port, host, tags)
 
-        return self._create_handler(handler, service_id, node, name, hostname, port, host, tags_dict)
+    def _create_new_handler(self, service_id, node, name, hostname, port, host, tags: dict):
+        """
+        create a new handler for the upstream model; it will initially be created as a
+        disabled canary model that has to be enabled and promoted in the ui
 
-    def _create_new_handler(self, service_id, node, name, hostname, port, host, tags_dict: dict):
+        if a similar upstream handler exists, certain metadata will be copied from that
+        handler to this one, such as event name, http path etc., but the handler will
+        still be a disabled canary model
+
+        :param service_id: the ID of the service
+        :param node: the node number in case multiple nodes running, 0 is the default
+        :param name: user-friendly name of the service
+        :param hostname: user-friendly name to display as the upstream in the ui
+        :param port: the port to invoke the model at
+        :param host: the service address used to invoke the model (can differ from 'hostname')
+        :param tags: additional metadata about the model
+        :return: the created handler conf representation
+        """
         self.logger.info('registering new handler "{}": address "{}", port "{}", id: "{}"'.format(
             name, host, port, service_id
         ))
 
-        handler = self._create_handler(HandlerConf(), service_id, node, name, hostname, port, host, tags_dict)
+        handler = self._create_handler(HandlerConf(), service_id, node, name, hostname, port, host, tags)
         other_service_handler = self.env.db.find_one_similar_handler(service_id)
 
         # copy known values form previous handler
         if other_service_handler is not None:
-            if 'event' not in tags_dict.keys():
+            if 'event' not in tags:
                 handler.event = other_service_handler.event
-            if 'path' not in tags_dict.keys():
+            if 'path' not in tags:
                 handler.path = other_service_handler.path
-            if 'method' not in tags_dict.keys():
+            if 'method' not in tags:
                 handler.method = other_service_handler.method
 
+        # new handlers is always a disabled canary model, that needs to be enabled in the ui
         handler.model_type = ModelTypes.CANARY
         handler.enabled = False
         return handler
 
     def _create_handler(
-            self, handler: HandlerConf, service_id, node, name, hostname, port, host, tags_dict: dict
+            self, handler: HandlerConf, service_id, node, name, hostname, port, host, tags: dict
     ):
         handler.enabled = True
         handler.startup = datetime.datetime.utcnow()
         handler.name = name
         handler.service_id = service_id
-        handler.version = tags_dict.get('version', None) or handler.version
-        handler.path = tags_dict.get('path', None) or handler.path
-        handler.event = tags_dict.get('event', handler.event) or 'UNMAPPED'
-        handler.return_to = tags_dict.get('returnto', None) or handler.return_to
-        handler.reader_type = tags_dict.get('readertype', handler.reader_type) or 'kafka'
-        handler.reader_endpoint = tags_dict.get('readerendpoint', None) or handler.reader_endpoint
+        handler.version = tags.get('version', None) or handler.version
+        handler.path = tags.get('path', None) or handler.path
+        handler.event = tags.get('event', handler.event) or 'UNMAPPED'
+        handler.return_to = tags.get('returnto', None) or handler.return_to
+        handler.reader_type = tags.get('readertype', handler.reader_type) or 'kafka'
+        handler.reader_endpoint = tags.get('readerendpoint', None) or handler.reader_endpoint
         handler.model_type = ModelTypes.MODEL
         handler.node = node
         handler.hostname = hostname
@@ -207,6 +220,20 @@ class DiscoveryService(BaseDiscoveryService):
         handler.port = port
 
         return handler
+
+    def convert_to_dict(self, service_id, service_tags):
+        tags = dict()
+
+        for tag in service_tags:
+            if '=' not in tag:
+                continue
+            k, v = tag.split('=', maxsplit=1)
+            if k in tags:
+                self.logger.warning(
+                    f'[{service_id}] key "{k}" already in tags dict with value "{tags[k]}", overwriting with "{v}"')
+            tags[k] = v
+
+        return tags
 
     def run(self):
         while True:
