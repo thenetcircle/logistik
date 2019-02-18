@@ -34,8 +34,7 @@ class OAuthService(OAuthBase):
 
         self.check_token_url = '{}/{}'.format(self.oauth_base.rstrip('/'), self.oauth_path.lstrip('/'))
 
-        from logistik.web import app
-        self.oauth = OAuth(app)
+        self.oauth = OAuth(env.app)
         self.logger = logging.getLogger(__name__)
         self.env = env
 
