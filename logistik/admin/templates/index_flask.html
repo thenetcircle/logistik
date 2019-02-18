@@ -56,11 +56,11 @@
                         <div class="footer">
                             <div class="left">
                                 <p>
-                                    <a href="/disable/{{ handler['node_id'] }}">Disable</a>
+                                    <a href="{{ config['root_url'] }}/disable/{{ handler['node_id'] }}">Disable</a>
                                 </p>
                             </div>
                             <div class="right">
-                                <p><a href="/promote/{{ handler['node_id'] }}">Promote</a></p>
+                                <p><a href="{{ config['root_url'] }}/promote/{{ handler['node_id'] }}">Promote</a></p>
                             </div>
                         </div>
                     </div>
@@ -93,8 +93,8 @@
                         <div class="footer">
                             <div class="left">
                                 <p>
-                                    <a href="/demote/{{ handler['node_id'] }}">Demote</a> |
-                                    <a href="/disable/{{ handler['node_id'] }}">Disable</a>
+                                    <a href="{{ config['root_url'] }}/demote/{{ handler['node_id'] }}">Demote</a> |
+                                    <a href="{{ config['root_url'] }}/disable/{{ handler['node_id'] }}">Disable</a>
                                 </p>
                             </div>
                             <div class="right">
@@ -167,10 +167,10 @@
                         </div>
                         <div class="footer">
                             <div class="left">
-                                <p><a href="/retire/{{ handler['node_id'] }}">Retire</a></p>
+                                <p><a href="{{ config['root_url'] }}/retire/{{ handler['node_id'] }}">Retire</a></p>
                             </div>
                             <div class="right">
-                                <p><a href="/enable/{{ handler['node_id'] }}">Enable</a></p>
+                                <p><a href="{{ config['root_url'] }}/enable/{{ handler['node_id'] }}">Enable</a></p>
                             </div>
                         </div>
                     </div>

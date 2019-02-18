@@ -135,7 +135,7 @@ def demote(node_id: str) -> None:
 
 
 @app.route('/api/handlers', methods=['GET'])
-#@requires_auth
+@requires_auth
 def get_handlers():
     """ Get handlers """
     handlers = environ.env.db.get_all_handlers()
@@ -143,14 +143,14 @@ def get_handlers():
 
 
 @app.route('/api/consumers', methods=['GET'])
-#@requires_auth
+@requires_auth
 def get_consumers():
     consumers = environ.env.handlers_manager.get_handlers()
     return api_response(200, consumers)
 
 
 @app.route('/api/stats/aggregated', methods=['GET'])
-#@requires_auth
+@requires_auth
 def get_agg_stats():
     """ Get aggregated statistics """
     agg_stats = environ.env.db.get_all_aggregated_stats()
@@ -158,7 +158,7 @@ def get_agg_stats():
 
 
 @app.route('/api/graph', methods=['GET'])
-#@requires_auth
+@requires_auth
 def get_graph():
     """ Get aggregated statistics """
     def stats_for(handler: HandlerConf) -> List[AggregatedHandlerStats]:
@@ -277,7 +277,7 @@ def get_graph():
 
 
 @app.route('/', methods=['GET'])
-#@requires_auth
+@requires_auth
 def index():
     floating_menu = str(environ.env.config.get(ConfigKeys.USE_FLOATING_MENU, domain=ConfigKeys.WEB))
     floating_menu = floating_menu.strip().lower() in {'yes', 'y', 'true'}
