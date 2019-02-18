@@ -571,6 +571,7 @@ def init_consul(gn_env: GNEnvironment):
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
+    init_web_auth(lk_env)
     init_handlers_manager(lk_env)
     init_timing_manager(lk_env)
     init_cache_service(lk_env)
