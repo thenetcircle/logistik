@@ -45,7 +45,7 @@ $(document).ready(function () {
         el.innerHTML = secondsToString(el.innerHTML);
     });
 
-    $.getJSON(window.location.protocol  + '//' + document.location + '/api/graph', function (graph) {
+    $.getJSON(document.location + '/api/graph', function (graph) {
       var nodes = graph.data['nodes'];
       var edges = graph.data['edges'];
 
