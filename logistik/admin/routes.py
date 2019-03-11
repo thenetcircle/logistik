@@ -283,13 +283,11 @@ def index():
     floating_menu = floating_menu.strip().lower() in {'yes', 'y', 'true'}
 
     handlers = environ.env.db.get_all_handlers()
-    stats = environ.env.db.get_all_stats()
     agg_stats = environ.env.db.get_all_aggregated_stats()
     consumers = environ.env.handlers_manager.get_handlers()
     timings = environ.env.timing.get_timing_summary()
 
     handlers_json = [handler.to_json() for handler in handlers]
-    stats_json = [stat.to_json() for stat in stats]
     agg_stats_json = [stat.to_json() for stat in agg_stats]
 
     for handler in handlers_json:
@@ -319,7 +317,6 @@ def index():
         },
         timings=timings,
         consumers=consumers,
-        stats=stats_json,
         agg_stats=agg_stats_json,
         handlers=handlers_json,
         version=tag_name)

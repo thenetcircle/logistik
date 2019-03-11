@@ -9,7 +9,6 @@ from logistik.db import IDatabase
 from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
 from logistik.db.models.event import EventConfEntity
 from logistik.db.models.handler import HandlerConfEntity
-from logistik.db.models.handler import HandlerStatsEntity
 from logistik.db.models.timing import TimingEntity
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.event import EventConf
@@ -179,11 +178,6 @@ class DatabaseManager(IDatabase):
     def get_all_enabled_handlers(self):
         handlers = HandlerConfEntity.query.filter_by(enabled=True).all()
         return [handler.to_repr() for handler in handlers]
-
-    @with_session
-    def get_all_stats(self):
-        stats = HandlerStatsEntity.query.all()
-        return [stat.to_repr() for stat in stats]
 
     @with_session
     def get_all_aggregated_stats(self) -> List[AggregatedHandlerStats]:
