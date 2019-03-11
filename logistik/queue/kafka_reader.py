@@ -75,6 +75,7 @@ class KafkaReader(IKafkaReader):
             group_id=group_id,
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
+            auto_offset_reset='earliest',
             connections_max_idle_ms=9 * ONE_MINUTE,  # default: 9min
             max_poll_interval_ms=10 * ONE_MINUTE,  # default: 5min
             session_timeout_ms=ONE_MINUTE,  # default: 10s
