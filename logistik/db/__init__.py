@@ -1,5 +1,7 @@
 from abc import ABC
 from typing import List, Union
+
+from logistik.db.repr.agg_timing import AggTiming
 from logistik.db.repr.handler import HandlerConf
 from logistik.db.repr.event import EventConf
 
@@ -53,5 +55,11 @@ class IDatabase(ABC):
     def timing_per_service(self) -> dict:
         raise NotImplementedError()
 
-    def timing_per_host_and_version(self) -> list:
+    def timing_per_host_and_version(self) -> List[dict]:
+        raise NotImplementedError()
+
+    def save_aggregated_entity(self, timing: AggTiming) -> None:
+        raise NotImplementedError()
+
+    def remove_old_timings(self, timing: AggTiming) -> None:
         raise NotImplementedError()

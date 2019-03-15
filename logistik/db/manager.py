@@ -5,8 +5,9 @@ from typing import Union
 
 from sqlalchemy import func
 
-from logistik.db import IDatabase
+from logistik.db import IDatabase, AggTiming
 from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
+from logistik.db.models.agg_timing import AggTimingEntity
 from logistik.db.models.event import EventConfEntity
 from logistik.db.models.handler import HandlerConfEntity
 from logistik.db.models.timing import TimingEntity
@@ -130,7 +131,7 @@ class DatabaseManager(IDatabase):
         }
 
     @with_session
-    def timing_per_host_and_version(self) -> list:
+    def timing_per_host_and_version(self) -> List[dict]:
         return [
             {
                 'service_id': row.service_id,
@@ -139,14 +140,18 @@ class DatabaseManager(IDatabase):
                 'model_type': row.model_type,
                 'average': row.average,
                 'stddev': row.stddev,
+                'timestamp': row.timestamp,
                 'min': row.min,
-                'max': row.max
+                'max': row.max,
+                'count': row.count
             } for row in
             self.env.dbman.session.query(
                 TimingEntity.service_id,
                 TimingEntity.hostname,
                 TimingEntity.model_type,
                 TimingEntity.version,
+                func.count(TimingEntity.id).label('count'),
+                func.max(TimingEntity.timestamp).label('timestamp'),
                 func.avg(TimingEntity.timing).label('average'),
                 func.min(TimingEntity.timing).label('min'),
                 func.max(TimingEntity.timing).label('max'),
@@ -313,3 +318,32 @@ class DatabaseManager(IDatabase):
             return None
 
         return event.to_repr()
+
+    @with_session
+    def save_aggregated_entity(self, timing: AggTiming) -> None:
+        entity = AggTimingEntity()
+
+        entity.timestamp = timing.timestamp
+        entity.service_id = timing.service_id
+        entity.hostname = timing.hostname
+        entity.version = timing.version
+        entity.model_type = timing.model_type
+        entity.average = timing.average
+        entity.stddev = timing.stddev
+        entity.min_value = timing.min_value
+        entity.max_value = timing.max_value
+        entity.count = timing.count
+
+        self.env.dbman.session.add(entity)
+        self.env.dbman.session.commit()
+
+    @with_session
+    def remove_old_timings(self, timing: AggTiming) -> None:
+        TimingEntity.query.filter(
+            TimingEntity.service_id == timing.service_id,
+            TimingEntity.hostname == timing.hostname,
+            TimingEntity.model_type == timing.model_type,
+            TimingEntity.version == timing.version,
+            TimingEntity.timestamp <= timing.timestamp
+        ).delete()
+        self.env.dbman.session.commit()

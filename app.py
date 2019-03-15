@@ -10,3 +10,4 @@ from logistik import environ
 environ.env.node = 'app'
 environ.env.api = api
 environ.env.app = app
+environ.env.aggregator.start()

@@ -19,6 +19,7 @@ from logistik.stats import IStats
 from logistik.cache import ICache
 from logistik.queue import IKafkaWriter
 from logistik.timing import ITimingManager
+from logistik.timing import IDataAggregatorTask
 from logistik.db import IDatabase
 from logistik.utils.decorators import timeit
 
@@ -171,6 +172,7 @@ class GNEnvironment(object):
         self.enrichers: List[Tuple[str, IEnricher]] = list()
 
         self.timing: ITimingManager = None
+        self.aggregator: IDataAggregatorTask = None
         self.handlers_manager: IHandlersManager = None
         self.handler_stats: IHandlerStats = None
         self.kafka_writer: IKafkaWriter = None
@@ -561,11 +563,20 @@ def init_kafka_writer(gn_env: GNEnvironment):
 def init_consul(gn_env: GNEnvironment):
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
-
         return
 
     from logistik.discover.consul.consul import ConsulService
     gn_env.consul = ConsulService(gn_env)
+
+
+@timeit(logger, 'init data aggregator')
+def init_data_aggregator(gn_env: GNEnvironment):
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        return
+
+    from logistik.timing.aggregator import DataAggregatorTask
+    gn_env.aggregator = DataAggregatorTask(gn_env)
 
 
 def initialize_env(lk_env):
@@ -582,6 +593,7 @@ def initialize_env(lk_env):
     init_discovery_service(lk_env)
     init_handler_stats(lk_env)
     init_kafka_writer(lk_env)
+    init_data_aggregator(lk_env)
     logger.info('startup done!')
 
 
