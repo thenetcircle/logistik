@@ -14,6 +14,7 @@ logging.getLogger('urllib3').setLevel(logging.WARN)
 
 
 class DiscoveryService(BaseDiscoveryService):
+    SERVICE_ID = 'ServiceID'
     SERVICE_ADDRESS = 'ServiceAddress'
     SERVICE_PORT = 'ServicePort'
     SERVICE_TAGS = 'ServiceTags'
@@ -62,6 +63,7 @@ class DiscoveryService(BaseDiscoveryService):
             _, services = self.env.consul.get_service(name)
 
             for service in services:
+                consul_service_id = service.get.get(DiscoveryService.SERVICE_ID)
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
                 service_tags = self.convert_to_dict(service_id, service_tags)
@@ -107,12 +109,12 @@ class DiscoveryService(BaseDiscoveryService):
         self.env.db.disable_handler(node_id)
         self.env.handlers_manager.stop_handler(node_id)
 
-    def enable_handler(self, service, name, node, hostname, tags: dict) -> Union[HandlerConf, None]:
+    def enable_handler(self, service, name, node, hostname, c_id, tags: dict) -> Union[HandlerConf, None]:
         host = service.get(DiscoveryService.SERVICE_ADDRESS)
         port = service.get(DiscoveryService.SERVICE_PORT)
         s_id = service.get(DiscoveryService.SERVICE_NAME)
 
-        handler_conf = self.create_or_update_handler(host, port, s_id, name, node, hostname, tags)
+        handler_conf = self.create_or_update_handler(host, port, s_id, name, node, hostname, c_id, tags)
         self.env.db.register_handler(handler_conf)
 
         if handler_conf.event != 'UNMAPPED':
@@ -121,7 +123,7 @@ class DiscoveryService(BaseDiscoveryService):
         self.env.handlers_manager.start_handler(handler_conf.node_id())
         return handler_conf
 
-    def create_or_update_handler(self, host, port, service_id, name, node, hostname, tags: dict):
+    def create_or_update_handler(self, host, port, service_id, name, node, hostname, c_id, tags: dict):
         """
         if the handler already exists, we'll update it in case the reported metadata
         differs, otherwise we'll create a new disabled canary model handler
@@ -132,18 +134,19 @@ class DiscoveryService(BaseDiscoveryService):
         :param name: user-friendly name of the service
         :param node: the node number in case multiple nodes running, 0 is the default
         :param hostname: user-friendly name to display as the upstream in the ui
+        :param c_id: the consul service id
         :param tags: additional metadata about the model
         :return: nothing
         """
         handler = self.env.db.find_one_handler(service_id, hostname, node)
 
         if handler is not None:
-            return self._update_existing_handler(handler, service_id, node, name, hostname, port, host, tags)
+            return self._update_existing_handler(handler, service_id, node, name, hostname, port, host, c_id, tags)
 
-        return self._create_new_handler(service_id, node, name, hostname, port, host, tags)
+        return self._create_new_handler(service_id, node, name, hostname, port, host, c_id, tags)
 
     def _update_existing_handler(
-            self, handler: HandlerConf, service_id, node, name, hostname, port, host, tags: dict
+            self, handler: HandlerConf, service_id, node, name, hostname, port, host, c_id, tags: dict
     ) -> HandlerConf:
         """
         update the existing handler with possibly updated metadata about the model
@@ -155,6 +158,7 @@ class DiscoveryService(BaseDiscoveryService):
         :param hostname: user-friendly name to display as the upstream in the ui
         :param port: the port to invoke the model at
         :param host: the service address used to invoke the model (can differ from 'hostname')
+        :param c_id: the consul service id
         :param tags: additional metadata about the model
         :return: the updated handler conf representation
         """
@@ -164,9 +168,9 @@ class DiscoveryService(BaseDiscoveryService):
         self.logger.info('registering updated handler "{}": address "{}", port "{}", id: "{}"'.format(
             name, host, port, service_id
         ))
-        return self._create_handler(handler, service_id, node, name, hostname, port, host, tags)
+        return self._create_handler(handler, service_id, node, name, hostname, port, host, c_id, tags)
 
-    def _create_new_handler(self, service_id, node, name, hostname, port, host, tags: dict):
+    def _create_new_handler(self, service_id, node, name, hostname, port, host, c_id, tags: dict):
         """
         create a new handler for the upstream model; it will initially be created as a
         disabled canary model that has to be enabled and promoted in the ui
@@ -181,6 +185,7 @@ class DiscoveryService(BaseDiscoveryService):
         :param hostname: user-friendly name to display as the upstream in the ui
         :param port: the port to invoke the model at
         :param host: the service address used to invoke the model (can differ from 'hostname')
+        :param c_id: the consul service id
         :param tags: additional metadata about the model
         :return: the created handler conf representation
         """
@@ -188,7 +193,7 @@ class DiscoveryService(BaseDiscoveryService):
             name, host, port, service_id
         ))
 
-        handler = self._create_handler(HandlerConf(), service_id, node, name, hostname, port, host, tags)
+        handler = self._create_handler(HandlerConf(), service_id, node, name, hostname, port, host, c_id, tags)
         other_service_handler = self.env.db.find_one_similar_handler(service_id)
 
         # copy known values form previous handler
@@ -206,7 +211,7 @@ class DiscoveryService(BaseDiscoveryService):
         return handler
 
     def _create_handler(
-            self, handler: HandlerConf, service_id, node, name, hostname, port, host, tags: dict
+            self, handler: HandlerConf, service_id, node, name, hostname, port, host, c_id, tags: dict
     ):
         handler.enabled = True
         handler.startup = datetime.datetime.utcnow()
@@ -220,6 +225,7 @@ class DiscoveryService(BaseDiscoveryService):
         handler.reader_endpoint = tags.get('readerendpoint', None) or handler.reader_endpoint
         handler.model_type = ModelTypes.MODEL
         handler.node = node
+        handler.consul_service_id = c_id
         handler.hostname = hostname
         handler.endpoint = host
         handler.port = port

@@ -17,3 +17,6 @@ class ConsulService(IConsulService):
 
     def get_services(self) -> list:
         return self.consul.catalog.services()
+
+    def deregister(self, service_id: str) -> None:
+        self.consul.agent.deregister(service_id)
