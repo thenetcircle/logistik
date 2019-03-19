@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import List
+from typing import List, Set
 from typing import Union
 
 from sqlalchemy import func
@@ -10,6 +10,7 @@ from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
 from logistik.db.models.agg_timing import AggTimingEntity
 from logistik.db.models.event import EventConfEntity
 from logistik.db.models.handler import HandlerConfEntity
+from logistik.db.models.ignore import IgnoreEntity
 from logistik.db.models.timing import TimingEntity
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.event import EventConf
@@ -347,3 +348,7 @@ class DatabaseManager(IDatabase):
             TimingEntity.timestamp <= timing.timestamp
         ).delete()
         self.env.dbman.session.commit()
+
+    @with_session
+    def get_ignore_list(self) -> Set[str]:
+        return {entity.node_id for entity in IgnoreEntity.query().all()}

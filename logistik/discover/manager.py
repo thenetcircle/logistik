@@ -51,6 +51,7 @@ class DiscoveryService(BaseDiscoveryService):
         :return: nothing
         """
         enabled_handlers_to_check = self.get_enabled_handlers()
+        ignore_list = self.env.db.get_ignore_list()
         _, data = self.env.consul.get_services()
 
         for name, metadata in data.items():
@@ -80,7 +81,10 @@ class DiscoveryService(BaseDiscoveryService):
                 if node_id in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(node_id)
 
-                # might be an existing model, in which case the node id might change.so check again
+                if node_id in ignore_list:
+                    continue
+
+                # might be an existing model, in which case the node id might change, so check again
                 handler_conf = self.enable_handler(service, name, node, hostname, service_tags)
                 if handler_conf is not None and handler_conf.node_id() in enabled_handlers_to_check:
                     enabled_handlers_to_check.remove(handler_conf.node_id())

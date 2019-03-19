@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Union
+from typing import List, Union, Set
 
 from logistik.db.repr.agg_timing import AggTiming
 from logistik.db.repr.handler import HandlerConf
@@ -20,6 +20,9 @@ class IDatabase(ABC):
         raise NotImplementedError()
 
     def promote_canary(self, node_id: str) -> Union[HandlerConf, None]:
+        raise NotImplementedError()
+
+    def get_ignore_list(self) -> Set[str]:
         raise NotImplementedError()
 
     def get_all_handlers(self) -> List[HandlerConf]:
