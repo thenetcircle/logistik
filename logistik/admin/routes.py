@@ -107,7 +107,7 @@ def promote(node_id: str) -> None:
 
 
 @app.route('/deregister/<consul_service_id>')
-def enable(consul_service_id: str) -> None:
+def deregister(consul_service_id: str) -> None:
     environ.env.consul.deregister(consul_service_id)
     return redirect('/')
 
