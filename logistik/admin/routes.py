@@ -51,6 +51,10 @@ def internal_url_for(url):
 
 
 def is_authorized():
+    enabled = environ.env.config.get(ConfigKeys.OAUTH_ENABLED, domain=ConfigKeys.WEB)
+    if str(enabled).lower() in {'false', 'no', '0'}:
+        return True
+
     logging.info(str(request.cookies))
     if 'token' not in request.cookies:
         return False
@@ -99,6 +103,12 @@ def promote(node_id: str) -> None:
     if handler_conf is not None:
         environ.env.handlers_manager.start_handler(handler_conf.node_id())
 
+    return redirect('/')
+
+
+@app.route('/deregister/<consul_service_id>')
+def enable(consul_service_id: str) -> None:
+    environ.env.consul.deregister(consul_service_id)
     return redirect('/')
 
 
@@ -282,12 +292,15 @@ def index():
     floating_menu = str(environ.env.config.get(ConfigKeys.USE_FLOATING_MENU, domain=ConfigKeys.WEB))
     floating_menu = floating_menu.strip().lower() in {'yes', 'y', 'true'}
 
-    handlers = environ.env.db.get_all_handlers()
+    all_handlers = environ.env.db.get_all_handlers(include_retired=True)
+    handlers = [handler for handler in all_handlers if not handler.retired]
+
     agg_stats = environ.env.db.get_all_aggregated_stats()
     consumers = environ.env.handlers_manager.get_handlers()
     timings = environ.env.timing.get_timing_summary()
 
     handlers_json = [handler.to_json() for handler in handlers]
+    all_handlers_json = [handler.to_json() for handler in all_handlers]
     agg_stats_json = [stat.to_json() for stat in agg_stats]
 
     for handler in handlers_json:
@@ -319,6 +332,7 @@ def index():
         consumers=consumers,
         agg_stats=agg_stats_json,
         handlers=handlers_json,
+        all_handlers=all_handlers_json,
         version=tag_name)
 
 

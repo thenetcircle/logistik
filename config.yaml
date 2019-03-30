@@ -50,3 +50,4 @@ web:
   callback_url: '$LK_WEB_AUTH_CALLBACK_URL'
   unauthorized_url: '$LK_WEB_AUTH_UNAUTH_URL'
   use_floating_menu: '$LK_WEB_USE_FLOATING_MENU'
+  enabled: '$LK_WEB_AUTH_ENABLED'

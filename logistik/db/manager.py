@@ -10,7 +10,6 @@ from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
 from logistik.db.models.agg_timing import AggTimingEntity
 from logistik.db.models.event import EventConfEntity
 from logistik.db.models.handler import HandlerConfEntity
-from logistik.db.models.ignore import IgnoreEntity
 from logistik.db.models.timing import TimingEntity
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.event import EventConf
@@ -28,8 +27,12 @@ class DatabaseManager(IDatabase):
         self.env = env
 
     @with_session
-    def get_all_handlers(self) -> List[HandlerConf]:
-        handlers = HandlerConfEntity.query.filter_by(retired=False).all()
+    def get_all_handlers(self, include_retired=False) -> List[HandlerConf]:
+        if include_retired:
+            handlers = HandlerConfEntity.query.all()
+        else:
+            handlers = HandlerConfEntity.query.filter_by(retired=False).all()
+
         return [handler.to_repr() for handler in handlers]
 
     @with_session
@@ -348,7 +351,3 @@ class DatabaseManager(IDatabase):
             TimingEntity.timestamp <= timing.timestamp
         ).delete()
         self.env.dbman.session.commit()
-
-    @with_session
-    def get_ignore_list(self) -> Set[str]:
-        return {entity.node_id for entity in IgnoreEntity.query().all()}

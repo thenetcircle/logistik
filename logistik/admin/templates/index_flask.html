@@ -32,7 +32,7 @@
         <div id="network"></div>
     </div>
 
-    <div>
+    <div class="content-area">
         <h2>Staging Area</h2>
 
         <div id="model-container">
@@ -71,7 +71,7 @@
         <div style="clear: both;"></div>
     </div>
 
-    <div>
+    <div class="content-area">
         <h2>Live Models</h2>
 
         <div id="model-container">
@@ -144,7 +144,7 @@
         </table>
     </div>
 
-    <div>
+    <div class="content-area">
         <h2>Disabled Models</h2>
 
         <div id="model-container">
@@ -181,8 +181,9 @@
         <div style="clear: both;"></div>
     </div>
 
-    <div>
+    <div class="content-area">
         <h2>Timings per version</h2>
+
         <table id="timings" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>Service ID</th>
@@ -211,8 +212,9 @@
         </table>
     </div>
 
-    <div>
+    <div class="content-area">
         <h2>Consumers</h2>
+
         <table id="consumers" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>Node ID</th>
@@ -239,8 +241,42 @@
         </table>
     </div>
 
-    <div>
+    <div class="content-area">
+        <h2>Consul Services</h2>
+
+        <table id="consul-services" class="display responsive" cellspacing="0" width="100%">
+            <thead>
+                <th>&nbsp;</th>
+                <th>Consul Service ID</th>
+                <th>Node ID</th>
+                <th>Name</th>
+                <th>Version</th>
+                <th>Event</th>
+                <th>Retired</th>
+                <th>Enabled</th>
+                <th>Endpoint</th>
+            </thead>
+            <tbody>
+                {% for handler in handlers %}
+                    <tr>
+                        <td>[delete]</td>
+                        <td>{{ handler['consul_service_id'] }}</td>
+                        <td>{{ handler['node_id'] }}</td>
+                        <td>{{ handler['name'] }}</td>
+                        <td>{{ handler['version'] }}</td>
+                        <td>{{ handler['event'] }}</td>
+                        <td>{{ handler['retired'] }}</td>
+                        <td>{{ handler['enabled'] }}</td>
+                        <td>{{ handler['endpoint'] }}:{{ handler['port'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="content-area">
         <h2>Events</h2>
+
         <table id="events" class="display responsive" cellspacing="0" width="400px">
             <thead>
                 <th>Event</th>
@@ -259,8 +295,9 @@
         </table>
     </div>
 
-    <div>
+    <div class="content-area">
         <h2>Handlers</h2>
+
         <table id="handlers" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>Name</th>
@@ -297,8 +334,9 @@
         </table>
     </div>
 
-    <div>
+    <div class="content-area">
         <h2>Aggregated Statistics</h2>
+
         <table id="aggregated" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>Event</th>

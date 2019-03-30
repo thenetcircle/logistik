@@ -105,6 +105,7 @@ class ConfigKeys(object):
     TOKEN_URL = 'token_url'
     CALLBACK_URL = 'callback_url'
     UNAUTH_URL = 'unauthorized_url'
+    OAUTH_ENABLED = 'enabled'
 
     # will be overwritten even if specified in config file
     ENVIRONMENT = '_environment'

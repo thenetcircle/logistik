@@ -27,6 +27,10 @@ $(document).ready(function () {
         'order': [[ 0, 'desc' ]]
     });
 
+    $('#consul-services').DataTable({
+        'order': [[ 2, 'desc' ]]
+    });
+
     function secondsToString(seconds) {
         var n_days = Math.floor(seconds / 86400);
         var n_hours = Math.floor((seconds % 86400) / 3600);
