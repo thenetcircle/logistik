@@ -62,7 +62,7 @@ class DiscoveryService(BaseDiscoveryService):
             _, services = self.env.consul.get_service(name)
 
             for service in services:
-                consul_service_id = service.get.get(DiscoveryService.SERVICE_ID)
+                consul_service_id = service.get(DiscoveryService.SERVICE_ID)
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
                 service_tags = self.convert_to_dict(service_id, service_tags)
