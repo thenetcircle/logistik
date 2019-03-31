@@ -8,7 +8,7 @@ class TimingManager(ITimingManager):
 
     def get_timing_summary(self) -> dict:
         return {
-            'node': self.env.db.timing_per_node(),
-            'service': self.env.db.timing_per_service(),
-            'version': self.env.db.timing_per_host_and_version()
+            'node': self.env.db.agg_timing_per_node(),
+            'service': self.env.db.agg_timing_per_service(),
+            'version': self.env.db.agg_timing_per_host_and_version()
         }

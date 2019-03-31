@@ -125,11 +125,29 @@ class DatabaseManager(IDatabase):
                 'max': row.max
             } for row in
             self.env.dbman.session.query(
-                AggTimingEntity.node_id,
+                TimingEntity.node_id,
                 func.avg(TimingEntity.timing).label('average'),
                 func.min(TimingEntity.timing).label('min'),
                 func.max(TimingEntity.timing).label('max'),
                 func.stddev(TimingEntity.timing).label('stddev')
+            ).group_by(TimingEntity.node_id).all()
+        }
+
+    @with_session
+    def agg_timing_per_node(self) -> dict:
+        return {
+            row.node_id: {
+                'average': row.average,
+                'stddev': row.stddev,
+                'min': row.min,
+                'max': row.max
+            } for row in
+            self.env.dbman.session.query(
+                AggTimingEntity.node_id,
+                func.avg(AggTimingEntity.average).label('average'),
+                func.min(AggTimingEntity.min_value).label('min'),
+                func.max(AggTimingEntity.max_value).label('max'),
+                func.avg(AggTimingEntity.stddev).label('stddev')
             ).group_by(AggTimingEntity.node_id).all()
         }
 
@@ -144,16 +162,69 @@ class DatabaseManager(IDatabase):
                 'max': row.max
             } for row in
             self.env.dbman.session.query(
-                AggTimingEntity.service_id,
+                TimingEntity.service_id,
                 func.avg(TimingEntity.timing).label('average'),
                 func.min(TimingEntity.timing).label('min'),
                 func.max(TimingEntity.timing).label('max'),
                 func.stddev(TimingEntity.timing).label('stddev')
+            ).group_by(TimingEntity.service_id).all()
+        }
+
+    @with_session
+    def agg_timing_per_service(self) -> dict:
+        return {
+            row.service_id: {
+                'service_id': row.service_id,
+                'average': row.average,
+                'stddev': row.stddev,
+                'min': row.min,
+                'max': row.max
+            } for row in
+            self.env.dbman.session.query(
+                AggTimingEntity.service_id,
+                func.avg(AggTimingEntity.average).label('average'),
+                func.min(AggTimingEntity.min_value).label('min'),
+                func.max(AggTimingEntity.max_value).label('max'),
+                func.avg(AggTimingEntity.stddev).label('stddev')
             ).group_by(AggTimingEntity.service_id).all()
         }
 
     @with_session
     def timing_per_host_and_version(self) -> List[dict]:
+        return [
+            {
+                'service_id': row.service_id,
+                'hostname': row.hostname,
+                'version': row.version,
+                'model_type': row.model_type,
+                'average': row.average,
+                'stddev': row.stddev,
+                'timestamp': row.timestamp,
+                'min': row.min,
+                'max': row.max,
+                'count': row.count
+            } for row in
+            self.env.dbman.session.query(
+                TimingEntity.service_id,
+                TimingEntity.hostname,
+                TimingEntity.model_type,
+                TimingEntity.version,
+                func.count(TimingEntity.id).label('count'),
+                func.max(TimingEntity.timestamp).label('timestamp'),
+                func.avg(TimingEntity.timing).label('average'),
+                func.min(TimingEntity.timing).label('min'),
+                func.max(TimingEntity.timing).label('max'),
+                func.stddev(TimingEntity.timing).label('stddev')
+            ).group_by(
+                TimingEntity.service_id,
+                TimingEntity.hostname,
+                TimingEntity.model_type,
+                TimingEntity.version
+            ).all()
+        ]
+
+    @with_session
+    def agg_timing_per_host_and_version(self) -> List[dict]:
         return [
             {
                 'service_id': row.service_id,

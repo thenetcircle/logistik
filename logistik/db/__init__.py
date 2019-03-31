@@ -61,10 +61,19 @@ class IDatabase(ABC):
     def timing_per_node(self) -> dict:
         raise NotImplementedError()
 
+    def agg_timing_per_node(self) -> dict:
+        raise NotImplementedError()
+
     def timing_per_service(self) -> dict:
         raise NotImplementedError()
 
+    def agg_timing_per_service(self) -> dict:
+        raise NotImplementedError()
+
     def timing_per_host_and_version(self) -> List[dict]:
+        raise NotImplementedError()
+
+    def agg_timing_per_host_and_version(self) -> List[dict]:
         raise NotImplementedError()
 
     def save_aggregated_entity(self, timing: AggTiming) -> None:
