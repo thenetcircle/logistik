@@ -134,7 +134,7 @@ def retire(node_id: str) -> None:
 
 
 @app.route('/delete/<node_id>')
-def retire(node_id: str) -> None:
+def delete_handler(node_id: str) -> None:
     environ.env.handlers_manager.stop_handler(node_id)
     environ.env.db.delete_handler(node_id)
     return redirect('/')
