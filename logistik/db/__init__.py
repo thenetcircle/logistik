@@ -66,3 +66,6 @@ class IDatabase(ABC):
 
     def remove_old_timings(self, timing: AggTiming) -> None:
         raise NotImplementedError()
+
+    def update_consul_service_id(self, handler_conf: HandlerConf, consul_service_id: str) -> HandlerConf:
+        raise NotImplementedError()

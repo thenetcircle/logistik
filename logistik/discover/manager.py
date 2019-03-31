@@ -62,6 +62,8 @@ class DiscoveryService(BaseDiscoveryService):
             _, services = self.env.consul.get_service(name)
 
             for service in services:
+                from pprint import pprint
+                pprint(service)
                 consul_service_id = service.get(DiscoveryService.SERVICE_ID)
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
@@ -159,7 +161,7 @@ class DiscoveryService(BaseDiscoveryService):
         :return: the updated handler conf representation
         """
         if handler.enabled:
-            return handler
+            return self.env.db.update_consul_service_id(handler, c_id)
 
         self.logger.info('registering updated handler "{}": address "{}", port "{}", id: "{}"'.format(
             name, host, port, service_id

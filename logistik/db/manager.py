@@ -351,3 +351,23 @@ class DatabaseManager(IDatabase):
             TimingEntity.timestamp <= timing.timestamp
         ).delete()
         self.env.dbman.session.commit()
+
+    @with_session
+    def update_consul_service_id(self, handler_conf: HandlerConf, consul_service_id: str) -> HandlerConf:
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=handler_conf.service_id,
+            hostname=handler_conf.hostname,
+            model_type=handler_conf.model_type,
+            node=handler_conf.node
+        ).first()
+
+        if handler is None:
+            logger.warning(f'no handler found for HandlerConf: {handler_conf.to_json()}')
+            return handler_conf
+
+        handler.consul_service_id = consul_service_id
+
+        self.env.dbman.session.add(handler_conf)
+        self.env.dbman.session.commit()
+
+        return handler.to_repr()
