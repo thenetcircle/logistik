@@ -8,9 +8,11 @@ class AggTimingEntity(env.dbman.Model):
 
     timestamp = env.dbman.Column(env.dbman.DateTime(), nullable=False)
     service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    node_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='')
+    node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default=0)
     model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default=ModelTypes.MODEL)
+    version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='')
     average = env.dbman.Column(env.dbman.Float(), nullable=False)
     stddev = env.dbman.Column(env.dbman.Float(), nullable=False)
     min_value = env.dbman.Column(env.dbman.Float(), nullable=False)
@@ -21,9 +23,11 @@ class AggTimingEntity(env.dbman.Model):
         return AggTiming(
             timestamp=self.timestamp,
             service_id=self.service_id,
+            node_id=self.node_id,
             hostname=self.hostname,
             version=self.version,
             model_type=self.model_type,
+            node=self.node,
             average=self.average,
             stddev=self.stddev,
             min_value=self.min_value,

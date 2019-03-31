@@ -107,12 +107,12 @@ class DatabaseManager(IDatabase):
                 'max': row.max
             } for row in
             self.env.dbman.session.query(
-                TimingEntity.node_id,
+                AggTimingEntity.node_id,
                 func.avg(TimingEntity.timing).label('average'),
                 func.min(TimingEntity.timing).label('min'),
                 func.max(TimingEntity.timing).label('max'),
                 func.stddev(TimingEntity.timing).label('stddev')
-            ).group_by(TimingEntity.node_id).all()
+            ).group_by(AggTimingEntity.node_id).all()
         }
 
     @with_session
@@ -126,12 +126,12 @@ class DatabaseManager(IDatabase):
                 'max': row.max
             } for row in
             self.env.dbman.session.query(
-                TimingEntity.service_id,
+                AggTimingEntity.service_id,
                 func.avg(TimingEntity.timing).label('average'),
                 func.min(TimingEntity.timing).label('min'),
                 func.max(TimingEntity.timing).label('max'),
                 func.stddev(TimingEntity.timing).label('stddev')
-            ).group_by(TimingEntity.service_id).all()
+            ).group_by(AggTimingEntity.service_id).all()
         }
 
     @with_session
@@ -139,9 +139,11 @@ class DatabaseManager(IDatabase):
         return [
             {
                 'service_id': row.service_id,
+                'node_id': row.node_id,
                 'hostname': row.hostname,
                 'version': row.version,
                 'model_type': row.model_type,
+                'node': row.node,
                 'average': row.average,
                 'stddev': row.stddev or 0,
                 'timestamp': row.timestamp,
@@ -150,21 +152,25 @@ class DatabaseManager(IDatabase):
                 'count': row.count
             } for row in
             self.env.dbman.session.query(
-                TimingEntity.service_id,
-                TimingEntity.hostname,
-                TimingEntity.model_type,
-                TimingEntity.version,
-                func.count(TimingEntity.id).label('count'),
-                func.max(TimingEntity.timestamp).label('timestamp'),
-                func.avg(TimingEntity.timing).label('average'),
-                func.min(TimingEntity.timing).label('min'),
-                func.max(TimingEntity.timing).label('max'),
-                func.stddev(TimingEntity.timing).label('stddev')
+                AggTimingEntity.service_id,
+                AggTimingEntity.node_id,
+                AggTimingEntity.hostname,
+                AggTimingEntity.model_type,
+                AggTimingEntity.version,
+                AggTimingEntity.node,
+                func.sum(AggTimingEntity.count).label('count'),
+                func.max(AggTimingEntity.timestamp).label('timestamp'),
+                func.avg(AggTimingEntity.average).label('average'),
+                func.min(AggTimingEntity.min).label('min'),
+                func.max(AggTimingEntity.max).label('max'),
+                func.avg(AggTimingEntity.stddev).label('stddev')
             ).group_by(
-                TimingEntity.service_id,
-                TimingEntity.hostname,
-                TimingEntity.model_type,
-                TimingEntity.version
+                AggTimingEntity.service_id,
+                AggTimingEntity.node_id,
+                AggTimingEntity.hostname,
+                AggTimingEntity.model_type,
+                AggTimingEntity.node,
+                AggTimingEntity.version
             ).all()
         ]
 
@@ -329,6 +335,7 @@ class DatabaseManager(IDatabase):
 
         entity.timestamp = timing.timestamp
         entity.service_id = timing.service_id
+        entity.node_id = timing.node_id
         entity.hostname = timing.hostname
         entity.version = timing.version
         entity.model_type = timing.model_type
@@ -348,6 +355,7 @@ class DatabaseManager(IDatabase):
             TimingEntity.hostname == timing.hostname,
             TimingEntity.model_type == timing.model_type,
             TimingEntity.version == timing.version,
+            TimingEntity.node == timing.node,
             TimingEntity.timestamp <= timing.timestamp
         ).delete()
         self.env.dbman.session.commit()

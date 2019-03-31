@@ -45,6 +45,7 @@ class DataAggregatorTask(IDataAggregatorTask):
                 entity = AggTiming(
                     timestamp=timing['timestamp'],
                     service_id=timing['service_id'],
+                    node_id=timing['node_id'],
                     hostname=timing['hostname'],
                     version=timing['version'],
                     model_type=timing['model_type'],

@@ -3,9 +3,11 @@ class AggTiming(object):
             self,
             timestamp: str = None,
             service_id: str = None,
+            node_id: str = None,
             hostname: str = None,
             version: str = None,
             model_type: str = None,
+            node: int = None,
             average: float = None,
             stddev: float = None,
             min_value: float = None,
@@ -14,8 +16,10 @@ class AggTiming(object):
     ):
         self.timestamp = timestamp
         self.service_id = service_id
+        self.node_id = node_id
         self.hostname = hostname
         self.version = version
+        self.node = node
         self.model_type = model_type
         self.average = average
         self.stddev = stddev
@@ -27,9 +31,11 @@ class AggTiming(object):
         return {
             'timestamp': self.timestamp,
             'service_id': self.service_id,
+            'node_id': self.node_id,
             'hostname': self.hostname,
             'version': self.version,
             'model_type': self.model_type,
+            'node': self.node,
             'average': self.average,
             'stddev': self.stddev,
             'min_value': self.min_value,
