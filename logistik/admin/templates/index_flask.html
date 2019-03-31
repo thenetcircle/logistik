@@ -259,7 +259,15 @@
             <tbody>
                 {% for handler in handlers %}
                     <tr>
-                        <td>[delete]</td>
+                        {% if handler['consul_service_id'] == '' %}
+                            <td>&nbsp;</td>
+                        {% else %}
+                            <td>
+                                <a href="{{ config.ROOT_URL }}/deregister/{{ handler['consul_service_id'] }}">
+                                    [deregister]
+                                </a>
+                            </td>
+                        {% endif %}
                         <td>{{ handler['consul_service_id'] }}</td>
                         <td>{{ handler['node_id'] }}</td>
                         <td>{{ handler['name'] }}</td>
