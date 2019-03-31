@@ -375,7 +375,7 @@ class DatabaseManager(IDatabase):
 
         handler.consul_service_id = consul_service_id
 
-        self.env.dbman.session.add(handler_conf)
+        self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()
 
         return handler.to_repr()
