@@ -143,7 +143,7 @@ class DatabaseManager(IDatabase):
                 'version': row.version,
                 'model_type': row.model_type,
                 'average': row.average,
-                'stddev': row.stddev,
+                'stddev': row.stddev or 0,
                 'timestamp': row.timestamp,
                 'min': row.min,
                 'max': row.max,
