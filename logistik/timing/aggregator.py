@@ -74,4 +74,4 @@ class DataAggregatorTask(IDataAggregatorTask):
                 continue
 
         after = time.time()
-        logger.info(f'aggregated and deleted {len(timings_per_version)} timings in {"%.2f" % (before-after)}s')
+        logger.info(f'aggregated and deleted {len(timings_per_version)} timings in {"%.2f" % (after-before)}s')
