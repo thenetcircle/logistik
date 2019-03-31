@@ -36,6 +36,24 @@ class DatabaseManager(IDatabase):
         return [handler.to_repr() for handler in handlers]
 
     @with_session
+    def delete_handler(self, node_id: str) -> None:
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
+
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id,
+            hostname=hostname,
+            model_type=model_type,
+            node=node
+        ).first()
+
+        if handler is None:
+            logger.warning(f'no handler found for node ID {node_id} when calling delete_handler()')
+            return
+
+        self.env.dbman.session.delete(handler)
+        self.env.dbman.session.commit()
+
+    @with_session
     def retire_model(self, node_id: str) -> None:
         service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
 
@@ -48,7 +66,7 @@ class DatabaseManager(IDatabase):
 
         if handler is None:
             logger.debug('handler with node id "{}" does not exist'.format(node_id))
-            return None
+            return
 
         logger.info('retiring {}'.format(node_id))
         handler.retired = True

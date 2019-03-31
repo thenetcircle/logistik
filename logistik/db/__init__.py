@@ -16,6 +16,12 @@ class IDatabase(ABC):
     def register_runtime(self, conf: HandlerConf, time_ms: float) -> None:
         raise NotImplementedError()
 
+    def retire_model(self, node_id: str) -> None:
+        raise NotImplementedError()
+
+    def delete_handler(self, node_id: str) -> None:
+        raise NotImplementedError()
+
     def demote_model(self, node_id: str) -> Union[HandlerConf, None]:
         raise NotImplementedError()
 

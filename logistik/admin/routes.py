@@ -133,6 +133,13 @@ def retire(node_id: str) -> None:
     return redirect('/')
 
 
+@app.route('/delete/<node_id>')
+def retire(node_id: str) -> None:
+    environ.env.handlers_manager.stop_handler(node_id)
+    environ.env.db.delete_handler(node_id)
+    return redirect('/')
+
+
 @app.route('/demote/<node_id>')
 def demote(node_id: str) -> None:
     environ.env.handlers_manager.stop_handler(node_id)
