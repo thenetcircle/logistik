@@ -161,8 +161,8 @@ class DatabaseManager(IDatabase):
                 func.sum(AggTimingEntity.count).label('count'),
                 func.max(AggTimingEntity.timestamp).label('timestamp'),
                 func.avg(AggTimingEntity.average).label('average'),
-                func.min(AggTimingEntity.min).label('min'),
-                func.max(AggTimingEntity.max).label('max'),
+                func.min(AggTimingEntity.min_value).label('min'),
+                func.max(AggTimingEntity.max_value).label('max'),
                 func.avg(AggTimingEntity.stddev).label('stddev')
             ).group_by(
                 AggTimingEntity.service_id,
