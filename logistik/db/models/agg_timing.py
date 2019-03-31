@@ -10,7 +10,7 @@ class AggTimingEntity(env.dbman.Model):
     service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     node_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default=0)
+    node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
     model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default=ModelTypes.MODEL)
     version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='')
     average = env.dbman.Column(env.dbman.Float(), nullable=False)
