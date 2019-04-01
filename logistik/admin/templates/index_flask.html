@@ -14,363 +14,392 @@
 
     <title>Logistik Dashboard</title>
 
-    <link rel="stylesheet" type="text/css" media="all" href="static/jquery.dataTables.min.css"/>
-    <link rel="stylesheet" type="text/css" media="all" href="static/datatables.min.css"/>
-    <link rel="stylesheet" type="text/css" media="all" href="static/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" media="all" href="static/vis-network.min.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="static/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" media="all" href="static/css/datatables.min.css"/>
+    <link rel="stylesheet" type="text/css" media="all" href="static/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" media="all" href="static/css/vis-network.min.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="static/css/bootstrap.min.css" id="bootstrap-css">
     <link rel="stylesheet" type="text/css" media="all" href="static/custom/css/style.css" />
 
-    <script type="text/javascript" src="static/jquery-2.2.2.min.js"></script>
-    <script type="text/javascript" src="static/datatables.min.js"></script>
-    <script type="text/javascript" src="static/sigma.min.js"></script>
+    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="static/js/jquery-2.2.2.min.js"></script>
+    <script type="text/javascript" src="static/js/datatables.min.js"></script>
+    <script type="text/javascript" src="static/js/sigma.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
     <script type="text/javascript" src="static/custom/js/index.js"></script>
 </head>
 <body>
-    <div>
-        <h2>Network</h2>
-        <div id="network"></div>
-    </div>
 
-    <div class="content-area">
-        <h2>Staging Area</h2>
-
-        <div id="model-container">
-            {% for handler in handlers %}
-                {% if handler['enabled'] and handler['model_type'] == 'canary' %}
-                    <div class="card canary-card">
-                        <div class="model-title-version">
-                            <h3>{{ handler['node_id'] }}</h3>
-                            <div class="model-version">
-                                {{ handler['version'] }} ::
-                                <b>{{ handler['model_type'] }}</b> ::
-                                {{ handler['traffic'] }}
-                            </div>
-                            <hr />
-                        </div>
-
-                        <div class="model-info">
-                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
-                            Average: {{ handler['average'] }} ms<br />
-                            Stddev: {{ handler['stddev'] }}
-                        </div>
-                        <div class="footer">
-                            <div class="left">
-                                <p>
-                                    <a href="{{ config.ROOT_URL }}/disable/{{ handler['node_id'] }}">Disable</a>
-                                </p>
-                            </div>
-                            <div class="right">
-                                <p><a href="{{ config.ROOT_URL }}/promote/{{ handler['node_id'] }}">Promote</a></p>
-                            </div>
-                        </div>
+<section id="tabs" class="project-tab">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <nav>
+                    <div class="nav nav-tabs nav-fill" id="nav-tab" role="tablist">
+                        <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-network" role="tab" aria-controls="nav-home" aria-selected="true">
+                            Network
+                        </a>
+                        <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">
+                            Staging Area
+                        </a>
+                        <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">
+                            Live Models
+                        </a>
+                        <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">
+                            Disabled Models
+                        </a>
+                        <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">
+                            Consumers
+                        </a>
+                        <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">
+                            Discovery
+                        </a>
+                        <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">
+                            Handlers
+                        </a>
+                        <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">
+                            Statistics and Timings
+                        </a>
                     </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-        <div style="clear: both;"></div>
-    </div>
+                </nav>
 
-    <div class="content-area">
-        <h2>Live Models</h2>
-
-        <div id="model-container">
-            {% for handler in handlers %}
-                {% if handler['enabled'] and handler['model_type'] != 'canary' %}
-                    <div class="card model-card">
-                        <div class="model-title-version">
-                            <h3>{{ handler['node_id'] }}</h3>
-                            <div class="model-version">
-                                {{ handler['version'] }} :: <b>{{ handler['model_type'] }}</b>
-                            </div>
-                            <hr />
-                        </div>
-
-                        <div class="model-info">
-                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
-                            Average: {{ handler['average'] }} ms<br />
-                            Stddev: {{ handler['stddev'] }}
-                        </div>
-                        <div class="footer">
-                            <div class="left">
-                                <p>
-                                    <a href="{{ config.ROOT_URL }}/demote/{{ handler['node_id'] }}">Demote</a> |
-                                    <a href="{{ config.ROOT_URL }}/disable/{{ handler['node_id'] }}">Disable</a>
-                                </p>
-                            </div>
-                            <div class="right">
-                                <p></p>
-                            </div>
-                        </div>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-network" role="tabpanel" aria-labelledby="nav-network-tab">
+                        <h2>Network</h2>
+                        <div id="network"></div>
                     </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-        <div style="clear: both;"></div>
 
-        <table id="models" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>Model</th>
-                <th>Version</th>
-                <th>Type</th>
-                <th>Traffic Allocation</th>
-                <th>Uptime</th>
-                <th>Average runtime (ms)</th>
-                <th>Min (ms)</th>
-                <th>Max (ms)</th>
-                <th>Standard deviation</th>
-            </thead>
-            <tbody>
-                {% for handler in handlers %}
-                    {% if handler['enabled'] %}
-                    <tr>
-                        <td>{{ handler['node_id'] }}</td>
-                        <td>{{ handler['version'] }}</td>
-                        <td>{{ handler['model_type'] }}</td>
-                        {% if handler['model_type'] == 'canary' %}
-                            <td>{{ handler['traffic'] }}</td>
-                        {% else %}
-                            <td>(balanced)</td>
-                        {% endif %}
-                        <td class="uptime">{{ handler['uptime'] }}</td>
-                        <td>{{ handler['average'] }}</td>
-                        <td>{{ handler['min'] }}</td>
-                        <td>{{ handler['max'] }}</td>
-                        <td>{{ handler['stddev'] }}</td>
-                    </tr>
-                    {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                    <div class="tab-pane fade show active" id="nav-staging" role="tabpanel" aria-labelledby="nav-staging-tab">
+                        <h2>Staging Area</h2>
+                        <div id="model-container">
+                            {% for handler in handlers %}
+                                {% if handler['enabled'] and handler['model_type'] == 'canary' %}
+                                    <div class="card canary-card">
+                                        <div class="model-title-version">
+                                            <h3>{{ handler['node_id'] }}</h3>
+                                            <div class="model-version">
+                                                {{ handler['version'] }} ::
+                                                <b>{{ handler['model_type'] }}</b> ::
+                                                {{ handler['traffic'] }}
+                                            </div>
+                                            <hr />
+                                        </div>
 
-    <div class="content-area">
-        <h2>Disabled Models</h2>
-
-        <div id="model-container">
-            {% for handler in handlers %}
-                {% if not handler['enabled'] %}
-                    <div class="card disabled-card">
-                        <div class="model-title-version">
-                            <h3>{{ handler['node_id'] }}</h3>
-                            <div class="model-version">
-                                {{ handler['version'] }} ::
-                                <b>{{ handler['model_type'] }}</b> ::
-                                {{ handler['traffic'] }}
-                            </div>
-                            <hr />
+                                        <div class="model-info">
+                                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
+                                            Average: {{ handler['average'] }} ms<br />
+                                            Stddev: {{ handler['stddev'] }}
+                                        </div>
+                                        <div class="footer">
+                                            <div class="left">
+                                                <p>
+                                                    <a href="{{ config.ROOT_URL }}/disable/{{ handler['node_id'] }}">Disable</a>
+                                                </p>
+                                            </div>
+                                            <div class="right">
+                                                <p><a href="{{ config.ROOT_URL }}/promote/{{ handler['node_id'] }}">Promote</a></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
                         </div>
-
-                        <div class="model-info">
-                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
-                            Average: {{ handler['average'] }} ms<br />
-                            Stddev: {{ handler['stddev'] }}
-                        </div>
-                        <div class="footer">
-                            <div class="left">
-                                <p><a href="{{ config.ROOT_URL }}/retire/{{ handler['node_id'] }}">Retire</a></p>
-                            </div>
-                            <div class="right">
-                                <p><a href="{{ config.ROOT_URL }}/enable/{{ handler['node_id'] }}">Enable</a></p>
-                            </div>
-                        </div>
+                        <div style="clear: both;"></div>
                     </div>
-                {% endif %}
-            {% endfor %}
+
+                    <div class="tab-pane fade show active" id="nav-live" role="tabpanel" aria-labelledby="nav-live-tab">
+                        <h2>Live Models</h2>
+                        <div id="model-container">
+                            {% for handler in handlers %}
+                                {% if handler['enabled'] and handler['model_type'] != 'canary' %}
+                                    <div class="card model-card">
+                                        <div class="model-title-version">
+                                            <h3>{{ handler['node_id'] }}</h3>
+                                            <div class="model-version">
+                                                {{ handler['version'] }} :: <b>{{ handler['model_type'] }}</b>
+                                            </div>
+                                            <hr />
+                                        </div>
+
+                                        <div class="model-info">
+                                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
+                                            Average: {{ handler['average'] }} ms<br />
+                                            Stddev: {{ handler['stddev'] }}
+                                        </div>
+                                        <div class="footer">
+                                            <div class="left">
+                                                <p>
+                                                    <a href="{{ config.ROOT_URL }}/demote/{{ handler['node_id'] }}">Demote</a> |
+                                                    <a href="{{ config.ROOT_URL }}/disable/{{ handler['node_id'] }}">Disable</a>
+                                                </p>
+                                            </div>
+                                            <div class="right">
+                                                <p></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div style="clear: both;"></div>
+
+                        <table id="models" class="display responsive" cellspacing="0" width="100%">
+                            <thead>
+                                <th>Model</th>
+                                <th>Version</th>
+                                <th>Type</th>
+                                <th>Traffic Allocation</th>
+                                <th>Uptime</th>
+                                <th>Average runtime (ms)</th>
+                                <th>Min (ms)</th>
+                                <th>Max (ms)</th>
+                                <th>Standard deviation</th>
+                            </thead>
+                            <tbody>
+                                {% for handler in handlers %}
+                                    {% if handler['enabled'] %}
+                                    <tr>
+                                        <td>{{ handler['node_id'] }}</td>
+                                        <td>{{ handler['version'] }}</td>
+                                        <td>{{ handler['model_type'] }}</td>
+                                        {% if handler['model_type'] == 'canary' %}
+                                            <td>{{ handler['traffic'] }}</td>
+                                        {% else %}
+                                            <td>(balanced)</td>
+                                        {% endif %}
+                                        <td class="uptime">{{ handler['uptime'] }}</td>
+                                        <td>{{ handler['average'] }}</td>
+                                        <td>{{ handler['min'] }}</td>
+                                        <td>{{ handler['max'] }}</td>
+                                        <td>{{ handler['stddev'] }}</td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="tab-pane fade show active" id="nav-disabled" role="tabpanel" aria-labelledby="nav-disabled-tab">
+                        <h2>Disabled Models</h2>
+                        <div id="model-container">
+                            {% for handler in handlers %}
+                                {% if not handler['enabled'] %}
+                                    <div class="card disabled-card">
+                                        <div class="model-title-version">
+                                            <h3>{{ handler['node_id'] }}</h3>
+                                            <div class="model-version">
+                                                {{ handler['version'] }} ::
+                                                <b>{{ handler['model_type'] }}</b> ::
+                                                {{ handler['traffic'] }}
+                                            </div>
+                                            <hr />
+                                        </div>
+
+                                        <div class="model-info">
+                                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
+                                            Average: {{ handler['average'] }} ms<br />
+                                            Stddev: {{ handler['stddev'] }}
+                                        </div>
+                                        <div class="footer">
+                                            <div class="left">
+                                                <p><a href="{{ config.ROOT_URL }}/retire/{{ handler['node_id'] }}">Retire</a></p>
+                                            </div>
+                                            <div class="right">
+                                                <p><a href="{{ config.ROOT_URL }}/enable/{{ handler['node_id'] }}">Enable</a></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+
+                    <div class="tab-pane fade show active" id="nav-consumers" role="tabpanel" aria-labelledby="nav-consumers-tab">
+                        <h2>Consumers</h2>
+                        <table id="consumers" class="display responsive" cellspacing="0" width="100%">
+                            <thead>
+                                <th>Node ID</th>
+                                <th>Bootstrap</th>
+                                <th>Group ID</th>
+                                <th>Enable auto commit?</th>
+                                <th>Max poll records</th>
+                                <th>Max poll interval (ms)</th>
+                                <th>Session timeout (ms)</th>
+                            </thead>
+                            <tbody>
+                                {% for consumer in consumers %}
+                                    <tr>
+                                        <td>{{ consumer['node_id'] }}</td>
+                                        <td>{{ consumer['bootstrap_servers'] }}</td>
+                                        <td>{{ consumer['group_id'] }}</td>
+                                        <td>{{ consumer['enable_auto_commit'] }}</td>
+                                        <td>{{ consumer['max_poll_records'] }}</td>
+                                        <td>{{ consumer['max_poll_interval_ms'] }}</td>
+                                        <td>{{ consumer['session_timeout_ms'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <h2>Events</h2>
+                        <table id="events" class="display responsive" cellspacing="0" width="400px">
+                            <thead>
+                                <th>Event</th>
+                                <th></th>
+                                <th>Model</th>
+                            </thead>
+                            <tbody>
+                                {% for handler in handlers %}
+                                    <tr>
+                                        <td>{{ handler['event'] }}</td>
+                                        <td>-&gt;</td>
+                                        <td>{{ handler['node_id'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="tab-pane fade show active" id="nav-discovery" role="tabpanel" aria-labelledby="nav-discovery-tab">
+                        <h2>Consul Services</h2>
+                        <table id="consul-services" class="display responsive" cellspacing="0" width="100%">
+                            <thead>
+                                <th>&nbsp;</th>
+                                <th>DiscoveryService ID</th>
+                                <th>Node ID</th>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Event</th>
+                                <th>Retired</th>
+                                <th>Enabled</th>
+                                <th>Endpoint</th>
+                            </thead>
+                            <tbody>
+                                {% for handler in handlers %}
+                                    <tr>
+                                        {% if handler['consul_service_id'] == '' %}
+                                            <td>
+                                                <a href="{{ config.ROOT_URL }}/delete/{{ handler['node_id'] }}">
+                                                    Delete handler from DB
+                                                </a>
+                                            </td>
+                                        {% else %}
+                                            <td>
+                                                <a href="{{ config.ROOT_URL }}/deregister/{{ handler['consul_service_id'] }}">
+                                                    Deregister service from discovery service
+                                                </a>
+                                            </td>
+                                        {% endif %}
+                                        <td>{{ handler['consul_service_id'] }}</td>
+                                        <td>{{ handler['node_id'] }}</td>
+                                        <td>{{ handler['name'] }}</td>
+                                        <td>{{ handler['version'] }}</td>
+                                        <td>{{ handler['event'] }}</td>
+                                        <td>{{ handler['retired'] }}</td>
+                                        <td>{{ handler['enabled'] }}</td>
+                                        <td>{{ handler['endpoint'] }}:{{ handler['port'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="tab-pane fade show active" id="nav-handlers" role="tabpanel" aria-labelledby="nav-handlers-tab">
+                        <h2>Handlers</h2>
+                        <table id="handlers" class="display responsive" cellspacing="0" width="100%">
+                            <thead>
+                                <th>Name</th>
+                                <th>Event</th>
+                                <th>Enabled</th>
+                                <th>Endpoint</th>
+                                <th>Path</th>
+                                <th>Node</th>
+                                <th>Timeout</th>
+                                <th>Retries</th>
+                                <th>Service ID</th>
+                                <th>Return-To</th>
+                                <th>Average runtime (ms)</th>
+                                <th>Standard deviation</th>
+                            </thead>
+                            <tbody>
+                                {% for handler in handlers %}
+                                    <tr>
+                                        <td>{{ handler['name'] }}</td>
+                                        <td>{{ handler['event'] }}</td>
+                                        <td>{{ handler['enabled'] }}</td>
+                                        <td>{{ handler['endpoint'] }}</td>
+                                        <td>{{ handler['path'] }}</td>
+                                        <td>{{ handler['node'] }}</td>
+                                        <td>{{ handler['timeout'] }}</td>
+                                        <td>{{ handler['retries'] }}</td>
+                                        <td>{{ handler['service_id'] }}</td>
+                                        <td>{{ handler['return_to'] }}</td>
+                                        <td>{{ handler['average'] }}</td>
+                                        <td>{{ handler['stddev'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="tab-pane fade show active" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
+                        <h2>Aggregated Statistics</h2>
+                        <table id="aggregated" class="display responsive" cellspacing="0" width="100%">
+                            <thead>
+                                <th>Event</th>
+                                <th>Service ID</th>
+                                <th>Type</th>
+                                <th>Model Type</th>
+                                <th>Node</th>
+                                <th>Count</th>
+                            </thead>
+                            <tbody>
+                                {% for stat in agg_stats %}
+                                    <tr>
+                                        <td>{{ stat['event'] }}</td>
+                                        <td>{{ stat['service_id'] }}</td>
+                                        <td>{{ stat['stat_type'] }}</td>
+                                        <td>{{ stat['model_type'] }}</td>
+                                        <td>{{ stat['node'] }}</td>
+                                        <td>{{ stat['count'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <h2>Timings per version</h2>
+                        <table id="timings" class="display responsive" cellspacing="0" width="100%">
+                            <thead>
+                                <th>Service ID</th>
+                                <th>Hostname</th>
+                                <th>Type</th>
+                                <th>Version</th>
+                                <th>Average runtime (ms)</th>
+                                <th>Min (ms)</th>
+                                <th>Max (ms)</th>
+                                <th>Standard deviation</th>
+                            </thead>
+                            <tbody>
+                                {% for timing in timings['version'] %}
+                                    <tr>
+                                        <td>{{ timing['service_id'] }}</td>
+                                        <td>{{ timing['hostname'] }}</td>
+                                        <td>{{ timing['model_type'] }}</td>
+                                        <td>{{ timing['version'] }}</td>
+                                        <td>{{ timing['average'] }}</td>
+                                        <td>{{ timing['min'] }}</td>
+                                        <td>{{ timing['max'] }}</td>
+                                        <td>{{ timing['stddev'] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div style="clear: both;"></div>
     </div>
-
-    <div class="content-area">
-        <h2>Timings per version</h2>
-
-        <table id="timings" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>Service ID</th>
-                <th>Hostname</th>
-                <th>Type</th>
-                <th>Version</th>
-                <th>Average runtime (ms)</th>
-                <th>Min (ms)</th>
-                <th>Max (ms)</th>
-                <th>Standard deviation</th>
-            </thead>
-            <tbody>
-                {% for timing in timings['version'] %}
-                    <tr>
-                        <td>{{ timing['service_id'] }}</td>
-                        <td>{{ timing['hostname'] }}</td>
-                        <td>{{ timing['model_type'] }}</td>
-                        <td>{{ timing['version'] }}</td>
-                        <td>{{ timing['average'] }}</td>
-                        <td>{{ timing['min'] }}</td>
-                        <td>{{ timing['max'] }}</td>
-                        <td>{{ timing['stddev'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="content-area">
-        <h2>Consumers</h2>
-
-        <table id="consumers" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>Node ID</th>
-                <th>Bootstrap</th>
-                <th>Group ID</th>
-                <th>Enable auto commit?</th>
-                <th>Max poll records</th>
-                <th>Max poll interval (ms)</th>
-                <th>Session timeout (ms)</th>
-            </thead>
-            <tbody>
-                {% for consumer in consumers %}
-                    <tr>
-                        <td>{{ consumer['node_id'] }}</td>
-                        <td>{{ consumer['bootstrap_servers'] }}</td>
-                        <td>{{ consumer['group_id'] }}</td>
-                        <td>{{ consumer['enable_auto_commit'] }}</td>
-                        <td>{{ consumer['max_poll_records'] }}</td>
-                        <td>{{ consumer['max_poll_interval_ms'] }}</td>
-                        <td>{{ consumer['session_timeout_ms'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="content-area">
-        <h2>Consul Services</h2>
-
-        <table id="consul-services" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>&nbsp;</th>
-                <th>Consul Service ID</th>
-                <th>Node ID</th>
-                <th>Name</th>
-                <th>Version</th>
-                <th>Event</th>
-                <th>Retired</th>
-                <th>Enabled</th>
-                <th>Endpoint</th>
-            </thead>
-            <tbody>
-                {% for handler in handlers %}
-                    <tr>
-                        {% if handler['consul_service_id'] == '' %}
-                            <td>
-                                <a href="{{ config.ROOT_URL }}/delete/{{ handler['node_id'] }}">
-                                    Delete handler from DB
-                                </a>
-                            </td>
-                        {% else %}
-                            <td>
-                                <a href="{{ config.ROOT_URL }}/deregister/{{ handler['consul_service_id'] }}">
-                                    Deregister service from Consul
-                                </a>
-                            </td>
-                        {% endif %}
-                        <td>{{ handler['consul_service_id'] }}</td>
-                        <td>{{ handler['node_id'] }}</td>
-                        <td>{{ handler['name'] }}</td>
-                        <td>{{ handler['version'] }}</td>
-                        <td>{{ handler['event'] }}</td>
-                        <td>{{ handler['retired'] }}</td>
-                        <td>{{ handler['enabled'] }}</td>
-                        <td>{{ handler['endpoint'] }}:{{ handler['port'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="content-area">
-        <h2>Events</h2>
-
-        <table id="events" class="display responsive" cellspacing="0" width="400px">
-            <thead>
-                <th>Event</th>
-                <th></th>
-                <th>Model</th>
-            </thead>
-            <tbody>
-                {% for handler in handlers %}
-                    <tr>
-                        <td>{{ handler['event'] }}</td>
-                        <td>-&gt;</td>
-                        <td>{{ handler['node_id'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="content-area">
-        <h2>Handlers</h2>
-
-        <table id="handlers" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>Name</th>
-                <th>Event</th>
-                <th>Enabled</th>
-                <th>Endpoint</th>
-                <th>Path</th>
-                <th>Node</th>
-                <th>Timeout</th>
-                <th>Retries</th>
-                <th>Service ID</th>
-                <th>Return-To</th>
-                <th>Average runtime (ms)</th>
-                <th>Standard deviation</th>
-            </thead>
-            <tbody>
-                {% for handler in handlers %}
-                    <tr>
-                        <td>{{ handler['name'] }}</td>
-                        <td>{{ handler['event'] }}</td>
-                        <td>{{ handler['enabled'] }}</td>
-                        <td>{{ handler['endpoint'] }}</td>
-                        <td>{{ handler['path'] }}</td>
-                        <td>{{ handler['node'] }}</td>
-                        <td>{{ handler['timeout'] }}</td>
-                        <td>{{ handler['retries'] }}</td>
-                        <td>{{ handler['service_id'] }}</td>
-                        <td>{{ handler['return_to'] }}</td>
-                        <td>{{ handler['average'] }}</td>
-                        <td>{{ handler['stddev'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="content-area">
-        <h2>Aggregated Statistics</h2>
-
-        <table id="aggregated" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>Event</th>
-                <th>Service ID</th>
-                <th>Type</th>
-                <th>Model Type</th>
-                <th>Node</th>
-                <th>Count</th>
-            </thead>
-            <tbody>
-                {% for stat in agg_stats %}
-                    <tr>
-                        <td>{{ stat['event'] }}</td>
-                        <td>{{ stat['service_id'] }}</td>
-                        <td>{{ stat['stat_type'] }}</td>
-                        <td>{{ stat['model_type'] }}</td>
-                        <td>{{ stat['node'] }}</td>
-                        <td>{{ stat['count'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+</section>
 </body>
 </html>
