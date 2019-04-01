@@ -18,7 +18,8 @@ $(document).ready(function () {
     $('#events').DataTable({
         'order': [[ 0, 'desc' ]],
         'bFilter': false,
-        'bInfo': false
+        'bInfo': false,
+        'bPaginate': false
     });
 
     $('#consumers').DataTable({
