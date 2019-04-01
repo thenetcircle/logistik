@@ -76,12 +76,10 @@
 
     <div class="tab-content">
       <div class="tab-pane active in" id="nav-network">
-        <h2>Network</h2>
         <div id="network"></div>
       </div>
 
       <div class="tab-pane active in" id="nav-staging">
-        <h2>Staging Area</h2>
         <div id="model-container">
             {% for handler in handlers %}
                 {% if handler['enabled'] and handler['model_type'] == 'canary' %}
@@ -119,7 +117,6 @@
       </div>
 
       <div class="tab-pane active in" id="nav-live">
-        <h2>Live Models</h2>
         <div id="model-container">
             {% for handler in handlers %}
                 {% if handler['enabled'] and handler['model_type'] != 'canary' %}
@@ -273,7 +270,6 @@
       </div>
 
       <div class="tab-pane active in" id="nav-discovery">
-        <h2>Consul Services</h2>
         <table id="consul-services" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>&nbsp;</th>
@@ -317,7 +313,6 @@
       </div>
 
       <div class="tab-pane active in" id="nav-handlers">
-        <h2>Handlers</h2>
         <table id="handlers" class="display responsive" cellspacing="0" width="100%">
             <thead>
                 <th>Name</th>
