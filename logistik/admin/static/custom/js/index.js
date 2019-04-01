@@ -16,7 +16,9 @@ $(document).ready(function () {
     });
 
     $('#events').DataTable({
-        'order': [[ 0, 'desc' ]]
+        'order': [[ 0, 'desc' ]],
+        'bFilter': false,
+        'bInfo': false
     });
 
     $('#consumers').DataTable({
