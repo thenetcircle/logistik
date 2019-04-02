@@ -180,16 +180,16 @@ def get_graph():
     """ Get aggregated statistics """
     def stats_for(handler: HandlerConf) -> List[AggregatedHandlerStats]:
         matching = list()
-        for stat in agg_stats:
-            if stat.service_id != handler.service_id:
+        for _stat in agg_stats:
+            if _stat['service_id'] != handler.service_id:
                 continue
-            if stat.event != handler.event:
+            if _stat['event'] != handler.event:
                 continue
-            if stat.model_type != handler.model_type:
+            if _stat['model_type'] != handler.model_type:
                 continue
-            if stat.node != handler.node:
+            if _stat['node'] != handler.node:
                 continue
-            matching.append(stat)
+            matching.append(_stat)
         return matching
 
     handlers = environ.env.db.get_all_handlers()
@@ -198,14 +198,14 @@ def get_graph():
     stats_per_node = dict()
 
     for stat in agg_stats:
-        if stat.service_id not in stats_per_service:
-            stats_per_service[stat.service_id] = 0
-        stats_per_service[stat.service_id] += stat.count
+        if stat['service_id'] not in stats_per_service:
+            stats_per_service[stat['service_id']] = 0
+        stats_per_service[stat['service_id']] += stat['count']
 
-        node_id = HandlerConf.to_node_id(stat.service_id, stat.hostname, stat.model_type, stat.node)
+        node_id = HandlerConf.to_node_id(stat['service_id'], stat['hostname'], stat['model_type'], stat['node'])
         if node_id not in stats_per_node:
             stats_per_node[node_id] = 0
-        stats_per_node[node_id] += stat.count
+        stats_per_node[node_id] += stat['count']
 
     node_id_enabled = {
         HandlerConf.to_node_id(h.service_id, h.hostname, h.model_type, h.node): h.enabled
@@ -234,9 +234,9 @@ def get_graph():
                     handler.service_id, handler.hostname,
                     handler.model_type, handler.node), 0),
                 'children': [{
-                    'id': 's-{}-{}-{}'.format(service_id, handler.identity, stat.stat_type),
-                    'label': stat.stat_type,
-                    'value': str(stat.count)
+                    'id': 's-{}-{}-{}'.format(service_id, handler.identity, stat['stat_type']),
+                    'label': stat['stat_type'],
+                    'value': str(stat['count'])
                 } for stat in stats_for(handler)]
             } for handler in handlers if handler.service_id == service_id]
         } for service_id in {h.service_id for h in handlers}]
