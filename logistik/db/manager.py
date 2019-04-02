@@ -238,6 +238,7 @@ class DatabaseManager(IDatabase):
             self.env.dbman.session.query(
                 TimingEntity.service_id,
                 TimingEntity.node_id,
+                TimingEntity.node,
                 TimingEntity.hostname,
                 TimingEntity.model_type,
                 TimingEntity.version,
@@ -250,6 +251,7 @@ class DatabaseManager(IDatabase):
             ).group_by(
                 TimingEntity.service_id,
                 TimingEntity.node_id,
+                TimingEntity.node,
                 TimingEntity.hostname,
                 TimingEntity.model_type,
                 TimingEntity.version

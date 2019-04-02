@@ -113,6 +113,7 @@ class DataAggregatorTask(IDataAggregatorTask):
                     node_id=timing['node_id'],
                     hostname=timing['hostname'],
                     version=timing['version'],
+                    node=timing['node'],
                     model_type=timing['model_type'],
                     average=timing['average'],
                     stddev=timing['stddev'],
