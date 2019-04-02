@@ -42,9 +42,8 @@ class AggregatedHandlerStatsEntity(env.dbman.Model):
     """
 
     __tablename__ = 'agg_handler_stats_entity'
-    __table_args__ = (
-        PrimaryKeyConstraint('service_id', 'event', 'hostname', 'stat_type', 'model_type', 'node'),
-    )
+
+    id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
 
     service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
