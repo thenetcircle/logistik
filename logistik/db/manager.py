@@ -224,6 +224,7 @@ class DatabaseManager(IDatabase):
         return [
             {
                 'service_id': row.service_id,
+                'node_id': row.node_id,
                 'hostname': row.hostname,
                 'version': row.version,
                 'model_type': row.model_type,
@@ -236,6 +237,7 @@ class DatabaseManager(IDatabase):
             } for row in
             self.env.dbman.session.query(
                 TimingEntity.service_id,
+                TimingEntity.node_id,
                 TimingEntity.hostname,
                 TimingEntity.model_type,
                 TimingEntity.version,
@@ -247,6 +249,7 @@ class DatabaseManager(IDatabase):
                 func.stddev(TimingEntity.timing).label('stddev')
             ).group_by(
                 TimingEntity.service_id,
+                TimingEntity.node_id,
                 TimingEntity.hostname,
                 TimingEntity.model_type,
                 TimingEntity.version
