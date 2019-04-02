@@ -498,6 +498,7 @@ class DatabaseManager(IDatabase):
         ).delete()
         self.env.dbman.session.commit()
 
+    @with_session
     def save_aggregated_stats_entity(self, stats: AggregatedHandlerStats) -> None:
         entity = AggregatedHandlerStatsEntity()
 
@@ -512,6 +513,7 @@ class DatabaseManager(IDatabase):
         self.env.dbman.session.add(entity)
         self.env.dbman.session.commit()
 
+    @with_session
     def remove_old_handler_stats(self, stats: AggregatedHandlerStats) -> None:
         HandlerStatsEntity.query.filter(
             HandlerStatsEntity.service_id == stats.service_id,
