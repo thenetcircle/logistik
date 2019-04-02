@@ -195,13 +195,9 @@ class DatabaseManager(IDatabase):
             {
                 'service_id': row.service_id,
                 'hostname': row.hostname,
-                'version': row.version,
+                'stat_type': row.stat_type,
+                'node': row.node,
                 'model_type': row.model_type,
-                'average': row.average,
-                'stddev': row.stddev,
-                'timestamp': row.timestamp,
-                'min': row.min,
-                'max': row.max,
                 'count': row.count
             } for row in
             self.env.dbman.session.query(
