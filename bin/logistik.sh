@@ -62,6 +62,7 @@ LK_ENVIRONMENT=$LK_ENV gunicorn \
     --threads 1 \
     --keep-alive 5 \
     --backlog 8192 \
+    --timeout 120 \
     --worker-connections 100 \
     --statsd-host ${STATSD_HOST}:8125 \
     --statsd-prefix gunicorn-logistik \
