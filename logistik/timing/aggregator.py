@@ -67,6 +67,7 @@ class DataAggregatorTask(IDataAggregatorTask):
                 entity = AggregatedHandlerStats(
                     service_id=stats['service_id'],
                     hostname=stats['hostname'],
+                    event=stats['event'],
                     model_type=stats['model_type'],
                     count=stats['count'],
                     stat_type=stats['stat_type'],

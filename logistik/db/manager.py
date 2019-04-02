@@ -196,6 +196,7 @@ class DatabaseManager(IDatabase):
                 'service_id': row.service_id,
                 'hostname': row.hostname,
                 'stat_type': row.stat_type,
+                'event': row.event,
                 'node': row.node,
                 'model_type': row.model_type,
                 'count': row.count
@@ -204,6 +205,7 @@ class DatabaseManager(IDatabase):
                 HandlerStatsEntity.service_id,
                 HandlerStatsEntity.hostname,
                 HandlerStatsEntity.stat_type,
+                HandlerStatsEntity.event,
                 HandlerStatsEntity.node,
                 HandlerStatsEntity.model_type,
                 func.count(HandlerStatsEntity.id).label('count')
@@ -211,6 +213,7 @@ class DatabaseManager(IDatabase):
                 HandlerStatsEntity.service_id,
                 HandlerStatsEntity.hostname,
                 HandlerStatsEntity.stat_type,
+                HandlerStatsEntity.event,
                 HandlerStatsEntity.node,
                 HandlerStatsEntity.model_type
             ).all()
@@ -317,6 +320,7 @@ class DatabaseManager(IDatabase):
                 'service_id': row.service_id,
                 'hostname': row.hostname,
                 'stat_type': row.stat_type,
+                'event': row.event,
                 'node': row.node,
                 'model_type': row.model_type,
                 'count': row.count
@@ -325,6 +329,7 @@ class DatabaseManager(IDatabase):
                 AggregatedHandlerStatsEntity.service_id,
                 AggregatedHandlerStatsEntity.hostname,
                 AggregatedHandlerStatsEntity.stat_type,
+                AggregatedHandlerStatsEntity.event,
                 AggregatedHandlerStatsEntity.node,
                 AggregatedHandlerStatsEntity.model_type,
                 func.sum(AggregatedHandlerStatsEntity.count).label('count')
@@ -332,6 +337,7 @@ class DatabaseManager(IDatabase):
                 AggregatedHandlerStatsEntity.service_id,
                 AggregatedHandlerStatsEntity.hostname,
                 AggregatedHandlerStatsEntity.stat_type,
+                AggregatedHandlerStatsEntity.event,
                 AggregatedHandlerStatsEntity.node,
                 AggregatedHandlerStatsEntity.model_type
             ).all()
