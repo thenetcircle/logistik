@@ -69,7 +69,6 @@ class DataAggregatorTask(IDataAggregatorTask):
                     hostname=stats['hostname'],
                     model_type=stats['model_type'],
                     count=stats['count'],
-                    event=stats['event'],
                     stat_type=stats['stat_type'],
                     node=stats['node']
                 )
