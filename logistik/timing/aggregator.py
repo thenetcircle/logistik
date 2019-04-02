@@ -1,7 +1,10 @@
 import logging
 import time
 import eventlet
+import sys
 
+from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
+from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.agg_timing import AggTiming
 from logistik.environ import GNEnvironment
 from logistik.timing import IDataAggregatorTask
@@ -34,6 +37,69 @@ class DataAggregatorTask(IDataAggregatorTask):
                 break
 
     def run_once(self):
+        try:
+            self.agg_timing_entity()
+        except InterruptedError as e:
+            raise e
+        except Exception as e:
+            logger.error(f'exception caught when aggregating TimingEntity: {str(e)}')
+            logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+
+        try:
+            self.agg_handler_stats_entity()
+        except InterruptedError as e:
+            raise e
+        except Exception as e:
+            logger.error(f'exception caught when aggregating HandlerStatsEntity: {str(e)}')
+            logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+
+    def agg_handler_stats_entity(self):
+        before = time.time()
+
+        stats_per_service = self.env.db.handler_stats_per_service()
+        if len(stats_per_service) == 0:
+            return
+
+        for stats in stats_per_service:
+            try:
+                entity = AggregatedHandlerStats(
+                    timestamp=stats['timestamp'],
+                    service_id=stats['service_id'],
+                    hostname=stats['hostname'],
+                    model_type=stats['model_type'],
+                    count=stats['count'],
+                    event=stats['event'],
+                    stat_type=stats['stat_type'],
+                    node=stats['node']
+                )
+            except KeyError as e:
+                logger.error(f'KeyError for {str(e)} in entry, ignoring: {str(stats)}')
+                logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+                continue
+
+            try:
+                self.env.db.save_aggregated_stats_entity(entity)
+            except Exception as e:
+                logger.error(f'could not save entity: {str(e)}')
+                logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+                continue
+
+            try:
+                self.env.db.remove_old_handler_stats(entity)
+            except Exception as e:
+                logger.error(f'could not remove old handler stats: {str(e)}')
+                logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+                continue
+
+        after = time.time()
+        logger.info(f'aggregated and deleted {len(stats_per_service)} handler stats in {"%.2f" % (after-before)}s')
+
+    def agg_timing_entity(self):
         before = time.time()
 
         timings_per_version = self.env.db.timing_per_host_and_version()
@@ -61,10 +127,11 @@ class DataAggregatorTask(IDataAggregatorTask):
                 continue
 
             try:
-                self.env.db.save_aggregated_entity(entity)
+                self.env.db.save_aggregated_timing_entity(entity)
             except Exception as e:
                 logger.error(f'could not save entity: {str(e)}')
                 logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
                 continue
 
             try:
@@ -72,6 +139,7 @@ class DataAggregatorTask(IDataAggregatorTask):
             except Exception as e:
                 logger.error(f'could not remove old timings: {str(e)}')
                 logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
                 continue
 
         after = time.time()

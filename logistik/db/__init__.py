@@ -1,6 +1,8 @@
 from abc import ABC
 from typing import List, Union, Set
 
+from logistik.db.models.handler import HandlerStatsEntity
+from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.agg_timing import AggTiming
 from logistik.db.repr.handler import HandlerConf
 from logistik.db.repr.event import EventConf
@@ -70,16 +72,25 @@ class IDatabase(ABC):
     def agg_timing_per_service(self) -> dict:
         raise NotImplementedError()
 
+    def handler_stats_per_service(self) -> List[dict]:
+        raise NotImplementedError()
+
     def timing_per_host_and_version(self) -> List[dict]:
         raise NotImplementedError()
 
     def agg_timing_per_host_and_version(self) -> List[dict]:
         raise NotImplementedError()
 
-    def save_aggregated_entity(self, timing: AggTiming) -> None:
+    def save_aggregated_timing_entity(self, timing: AggTiming) -> None:
         raise NotImplementedError()
 
     def remove_old_timings(self, timing: AggTiming) -> None:
+        raise NotImplementedError()
+
+    def save_aggregated_stats_entity(self, stats: AggregatedHandlerStats) -> None:
+        raise NotImplementedError()
+
+    def remove_old_handler_stats(self, stats: AggregatedHandlerStats) -> None:
         raise NotImplementedError()
 
     def update_consul_service_id(self, handler_conf: HandlerConf, consul_service_id: str) -> HandlerConf:

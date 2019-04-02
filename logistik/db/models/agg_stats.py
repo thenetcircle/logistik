@@ -1,3 +1,5 @@
+import datetime
+
 from logistik import environ
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from sqlalchemy import PrimaryKeyConstraint
@@ -41,7 +43,7 @@ class AggregatedHandlerStatsEntity(db.Model):
 
     """
 
-    __tablename__ = 'handler_stats_mv'
+    __tablename__ = 'agg_handler_stats_entity'
     __table_args__ = (
         PrimaryKeyConstraint('service_id', 'event', 'hostname', 'stat_type', 'model_type', 'node'),
     )
@@ -53,6 +55,7 @@ class AggregatedHandlerStatsEntity(db.Model):
     count = db.Column(db.Integer(), unique=False, nullable=False)
     model_type = db.Column(db.String(128), unique=False, nullable=False)
     node = db.Column(db.Integer(), unique=False, nullable=False)
+    timestamp = db.Column(db.DateTime(), unique=False, nullable=False, default=datetime.datetime.utcnow)
 
     def to_repr(self) -> AggregatedHandlerStats:
         return AggregatedHandlerStats(

@@ -9,7 +9,7 @@ from logistik.db import IDatabase, AggTiming
 from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
 from logistik.db.models.agg_timing import AggTimingEntity
 from logistik.db.models.event import EventConfEntity
-from logistik.db.models.handler import HandlerConfEntity
+from logistik.db.models.handler import HandlerConfEntity, HandlerStatsEntity
 from logistik.db.models.timing import TimingEntity
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.event import EventConf
@@ -188,6 +188,37 @@ class DatabaseManager(IDatabase):
                 func.avg(AggTimingEntity.stddev).label('stddev')
             ).group_by(AggTimingEntity.service_id).all()
         }
+
+    @with_session
+    def handler_stats_per_service(self) -> List[dict]:
+        return [
+            {
+                'service_id': row.service_id,
+                'hostname': row.hostname,
+                'version': row.version,
+                'model_type': row.model_type,
+                'average': row.average,
+                'stddev': row.stddev,
+                'timestamp': row.timestamp,
+                'min': row.min,
+                'max': row.max,
+                'count': row.count
+            } for row in
+            self.env.dbman.session.query(
+                HandlerStatsEntity.service_id,
+                HandlerStatsEntity.hostname,
+                HandlerStatsEntity.stat_type,
+                HandlerStatsEntity.node,
+                HandlerStatsEntity.model_type,
+                func.count(HandlerStatsEntity.id).label('count')
+            ).group_by(
+                HandlerStatsEntity.service_id,
+                HandlerStatsEntity.hostname,
+                HandlerStatsEntity.stat_type,
+                HandlerStatsEntity.node,
+                HandlerStatsEntity.model_type
+            ).all()
+        ]
 
     @with_session
     def timing_per_host_and_version(self) -> List[dict]:
@@ -419,7 +450,7 @@ class DatabaseManager(IDatabase):
         return event.to_repr()
 
     @with_session
-    def save_aggregated_entity(self, timing: AggTiming) -> None:
+    def save_aggregated_timing_entity(self, timing: AggTiming) -> None:
         entity = AggTimingEntity()
 
         entity.timestamp = timing.timestamp
@@ -446,6 +477,31 @@ class DatabaseManager(IDatabase):
             TimingEntity.version == timing.version,
             TimingEntity.node == timing.node,
             TimingEntity.timestamp <= timing.timestamp
+        ).delete()
+        self.env.dbman.session.commit()
+
+    def save_aggregated_stats_entity(self, stats: AggregatedHandlerStats) -> None:
+        entity = AggregatedHandlerStatsEntity()
+
+        entity.hostname = stats.hostname
+        entity.stat_type = stats.stat_type
+        entity.model_type = stats.model_type
+        entity.node = stats.node
+        entity.event = stats.event
+        entity.count = stats.count
+        entity.service_id = stats.service_id
+
+        self.env.dbman.session.add(entity)
+        self.env.dbman.session.commit()
+
+    def remove_old_handler_stats(self, stats: AggregatedHandlerStats) -> None:
+        HandlerStatsEntity.query.filter(
+            HandlerStatsEntity.service_id == stats.service_id,
+            HandlerStatsEntity.event == stats.event,
+            HandlerStatsEntity.node == stats.node,
+            HandlerStatsEntity.model_type == stats.model_type,
+            HandlerStatsEntity.stat_type == stats.stat_type,
+            HandlerStatsEntity.hostname == stats.hostname
         ).delete()
         self.env.dbman.session.commit()
 
