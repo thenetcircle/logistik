@@ -1,5 +1,5 @@
-from logistik.db.repr.agg_timing import AggTiming
 from logistik.environ import env
+from logistik.db.repr.agg_timing import AggTiming
 from logistik.config import ModelTypes
 
 

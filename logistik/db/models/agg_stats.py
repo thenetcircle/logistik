@@ -1,27 +1,25 @@
 import datetime
 
-from logistik import environ
+from logistik.environ import env
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from sqlalchemy import PrimaryKeyConstraint
 
-db = environ.env.dbman
 
-
-class AggregatedHandlerStatsEntity(db.Model):
+class AggregatedHandlerStatsEntity(env.dbman.Model):
     """
     # having issues with generating primary key for this in sqlalchemy...
-    from logistik.db.models.handler import HandlerStatsEntity
-    from logistik.db.models.handler import HandlerConfEntity
+    from logistik.env.dbman.models.handler import HandlerStatsEntity
+    from logistik.env.dbman.models.handler import HandlerConfEntity
     from logistik.utils.materialized_view_factory import create_mat_view
 
     __table__ = create_mat_view(
         'handler_stats_mv',
-        db.select(
+        env.dbman.select(
             [HandlerStatsEntity.id.label('id'),
              HandlerStatsEntity.event.label('event'),
              HandlerStatsEntity.service_id.label('service_id'),
              HandlerStatsEntity.stat_type.label('stat_type'),
-             db.func.count(HandlerStatsEntity.id).label('count')]
+             env.dbman.func.count(HandlerStatsEntity.id).label('count')]
         ).group_by(
             HandlerStatsEntity.id,
             HandlerStatsEntity.event,
@@ -48,14 +46,14 @@ class AggregatedHandlerStatsEntity(db.Model):
         PrimaryKeyConstraint('service_id', 'event', 'hostname', 'stat_type', 'model_type', 'node'),
     )
 
-    service_id = db.Column(db.String(128), unique=False, nullable=False)
-    event = db.Column(db.String(128), unique=False, nullable=False)
-    stat_type = db.Column(db.String(128), unique=False, nullable=False)
-    hostname = db.Column(db.String(128), unique=False, nullable=False)
-    count = db.Column(db.Integer(), unique=False, nullable=False)
-    model_type = db.Column(db.String(128), unique=False, nullable=False)
-    node = db.Column(db.Integer(), unique=False, nullable=False)
-    timestamp = db.Column(db.DateTime(), unique=False, nullable=False, default=datetime.datetime.utcnow)
+    service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    stat_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    count = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
+    model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
+    timestamp = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=False, default=datetime.datetime.utcnow)
 
     def to_repr(self) -> AggregatedHandlerStats:
         return AggregatedHandlerStats(

@@ -1,4 +1,4 @@
-from logistik import environ
+from logistik.environ import env
 from logistik.db.repr.handler import HandlerConf
 from logistik.db.repr.handler import HandlerStats
 from logistik.config import ModelTypes
@@ -6,22 +6,22 @@ from logistik.config import ModelTypes
 from sqlalchemy import UniqueConstraint
 
 
-class HandlerStatsEntity(environ.env.dbman.Model):
+class HandlerStatsEntity(env.dbman.Model):
     __tablename__ = 'handler_stats_entity'
 
-    id = environ.env.dbman.Column(environ.env.dbman.Integer(), primary_key=True)
-    service_id = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    name = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    event = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    endpoint = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    hostname = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    version = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    stat_type = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    event_time = environ.env.dbman.Column(environ.env.dbman.DateTime(), unique=False, nullable=False)
-    event_id = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    event_verb = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    model_type = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    node = environ.env.dbman.Column(environ.env.dbman.Integer(), unique=False, nullable=False)
+    id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
+    service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    endpoint = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    stat_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    event_time = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=False)
+    event_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    event_verb = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
 
     def to_repr(self) -> HandlerStats:
         return HandlerStats(
@@ -41,31 +41,31 @@ class HandlerStatsEntity(environ.env.dbman.Model):
         )
 
 
-class HandlerConfEntity(environ.env.dbman.Model):
-    id = environ.env.dbman.Column(environ.env.dbman.Integer(), primary_key=True)
-    service_id = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    name = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    event = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    enabled = environ.env.dbman.Column(environ.env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
-    retired = environ.env.dbman.Column(environ.env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
-    endpoint = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    hostname = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False)
-    port = environ.env.dbman.Column(environ.env.dbman.Integer(), unique=False, nullable=False)
-    version = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False, server_default='')
-    path = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=True)
-    node = environ.env.dbman.Column(environ.env.dbman.Integer(), unique=False, nullable=False, server_default='0')
-    method = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=True)
-    model_type = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False, server_default=ModelTypes.MODEL)
-    retries = environ.env.dbman.Column(environ.env.dbman.Integer(), unique=False, nullable=False, server_default='1')
-    timeout = environ.env.dbman.Column(environ.env.dbman.Integer(), unique=False, nullable=False, server_default='0')
-    tags = environ.env.dbman.Column(environ.env.dbman.String(256), unique=False, nullable=True)
-    return_to = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=True)
-    event_display_name = environ.env.dbman.Column(environ.env.dbman.String(128), unique=False, nullable=False, server_default='event')
-    startup = environ.env.dbman.Column(environ.env.dbman.DateTime(), unique=False, nullable=True)
-    traffic = environ.env.dbman.Column(environ.env.dbman.Float(), unique=False, nullable=False, server_default='0.1')
-    reader_type = environ.env.dbman.Column(environ.env.dbman.String(), unique=False, nullable=False, server_default='kafka')
-    reader_endpoint = environ.env.dbman.Column(environ.env.dbman.String(), unique=False, nullable=True)
-    consul_service_id = environ.env.dbman.Column(environ.env.dbman.String(), unique=False, nullable=True)
+class HandlerConfEntity(env.dbman.Model):
+    id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
+    service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
+    retired = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')
+    endpoint = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    port = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
+    version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='')
+    path = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+    node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
+    method = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+    model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default=ModelTypes.MODEL)
+    retries = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='1')
+    timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
+    tags = env.dbman.Column(env.dbman.String(256), unique=False, nullable=True)
+    return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+    event_display_name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='event')
+    startup = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=True)
+    traffic = env.dbman.Column(env.dbman.Float(), unique=False, nullable=False, server_default='0.1')
+    reader_type = env.dbman.Column(env.dbman.String(), unique=False, nullable=False, server_default='kafka')
+    reader_endpoint = env.dbman.Column(env.dbman.String(), unique=False, nullable=True)
+    consul_service_id = env.dbman.Column(env.dbman.String(), unique=False, nullable=True)
 
     UniqueConstraint('service_id', 'hostname', 'node', 'model_type', name='uix_1')
 
