@@ -315,9 +315,31 @@ class DatabaseManager(IDatabase):
         return [handler.to_repr() for handler in handlers]
 
     @with_session
-    def get_all_aggregated_stats(self) -> List[AggregatedHandlerStats]:
-        stats = AggregatedHandlerStatsEntity.query.all()
-        return [stat.to_repr() for stat in stats]
+    def get_all_aggregated_stats(self) -> List[dict]:
+        return [
+            {
+                'service_id': row.service_id,
+                'hostname': row.hostname,
+                'stat_type': row.stat_type,
+                'node': row.node,
+                'model_type': row.model_type,
+                'count': row.count
+            } for row in
+            self.env.dbman.session.query(
+                AggregatedHandlerStatsEntity.service_id,
+                AggregatedHandlerStatsEntity.hostname,
+                AggregatedHandlerStatsEntity.stat_type,
+                AggregatedHandlerStatsEntity.node,
+                AggregatedHandlerStatsEntity.model_type,
+                func.sum(AggregatedHandlerStatsEntity.count).label('count')
+            ).group_by(
+                AggregatedHandlerStatsEntity.service_id,
+                AggregatedHandlerStatsEntity.hostname,
+                AggregatedHandlerStatsEntity.stat_type,
+                AggregatedHandlerStatsEntity.node,
+                AggregatedHandlerStatsEntity.model_type
+            ).all()
+        ]
 
     @with_session
     def enable_handler(self, node_id) -> None:

@@ -302,13 +302,12 @@ def index():
     all_handlers = environ.env.db.get_all_handlers(include_retired=True)
     handlers = [handler for handler in all_handlers if not handler.retired]
 
-    agg_stats = environ.env.db.get_all_aggregated_stats()
+    agg_stats_json = environ.env.db.get_all_aggregated_stats()
     consumers = environ.env.handlers_manager.get_handlers()
     timings = environ.env.timing.get_timing_summary()
 
     handlers_json = [handler.to_json() for handler in handlers]
     all_handlers_json = [handler.to_json() for handler in all_handlers]
-    agg_stats_json = [stat.to_json() for stat in agg_stats]
 
     for handler in handlers_json:
         if handler['node_id'] in timings['node']:
