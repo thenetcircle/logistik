@@ -1,7 +1,6 @@
 from abc import ABC
 from typing import List, Union, Set
 
-from logistik.db.models.handler import HandlerStatsEntity
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
 from logistik.db.repr.agg_timing import AggTiming
 from logistik.db.repr.handler import HandlerConf
