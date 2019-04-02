@@ -65,7 +65,6 @@ class DataAggregatorTask(IDataAggregatorTask):
         for stats in stats_per_service:
             try:
                 entity = AggregatedHandlerStats(
-                    timestamp=stats['timestamp'],
                     service_id=stats['service_id'],
                     hostname=stats['hostname'],
                     model_type=stats['model_type'],
