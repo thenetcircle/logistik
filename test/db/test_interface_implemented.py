@@ -4,18 +4,16 @@ from nose_parameterized import parameterized
 from logistik.db import IDatabase
 from logistik.db.manager import DatabaseManager
 
-from pprint import pprint
-
 
 class ManagerHasInterfaceMethodsTest(unittest.TestCase):
     interface_methods = [key for key in IDatabase.__dict__.keys() if not key.startswith('_')]
 
     def setUp(self):
         self.manager_methods = set(
-                [
-                    key for key in DatabaseManager.__dict__.keys()
-                    if not key.startswith('_') and callable(DatabaseManager.__dict__[key])
-                ]
+            [
+                key for key in DatabaseManager.__dict__.keys()
+                if not key.startswith('_') and callable(DatabaseManager.__dict__[key])
+            ]
         )
 
     @parameterized.expand(interface_methods)
@@ -25,10 +23,10 @@ class ManagerHasInterfaceMethodsTest(unittest.TestCase):
 
 class ManagerHasOnlyInterfaceMethodsTest(unittest.TestCase):
     manager_methods = set(
-            [
-                key for key in DatabaseManager.__dict__.keys()
-                if not key.startswith('_') and callable(DatabaseManager.__dict__[key])
-            ]
+        [
+            key for key in DatabaseManager.__dict__.keys()
+            if not key.startswith('_') and callable(DatabaseManager.__dict__[key])
+        ]
     )
 
     def setUp(self):
