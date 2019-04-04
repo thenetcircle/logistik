@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import List, Set
+from typing import List
 from typing import Union
 
 from sqlalchemy import func

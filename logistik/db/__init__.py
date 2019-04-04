@@ -29,9 +29,6 @@ class IDatabase(ABC):
     def promote_canary(self, node_id: str) -> Union[HandlerConf, None]:
         raise NotImplementedError()
 
-    def get_ignore_list(self) -> Set[str]:
-        raise NotImplementedError()
-
     def get_all_handlers(self) -> List[HandlerConf]:
         raise NotImplementedError()
 
@@ -45,9 +42,6 @@ class IDatabase(ABC):
         raise NotImplementedError()
 
     def enable_handler(self, node_id) -> None:
-        raise NotImplementedError()
-
-    def retire_handler(self, node_id) -> None:
         raise NotImplementedError()
 
     def find_one_handler(self, service_id, hostname, node) -> Union[HandlerConf, None]:
@@ -69,6 +63,9 @@ class IDatabase(ABC):
         raise NotImplementedError()
 
     def agg_timing_per_service(self) -> dict:
+        raise NotImplementedError()
+
+    def get_all_aggregated_stats(self) -> List[dict]:
         raise NotImplementedError()
 
     def handler_stats_per_service(self) -> List[dict]:

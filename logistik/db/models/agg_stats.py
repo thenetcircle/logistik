@@ -2,7 +2,6 @@ import datetime
 
 from logistik.environ import env
 from logistik.db.repr.agg_stats import AggregatedHandlerStats
-from sqlalchemy import PrimaryKeyConstraint
 
 
 class AggregatedHandlerStatsEntity(env.dbman.Model):

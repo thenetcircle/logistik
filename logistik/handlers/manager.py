@@ -44,8 +44,8 @@ class HandlersManager(IHandlersManager):
         node_id = handler_conf.node_id()
 
         if handler_conf.event == 'UNMAPPED':
-            logger.info('not adding handler for unmapped event with node id "{}"'.format(node_id))
             return
+
         if handler_conf.model_type is None:
             logger.info('not adding handler for empty model type with node id "{}"'.format(node_id))
             return

@@ -488,12 +488,13 @@ def init_handlers_manager(gn_env: GNEnvironment) -> None:
 
 @timeit(logger, 'init db service')
 def init_db_service(gn_env: GNEnvironment) -> None:
-    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
-        # assume we're testing
-        return
-
     from flask_sqlalchemy import SQLAlchemy
     gn_env.dbman = SQLAlchemy()
+
+    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
+        # assume we're testing
+        gn_env.dbman = SQLAlchemy()
+        return
 
     from logistik.db.manager import DatabaseManager
     gn_env.db = DatabaseManager(gn_env)
