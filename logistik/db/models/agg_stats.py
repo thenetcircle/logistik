@@ -1,7 +1,7 @@
 import datetime
 
 from logistik.environ import env
-from logistik.db.repr.agg_stats import AggregatedHandlerStats
+from logistik.db.reprs.agg_stats import AggregatedHandlerStats
 
 
 class AggregatedHandlerStatsEntity(env.dbman.Model):

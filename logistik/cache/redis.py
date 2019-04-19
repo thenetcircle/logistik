@@ -6,8 +6,8 @@ from typing import Union
 from ttldict import TTLOrderedDict
 
 from logistik.cache import ICache
-from logistik.db.repr.event import EventConf
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.event import EventConf
+from logistik.db.reprs.handler import HandlerConf
 from logistik.environ import GNEnvironment
 
 

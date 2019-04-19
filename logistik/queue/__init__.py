@@ -1,7 +1,7 @@
 from abc import ABC
 from requests import Response
 
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerConf
 
 
 class IRestReader(ABC):

@@ -8,7 +8,7 @@ import logging
 from logistik.environ import GNEnvironment
 from logistik.config import ConfigKeys, ModelTypes, ServiceTags
 from logistik.discover.base import BaseDiscoveryService
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerConf
 
 logging.getLogger('urllib3').setLevel(logging.WARN)
 

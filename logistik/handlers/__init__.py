@@ -5,7 +5,7 @@ from activitystreams import Activity
 from requests import Response
 
 from logistik.config import ErrorCodes
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerConf
 
 
 class IHandlersManager(ABC):

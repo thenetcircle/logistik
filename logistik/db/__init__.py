@@ -1,10 +1,10 @@
 from abc import ABC
 from typing import List, Union, Set
 
-from logistik.db.repr.agg_stats import AggregatedHandlerStats
-from logistik.db.repr.agg_timing import AggTiming
-from logistik.db.repr.handler import HandlerConf
-from logistik.db.repr.event import EventConf
+from logistik.db.reprs.agg_stats import AggregatedHandlerStats
+from logistik.db.reprs.agg_timing import AggTiming
+from logistik.db.reprs.handler import HandlerConf
+from logistik.db.reprs.event import EventConf
 
 
 class IDatabase(ABC):

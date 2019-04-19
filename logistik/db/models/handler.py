@@ -1,6 +1,6 @@
 from logistik.environ import env
-from logistik.db.repr.handler import HandlerConf
-from logistik.db.repr.handler import HandlerStats
+from logistik.db.reprs.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerStats
 from logistik.config import ModelTypes
 
 from sqlalchemy import UniqueConstraint

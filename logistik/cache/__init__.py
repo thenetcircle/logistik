@@ -1,8 +1,8 @@
 from abc import ABC
 
 from typing import List
-from logistik.db.repr.handler import HandlerConf
-from logistik.db.repr.event import EventConf
+from logistik.db.reprs.handler import HandlerConf
+from logistik.db.reprs.event import EventConf
 
 
 class ICache(ABC):

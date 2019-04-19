@@ -4,8 +4,8 @@ import eventlet
 import sys
 
 from logistik.db.models.agg_stats import AggregatedHandlerStatsEntity
-from logistik.db.repr.agg_stats import AggregatedHandlerStats
-from logistik.db.repr.agg_timing import AggTiming
+from logistik.db.reprs.agg_stats import AggregatedHandlerStats
+from logistik.db.reprs.agg_timing import AggTiming
 from logistik.environ import GNEnvironment
 from logistik.timing import IDataAggregatorTask
 

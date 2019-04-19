@@ -5,7 +5,7 @@ import json
 from requests import Response
 from kafka import KafkaProducer
 
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerConf
 from logistik.environ import GNEnvironment
 from logistik.queue import IKafkaWriter
 from logistik.config import ConfigKeys

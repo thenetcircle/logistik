@@ -1,8 +1,8 @@
 from unittest import TestCase
 from test.base import MockEnv
 
-from logistik.db.repr.event import EventConf
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.event import EventConf
+from logistik.db.reprs.handler import HandlerConf
 from logistik.cache.redis import CacheRedis
 
 

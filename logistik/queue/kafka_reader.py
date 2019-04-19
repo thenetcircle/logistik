@@ -16,7 +16,7 @@ from logistik.queue import IKafkaReader
 from logistik.config import ConfigKeys, ModelTypes
 from logistik.environ import GNEnvironment
 from logistik.handlers.base import IHandler
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerConf
 
 logger = logging.getLogger(__name__)
 logging.getLogger('kafka').setLevel(logging.WARNING)

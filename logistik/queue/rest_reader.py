@@ -16,7 +16,7 @@ from logistik.queue import IRestReader
 from logistik.config import ConfigKeys, ErrorCodes
 from logistik.environ import GNEnvironment
 from logistik.handlers.base import IHandler
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerConf
 
 ONE_MINUTE = 60_000
 

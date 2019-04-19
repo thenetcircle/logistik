@@ -10,7 +10,7 @@ from logistik import environ
 from logistik.config import ErrorCodes
 from logistik.environ import GNEnvironment
 from logistik.handlers.base import BaseHandler
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerConf
 from logistik.queue.kafka_reader import KafkaReader
 from logistik.queue.mock_reader import MockReader
 from logistik.queue.rest_reader import RestReader

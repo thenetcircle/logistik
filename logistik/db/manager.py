@@ -11,9 +11,9 @@ from logistik.db.models.agg_timing import AggTimingEntity
 from logistik.db.models.event import EventConfEntity
 from logistik.db.models.handler import HandlerConfEntity, HandlerStatsEntity
 from logistik.db.models.timing import TimingEntity
-from logistik.db.repr.agg_stats import AggregatedHandlerStats
-from logistik.db.repr.event import EventConf
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.agg_stats import AggregatedHandlerStats
+from logistik.db.reprs.event import EventConf
+from logistik.db.reprs.handler import HandlerConf
 from logistik.config import ModelTypes
 from logistik.environ import GNEnvironment
 from logistik.utils.decorators import with_session

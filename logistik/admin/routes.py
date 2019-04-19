@@ -15,8 +15,8 @@ from werkzeug.wrappers import Response
 from logistik import environ
 from logistik.config import ConfigKeys
 from logistik.server import app
-from logistik.db.repr.agg_stats import AggregatedHandlerStats
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.agg_stats import AggregatedHandlerStats
+from logistik.db.reprs.handler import HandlerConf
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

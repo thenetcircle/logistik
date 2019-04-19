@@ -2,7 +2,7 @@ from unittest import TestCase
 from uuid import uuid4 as uuid
 
 from logistik.config import ModelTypes
-from logistik.db.repr.handler import HandlerConf
+from logistik.db.reprs.handler import HandlerConf
 from logistik.handlers.manager import HandlersManager
 from test.base import MockEnv
 

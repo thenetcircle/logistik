@@ -1,5 +1,5 @@
 from logistik.environ import env
-from logistik.db.repr.event import EventConf
+from logistik.db.reprs.event import EventConf
 
 
 class EventConfEntity(env.dbman.Model):
