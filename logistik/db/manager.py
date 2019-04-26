@@ -490,7 +490,7 @@ class DatabaseManager(IDatabase):
         entity.version = timing.version
         entity.model_type = timing.model_type
         entity.average = timing.average
-        entity.stddev = timing.stddev
+        entity.stddev = timing.stddev or 1.0
         entity.min_value = timing.min_value
         entity.max_value = timing.max_value
         entity.count = timing.count
