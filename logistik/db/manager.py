@@ -227,6 +227,7 @@ class DatabaseManager(IDatabase):
                 'node_id': row.node_id,
                 'hostname': row.hostname,
                 'version': row.version,
+                'node': row.node,
                 'model_type': row.model_type,
                 'average': row.average,
                 'stddev': row.stddev,
