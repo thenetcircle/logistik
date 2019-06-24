@@ -14,6 +14,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)-18s - %(levelname)-7s - %(message)s')
 
 logger = logging.getLogger(__name__)
+logger.setLevel(os.environ.get('LOG_LEVEL', 'DEBUG'))
 logging.getLogger('kafka').setLevel(logging.WARNING)
 logging.getLogger('kafka.conn').setLevel(logging.WARNING)
 

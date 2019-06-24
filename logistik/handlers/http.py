@@ -1,6 +1,7 @@
 import logging
 import eventlet
 import requests
+import os
 
 from typing import Union
 from requests.models import Response
@@ -24,6 +25,7 @@ class HttpHandler(BaseHandler):
         self.json_header = {'Context-Type': 'application/json'}
         self.schema = 'http://'
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(os.environ.get('LOG_LEVEL', 'DEBUG'))
         self.enabled = False
         self.name = ''
 

@@ -3,7 +3,7 @@
 LOG_DIR=/var/log/logistik
 
 if [ $# -lt 4 ]; then
-    echo "usage: $0 <home path> <environment> <port> <conda env>"
+    echo "usage: $0 <home path> <environment> <port> <conda env> <log level>"
     exit 1
 fi
 
@@ -11,6 +11,7 @@ LK_HOME=$1
 LK_ENV=$2
 LK_PORT=$3
 LK_CONDA_ENV=$4
+LK_LOG_LEVEL=$5
 
 re='^[0-9]+$'
 if ! [[ $3 =~ $re ]] ; then
@@ -56,7 +57,7 @@ if [[ -z "$STATSD_HOST" ]]; then
     STATSD_HOST="localhost"
 fi
 
-LK_ENVIRONMENT=$LK_ENV gunicorn \
+LOG_LEVEL=$LK_LOG_LEVEL LK_ENVIRONMENT=$LK_ENV gunicorn \
     --worker-class eventlet \
     --workers 1 \
     --threads 1 \
