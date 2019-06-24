@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 
-version = '0.3.12-dev'
+version = '0.3.12'
 
 setup(
     name='logistik',
