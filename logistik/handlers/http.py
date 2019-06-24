@@ -94,7 +94,7 @@ class HttpHandler(BaseHandler):
     def stop(self):
         self.reader.stop()
 
-    def handle_once(self, data: dict, _: Activity) -> (ErrorCodes, Union[None, Response]):
+    def handle_once(self, data: dict, _: Activity, **kwargs) -> (ErrorCodes, Union[None, Response]):
         self.logger.debug(f'data to send: {data}')
         self.logger.debug(f'method={self.method}, url={self.url}, json=<data>, headers={self.json_header}')
 

@@ -59,8 +59,6 @@ class KafkaWriter(IKafkaWriter):
 
         try:
             if conf.return_to is None or len(conf.return_to.strip()) == 0:
-                self.logger.warning('no return-to topic specified for conf: {}'.format(conf))
-                self.drop_msg(str_msg)
                 return
 
             self.try_to_publish(conf, str_msg)

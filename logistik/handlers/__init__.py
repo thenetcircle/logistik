@@ -29,7 +29,7 @@ class IHandler(ABC):
     def setup(self, env):
         raise NotImplementedError('setup() not implemented in plugin')
 
-    def handle_once(self, data: dict, _: Activity) -> (ErrorCodes, Union[None, Response]):
+    def handle_once(self, data: dict, _: Activity, **kwargs) -> (ErrorCodes, Union[None, Response]):
         raise NotImplementedError('handle_once() not implemented in plugin')
 
     def handle(self, data: dict, activity: Activity) -> (bool, str):
