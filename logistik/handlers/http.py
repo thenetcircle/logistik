@@ -25,7 +25,18 @@ class HttpHandler(BaseHandler):
         self.json_header = {'Context-Type': 'application/json'}
         self.schema = 'http://'
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(os.environ.get('LOG_LEVEL', 'DEBUG'))
+
+        log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
+        if log_level == 'DEBUG':
+            log_level = logging.DEBUG
+        elif log_level == 'INFO':
+            log_level = logging.INFO
+        elif log_level in {'WARNING', 'WARN'}:
+            log_level = logging.WARNING
+        else:
+            log_level = logging.INFO
+
+        self.logger.setLevel(log_level)
         self.enabled = False
         self.name = ''
 

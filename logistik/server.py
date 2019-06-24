@@ -9,12 +9,23 @@ from werkzeug.contrib.fixers import ProxyFix
 from logistik import environ
 from logistik.config import ConfigKeys
 
+
+log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
+if log_level == 'DEBUG':
+    log_level = logging.DEBUG
+elif log_level == 'INFO':
+    log_level = logging.INFO
+elif log_level in {'WARNING', 'WARN'}:
+    log_level = logging.WARNING
+else:
+    log_level = logging.INFO
+
 logging.basicConfig(
-    level=getattr(logging, os.environ.get('LOG_LEVEL', 'DEBUG')),
+    level=log_level,
     format='%(asctime)s - %(name)-18s - %(levelname)-7s - %(message)s')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(os.environ.get('LOG_LEVEL', 'DEBUG'))
+logger.setLevel(log_level)
 logging.getLogger('kafka').setLevel(logging.WARNING)
 logging.getLogger('kafka.conn').setLevel(logging.WARNING)
 
