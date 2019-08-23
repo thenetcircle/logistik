@@ -115,11 +115,11 @@ class DataAggregatorTask(IDataAggregatorTask):
                     version=timing['version'],
                     node=timing['node'],
                     model_type=timing['model_type'],
-                    average=timing['average'],
-                    stddev=timing['stddev'],
-                    min_value=timing['min'],
-                    max_value=timing['max'],
-                    count=timing['count']
+                    average=timing['average'] or 0,
+                    stddev=timing['stddev'] or 0,
+                    min_value=timing['min'] or 0,
+                    max_value=timing['max'] or 0,
+                    count=timing['count'] or 1
                 )
             except KeyError as e:
                 logger.error(f'KeyError for {str(e)} in entry, ignoring: {str(timing)}')
