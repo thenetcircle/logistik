@@ -119,6 +119,11 @@ class KafkaReader(IKafkaReader):
 
     def try_to_read(self):
         for message in self.consumer:
+            if not self.enabled:
+                logger.info(f'stopping consumption of {self.conf.node_id()}')
+                time.sleep(3)
+                break
+
             try:
                 self.handle_message(message)
             except InterruptedError:
@@ -137,9 +142,6 @@ class KafkaReader(IKafkaReader):
 
     def stop(self):
         self.enabled = False
-
-        self.logger.info('closing KafkaConsumer...')
-        self.consumer.close()
 
     def handle_message(self, message) -> None:
         self.logger.debug("%s:%d:%d: key=%s" % (
