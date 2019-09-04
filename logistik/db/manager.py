@@ -403,7 +403,8 @@ class DatabaseManager(IDatabase):
             service_id=service_id,
             hostname=hostname,
             model_type=model_type,
-            node=node
+            node=node,
+            retired=False
         ).first()
 
         if handler is None:
