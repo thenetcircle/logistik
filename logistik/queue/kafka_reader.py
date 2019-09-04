@@ -138,6 +138,9 @@ class KafkaReader(IKafkaReader):
     def stop(self):
         self.enabled = False
 
+        self.logger.info('closing KafkaConsumer...')
+        self.consumer.close()
+
     def handle_message(self, message) -> None:
         self.logger.debug("%s:%d:%d: key=%s" % (
             message.topic, message.partition,
