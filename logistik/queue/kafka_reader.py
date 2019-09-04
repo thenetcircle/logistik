@@ -13,7 +13,7 @@ from activitystreams import Activity
 
 from logistik.utils.exceptions import ParseException
 from logistik.queue import IKafkaReader
-from logistik.config import ConfigKeys, ModelTypes
+from logistik.config import ConfigKeys, ModelTypes, ErrorCodes
 from logistik.environ import GNEnvironment
 from logistik.handlers.base import IHandler
 from logistik.db.reprs.handler import HandlerConf
@@ -180,8 +180,10 @@ class KafkaReader(IKafkaReader):
             self.fail_msg(message, message.topic, message_value)
             return
 
+        error_code = ErrorCodes.OK
+
         try:
-            self.handler.handle(data, activity)
+            error_code, error_msg = self.handler.handle(data, activity)
         except InterruptedError:
             raise
         except Exception as e:
@@ -191,6 +193,9 @@ class KafkaReader(IKafkaReader):
             self.env.capture_exception(sys.exc_info())
             self.env.handler_stats.error(self.conf, None)
             self.fail_msg(message, message.topic, message_value)
+
+        if error_code == ErrorCodes.RETRIES_EXCEEDED:
+            self.stop()
 
     def try_to_parse(self, data) -> (dict, Activity):
         try:

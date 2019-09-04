@@ -87,6 +87,11 @@ class BaseHandler(IHandler, IPlugin, ABC):
 
         status_code, error_code, response = self.handle_and_return_response(data, activity)
 
+        if error_code == ErrorCodes.RETRIES_EXCEEDED:
+            error_msg = 'exceeded max retries, disabling handler'
+            self.logger.info(error_code)
+            return ErrorCodes.RETRIES_EXCEEDED, error_msg
+
         if response is None:
             error_msg = 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code)
             self.logger.warning(error_msg)
