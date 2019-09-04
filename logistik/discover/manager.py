@@ -62,8 +62,6 @@ class DiscoveryService(BaseDiscoveryService):
             _, services = self.env.consul.get_service(name)
 
             for service in services:
-                from pprint import pprint
-                pprint(service)
                 consul_service_id = service.get(DiscoveryService.SERVICE_ID)
                 service_id = service.get(DiscoveryService.SERVICE_NAME)
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
