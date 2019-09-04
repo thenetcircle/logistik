@@ -89,7 +89,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
 
         if error_code == ErrorCodes.RETRIES_EXCEEDED:
             error_msg = 'exceeded max retries, disabling handler'
-            self.logger.info(error_code)
+            self.logger.info(error_msg)
             return ErrorCodes.RETRIES_EXCEEDED, error_msg
 
         if response is None:

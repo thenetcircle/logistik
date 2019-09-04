@@ -195,6 +195,9 @@ class KafkaReader(IKafkaReader):
             self.fail_msg(message, message.topic, message_value)
 
         if error_code == ErrorCodes.RETRIES_EXCEEDED:
+            node_id = self.conf.node_id()
+            self.env.db.disable_handler(node_id)
+            self.env.handlers_manager.stop_handler(node_id)
             self.stop()
 
     def try_to_parse(self, data) -> (dict, Activity):
