@@ -62,6 +62,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
                 self.logger.error('attempt {}/{} failed for endpoint {}, error was: {}'.format(
                     str(i+1), self.n_retries, self.endpoint, str(e))
                 )
+                environ.env.capture_exception(sys.exc_info())
 
         utils.fail_message(data)
         return ErrorCodes.RETRIES_EXCEEDED, None
