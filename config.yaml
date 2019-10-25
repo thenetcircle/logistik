@@ -12,6 +12,9 @@ database:
   password: '$LK_DB_PASS'
   pool_size: '$LK_DB_POOL_SIZE'
 
+logging:
+  dsn: '$LK_DSN'
+
 cache:
   host: '$LK_CACHE_HOST'
   db: '$LK_CACHE_DB'
