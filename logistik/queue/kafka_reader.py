@@ -68,7 +68,7 @@ class KafkaReader(IKafkaReader):
             group_id = 'logistik-{}-{}'.format(self.conf.service_id, str(uuid()))
             self.logger.info('canary model using Group ID {} to get all messages'.format(group_id))
         else:
-            group_id = 'logistik-{}'.format(self.conf.service_id)
+            group_id = 'logistik-{}'.format(self.conf.service_id.split('-')[0])
 
         self.consumer = KafkaConsumer(
             topic_name,
