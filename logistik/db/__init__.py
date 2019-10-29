@@ -89,9 +89,6 @@ class IDatabase(ABC):
     def remove_old_handler_stats(self, stats: AggregatedHandlerStats) -> None:
         raise NotImplementedError()
 
-    def update_group_id(self, handler_conf: HandlerConf, tagd: dict) -> HandlerConf:
-        raise NotImplementedError()
-
     def update_consul_service_id_and_group_id(
             self, handler_conf: HandlerConf, consul_service_id: str, tags: dict
     ) -> HandlerConf:
