@@ -114,7 +114,7 @@ class HandlerConfEntity(env.dbman.Model):
         self.timeout = handler_conf.timeout or self.timeout
         self.retries = handler_conf.retries or self.retries
         self.service_id = handler_conf.service_id or self.service_id
-        self.group_id = handler_conf.service_id or self.group_id
+        self.group_id = handler_conf.group_id or self.group_id
         self.return_to = handler_conf.return_to or self.return_to
         self.tags = handler_conf.tags or self.tags
         self.event_display_name = handler_conf.event_display_name or self.event_display_name
