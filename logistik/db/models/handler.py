@@ -114,6 +114,7 @@ class HandlerConfEntity(env.dbman.Model):
         self.timeout = handler_conf.timeout or self.timeout
         self.retries = handler_conf.retries or self.retries
         self.service_id = handler_conf.service_id or self.service_id
+        self.group_id = handler_conf.service_id or self.group_id
         self.return_to = handler_conf.return_to or self.return_to
         self.tags = handler_conf.tags or self.tags
         self.event_display_name = handler_conf.event_display_name or self.event_display_name
@@ -129,12 +130,12 @@ class HandlerConfEntity(env.dbman.Model):
                 id={}, name={}, event={}, enabled={}, endpoint={}, 
                 version={}, path={}, method={}, retries={}, timeout={}, 
                 service_id={}, tags={}, return_to={}, port={}, hostname={}. 
-                startup={}, traffic={}, retired={}, reader_type={}, 
-                reader_endpoint={}, event_display_name={}, consul_service_id={}>
+                startup={}, traffic={}, retired={}, reader_type={}, reader_endpoint={}, 
+                event_display_name={}, consul_service_id={}, group_id={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
             self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
             self.port, self.hostname, self.startup, self.traffic, self.retired, self.reader_type,
-            self.reader_endpoint, self.event_display_name, self.consul_service_id
+            self.reader_endpoint, self.event_display_name, self.consul_service_id, self.group_id
         )
