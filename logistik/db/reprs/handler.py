@@ -79,6 +79,11 @@ class HandlerConf(object):
             self.node
         )
 
+    def build_group_id(self):
+        if self.group_id is not None and len(self.group_id.strip()) > 0:
+            return self.group_id
+        return self.service_id.split('-')[0]
+
     @staticmethod
     def to_node_id(service_id, hostname, model_type, node):
         return '{}-{}-{}-{}'.format(
