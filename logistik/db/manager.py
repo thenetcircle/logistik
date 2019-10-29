@@ -14,7 +14,7 @@ from logistik.db.models.timing import TimingEntity
 from logistik.db.reprs.agg_stats import AggregatedHandlerStats
 from logistik.db.reprs.event import EventConf
 from logistik.db.reprs.handler import HandlerConf
-from logistik.config import ModelTypes
+from logistik.config import ModelTypes, ServiceTags
 from logistik.environ import GNEnvironment
 from logistik.utils.decorators import with_session
 from logistik.utils.exceptions import HandlerNotFoundException
@@ -539,7 +539,9 @@ class DatabaseManager(IDatabase):
         self.env.dbman.session.commit()
 
     @with_session
-    def update_consul_service_id(self, handler_conf: HandlerConf, consul_service_id: str) -> HandlerConf:
+    def update_consul_service_id_and_group_id(
+            self, handler_conf: HandlerConf, consul_service_id: str, tags: dict
+    ) -> HandlerConf:
         handler = HandlerConfEntity.query.filter_by(
             service_id=handler_conf.service_id,
             hostname=handler_conf.hostname,
@@ -552,6 +554,7 @@ class DatabaseManager(IDatabase):
             return handler_conf
 
         handler.consul_service_id = consul_service_id
+        handler.group_id = tags.get(ServiceTags.GROUP_ID, None) or handler.service_id.split('-')[0]
 
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()

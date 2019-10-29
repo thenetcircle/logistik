@@ -44,6 +44,7 @@ class HandlerStatsEntity(env.dbman.Model):
 class HandlerConfEntity(env.dbman.Model):
     id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
     service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
+    group_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
     name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
     enabled = env.dbman.Column(env.dbman.Boolean(), unique=False, nullable=False, server_default='false')

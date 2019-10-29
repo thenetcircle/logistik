@@ -159,7 +159,7 @@ class DiscoveryService(BaseDiscoveryService):
         :return: the updated handler conf representation
         """
         if handler.enabled:
-            return self.env.db.update_consul_service_id(handler, c_id)
+            return self.env.db.update_consul_service_id_and_group_id(handler, c_id, tags)
 
         self.logger.info('registering updated handler "{}": address "{}", port "{}", id: "{}"'.format(
             name, host, port, service_id
