@@ -213,13 +213,13 @@ class DiscoveryService(BaseDiscoveryService):
         handler.startup = datetime.datetime.utcnow()
         handler.name = name
         handler.service_id = service_id
+        handler.group_id = tags.get(ServiceTags.GROUP_ID, None) or service_id.split('-')[0]
         handler.version = tags.get('version', None) or handler.version
         handler.path = tags.get('path', None) or handler.path
         handler.event = tags.get('event', handler.event) or 'UNMAPPED'
         handler.return_to = tags.get('returnto', None) or handler.return_to
         handler.reader_type = tags.get('readertype', handler.reader_type) or 'kafka'
         handler.reader_endpoint = tags.get('readerendpoint', None) or handler.reader_endpoint
-        handler.group_id = tags.get(ServiceTags.GROUP_ID, None) or service_id.split('-')[0]
         handler.model_type = ModelTypes.MODEL
         handler.node = node
         handler.consul_service_id = c_id
