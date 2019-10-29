@@ -43,8 +43,8 @@ class HandlerConf(object):
                  node=None, method=None, timeout=None, retries=None,
                  service_id=None, tags=None, return_to=None, port=None,
                  hostname=None, startup=None, traffic=None, retired=None,
-                 reader_type=None, reader_endpoint=None,
-                 event_display_name=None, consul_service_id=None):
+                 reader_type=None, reader_endpoint=None, event_display_name=None,
+                 consul_service_id=None, group_id=None):
         self.identity: int = identity
         self.name: str = name
         self.event: str = event
@@ -61,6 +61,7 @@ class HandlerConf(object):
         self.timeout: int = timeout
         self.retries: int = retries
         self.service_id: str = service_id
+        self.group_id: str = group_id
         self.return_to: str = return_to
         self.tags: str = tags
         self.event_display_name: str = event_display_name
@@ -102,8 +103,8 @@ class HandlerConf(object):
             node={}, method={}, timeout={}, retries={}, 
             service_id={}, tags={}, return_to={}, port={}, 
             hostname={}, startup={}, traffic={}, retired={}, 
-            reader_type={}, reader_endpoint={}, 
-            event_display_name={}, consul_service_id={}>
+            reader_type={}, reader_endpoint={}, event_display_name={}, 
+            consul_service_id={}, group_id={}>
         """
 
         return repr_string.format(
@@ -112,7 +113,7 @@ class HandlerConf(object):
             self.timeout, self.retries, self.service_id, self.tags, self.return_to,
             self.port, self.hostname, self.startup, self.traffic, self.retired,
             self.reader_type, self.reader_endpoint, self.event_display_name,
-            self.consul_service_id
+            self.consul_service_id, self.group_id
         )
 
     def to_json(self):
@@ -142,7 +143,8 @@ class HandlerConf(object):
             'reader_endpoint': self.reader_endpoint,
             'traffic': '%s%%' % int(float(self.traffic or 0) * 100),
             'return_to': self.return_to or '',
-            'consul_service_id': self.consul_service_id or ''
+            'consul_service_id': self.consul_service_id or '',
+            'group_id': self.group_id
         }
 
         if self.startup is not None:

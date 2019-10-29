@@ -54,6 +54,7 @@ class ServiceTags(object):
     NODE = 'node'
     HOSTNAME = 'hostname'
     MODEL = 'model'
+    GROUP_ID = 'group_id'
 
 
 class ConfigKeys(object):

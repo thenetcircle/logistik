@@ -65,10 +65,10 @@ class KafkaReader(IKafkaReader):
         self.logger.info('consuming from topic {}'.format(topic_name))
 
         if self.conf.model_type == ModelTypes.CANARY:
-            group_id = 'logistik-{}-{}'.format(self.conf.service_id, str(uuid()))
+            group_id = 'logistik-{}-{}'.format(self.conf.group_id, str(uuid()))
             self.logger.info('canary model using Group ID {} to get all messages'.format(group_id))
         else:
-            group_id = 'logistik-{}'.format(self.conf.service_id.split('-')[0])
+            group_id = 'logistik-{}'.format(self.conf.group_id)
 
         self.consumer = KafkaConsumer(
             topic_name,
