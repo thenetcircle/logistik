@@ -21,8 +21,9 @@ class DataAggregatorTask(IDataAggregatorTask):
         self.last_run = time.time()
 
     def start(self):
-        self.run_once()
-        eventlet.spawn(self.run_loop)
+        # self.run_once()
+        # eventlet.spawn(self.run_loop)
+        pass
 
     def run_loop(self):
         while True:

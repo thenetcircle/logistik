@@ -163,7 +163,6 @@ class KafkaReader(IKafkaReader):
 
         try:
             data, activity = self.try_to_parse(message_value)
-            self.log_pre_processed_request(message.topic, data)
         except InterruptedError:
             self.logger.warning('got interrupt, dropping message'.format(str(message.value)))
             self.env.handler_stats.failure(self.conf, None)
@@ -216,15 +215,6 @@ class KafkaReader(IKafkaReader):
             return enriched_data, activity
         except Exception as e:
             raise ParseException(e)
-
-    def log_pre_processed_request(self, original_topic: str, decoded_value: dict):
-        try:
-            log_topic = f'{original_topic}-preprocessed'
-            self.env.kafka_writer.log(log_topic, decoded_value)
-        except Exception as e:
-            self.logger.error('could not publish pre-processed request to kafka: {}'.format(str(e)))
-            self.logger.exception(e)
-            self.env.capture_exception(sys.exc_info())
 
     def fail_msg(self, message, original_topic: Union[str, None], decoded_value: Union[dict, None]):
         try:

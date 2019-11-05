@@ -53,9 +53,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
                     diff = (after-before) * 1000
 
                     key = StatsKeys.handler_timing(self.conf.node_id())
-
                     environ.env.stats.timing(key, diff)
-                    environ.env.db.register_runtime(self.conf, diff)
 
                 return error_code, response
             except Exception as e:
