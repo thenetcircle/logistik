@@ -1,4 +1,5 @@
 from abc import ABC
+from abc import abstractmethod
 from typing import Union
 
 from activitystreams import Activity
@@ -9,42 +10,58 @@ from logistik.db.reprs.handler import HandlerConf
 
 
 class IHandlersManager(ABC):
+    @abstractmethod
     def setup(self):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def start_handler(self, node_id: str) -> None:
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def stop_handler(self, node_id: str) -> None:
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_handlers(self) -> list:
-        raise NotImplementedError()
+        pass
+
+    @abstractmethod
+    def query_model_for_info(self, handler_conf: HandlerConf):
+        pass
 
 
 class IHandler(ABC):
+    @abstractmethod
     def configure(self, conf: HandlerConf):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def setup(self, env):
-        raise NotImplementedError('setup() not implemented in plugin')
+        pass
 
+    @abstractmethod
     def handle_once(self, data: dict, _: Activity, **kwargs) -> (ErrorCodes, Union[None, Response]):
-        raise NotImplementedError('handle_once() not implemented in plugin')
+        pass
 
+    @abstractmethod
     def handle(self, data: dict, activity: Activity) -> (bool, str):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def stop(self):
-        raise NotImplementedError()
+        pass
 
 
 class IHandlerStats(ABC):
+    @abstractmethod
     def failure(self, conf: HandlerConf, event: Activity=None) -> None:
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def success(self, conf: HandlerConf, event: Activity=None) -> None:
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def error(self, conf: HandlerConf, event: Activity=None) -> None:
-        raise NotImplementedError()
+        pass
