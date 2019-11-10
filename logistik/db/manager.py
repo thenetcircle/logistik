@@ -383,7 +383,7 @@ class DatabaseManager(IDatabase):
             node=node
         ).first()
 
-        fields = ['return_to', 'event', 'method', 'retries', 'timeout']
+        fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path']
         for field in fields:
             updated = handler_conf.__getattribute__(field)
             handler.__setattr__(field, updated)

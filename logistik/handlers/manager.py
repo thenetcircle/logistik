@@ -77,12 +77,16 @@ class HandlersManager(IHandlersManager):
             raise QueryException(response.status_code)
 
         json_response = response.json()
-        fields = ['return_to', 'event', 'method', 'retries', 'timeout']
+        fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path']
 
         try:
             for field in fields:
+                if field not in json_response:
+                    continue
+
                 original = handler_conf.__getattribute__(field)
-                updated = json_response.get(field, default=original)
+                updated = json_response.get(field)
+
                 self.logger.info(f'updating field "{field}" from "{original}" to "{updated}"')
                 handler_conf.__setattr__(field, updated)
 
