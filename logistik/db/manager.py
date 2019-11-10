@@ -373,6 +373,25 @@ class DatabaseManager(IDatabase):
             self.env.cache.reset_enabled_handlers_for(handler.event)
 
     @with_session
+    def update_handler(self, handler_conf: HandlerConf):
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(handler_conf.node_id())
+
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id,
+            hostname=hostname,
+            model_type=model_type,
+            node=node
+        ).first()
+
+        fields = ['return_to', 'event', 'method', 'retries', 'timeout']
+        for field in fields:
+            updated = handler_conf.__getattribute__(field)
+            handler.__setattr__(field, updated)
+
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+
+    @with_session
     def disable_handler(self, node_id) -> None:
         service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
 

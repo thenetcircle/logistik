@@ -111,12 +111,10 @@ class DiscoveryService(BaseDiscoveryService):
         s_id = service.get(DiscoveryService.SERVICE_NAME)
 
         handler_conf = self.create_or_update_handler(host, port, s_id, name, node, hostname, c_id, tags)
+
         self.env.db.register_handler(handler_conf)
-
-        if handler_conf.event != 'UNMAPPED':
-            self.env.cache.reset_enabled_handlers_for(handler_conf.event)
-
         self.env.handlers_manager.start_handler(handler_conf.node_id())
+        self.env.cache.reset_enabled_handlers_for(handler_conf.event)
         return handler_conf
 
     def create_or_update_handler(self, host, port, service_id, name, node, hostname, c_id, tags: dict):
@@ -166,7 +164,7 @@ class DiscoveryService(BaseDiscoveryService):
         ))
         return self._create_handler(handler, service_id, node, name, hostname, port, host, c_id, tags)
 
-    def _create_new_handler(self, service_id, node, name, hostname, port, host, c_id, tags: dict):
+    def _create_new_handler(self, service_id, node, name, hostname, port, host, c_id, tags: dict) -> HandlerConf:
         """
         create a new handler for the upstream model; it will initially be created as a
         disabled canary model that has to be enabled and promoted in the ui
