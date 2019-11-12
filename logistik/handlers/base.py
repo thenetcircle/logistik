@@ -90,11 +90,13 @@ class BaseHandler(IHandler, IPlugin, ABC):
             # TODO: post to retry topic for replaying later
             error_msg = 'exceeded max retries, disabling handler'
             self.logger.info(error_msg)
+            environ.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.RETRIES_EXCEEDED, error_msg
 
         if response is None:
             error_msg = 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code)
             self.logger.warning(error_msg)
+            environ.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.HANDLER_ERROR, error_msg
 
         elif status_code == BaseHandler.OK:
@@ -104,6 +106,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
         else:
             error_msg = 'not publishing response since request failed: {}'.format(response)
             self.logger.error(error_msg)
+            environ.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.HANDLER_ERROR, error_msg
 
     def handle_and_return_response(self, data: dict, activity: Activity) -> (bool, str, Response):

@@ -77,7 +77,7 @@ class HandlersManager(IHandlersManager):
             raise QueryException(response.status_code)
 
         json_response = response.json()
-        fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path']
+        fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path', 'failed']
 
         try:
             for field in fields:

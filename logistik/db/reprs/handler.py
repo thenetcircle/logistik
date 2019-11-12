@@ -44,7 +44,7 @@ class HandlerConf(object):
                  service_id=None, tags=None, return_to=None, port=None,
                  hostname=None, startup=None, traffic=None, retired=None,
                  reader_type=None, reader_endpoint=None, event_display_name=None,
-                 consul_service_id=None, group_id=None):
+                 consul_service_id=None, group_id=None, failed_topic=None):
         self.identity: int = identity
         self.name: str = name
         self.event: str = event
@@ -63,6 +63,7 @@ class HandlerConf(object):
         self.service_id: str = service_id
         self.group_id: str = group_id
         self.return_to: str = return_to
+        self.failed_topic: str = failed_topic
         self.tags: str = tags
         self.event_display_name: str = event_display_name
         self.startup: datetime.datetime = startup
@@ -109,7 +110,7 @@ class HandlerConf(object):
             service_id={}, tags={}, return_to={}, port={}, 
             hostname={}, startup={}, traffic={}, retired={}, 
             reader_type={}, reader_endpoint={}, event_display_name={}, 
-            consul_service_id={}, group_id={}>
+            consul_service_id={}, group_id={}, failed_topic={}>
         """
 
         return repr_string.format(
@@ -118,7 +119,7 @@ class HandlerConf(object):
             self.timeout, self.retries, self.service_id, self.tags, self.return_to,
             self.port, self.hostname, self.startup, self.traffic, self.retired,
             self.reader_type, self.reader_endpoint, self.event_display_name,
-            self.consul_service_id, self.group_id
+            self.consul_service_id, self.group_id, self.failed_topic
         )
 
     def to_json(self):
@@ -148,6 +149,7 @@ class HandlerConf(object):
             'reader_endpoint': self.reader_endpoint,
             'traffic': '%s%%' % int(float(self.traffic or 0) * 100),
             'return_to': self.return_to or '',
+            'failed_topic': self.failed_topic or '',
             'consul_service_id': self.consul_service_id or '',
             'group_id': self.group_id
         }

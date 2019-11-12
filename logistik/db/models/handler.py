@@ -61,6 +61,7 @@ class HandlerConfEntity(env.dbman.Model):
     timeout = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False, server_default='0')
     tags = env.dbman.Column(env.dbman.String(256), unique=False, nullable=True)
     return_to = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
+    failed_topic = env.dbman.Column(env.dbman.String(128), unique=False, nullable=True)
     event_display_name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False, server_default='event')
     startup = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=True)
     traffic = env.dbman.Column(env.dbman.Float(), unique=False, nullable=False, server_default='0.1')
@@ -91,6 +92,7 @@ class HandlerConfEntity(env.dbman.Model):
             tags=self.tags,
             event_display_name=self.event_display_name,
             return_to=self.return_to,
+            failed_topic=self.failed_topic,
             startup=self.startup,
             traffic=self.traffic,
             reader_type=self.reader_type,
@@ -111,6 +113,7 @@ class HandlerConfEntity(env.dbman.Model):
         self.model_type = handler_conf.model_type or self.model_type
         self.node = handler_conf.node or self.node
         self.method = handler_conf.method or self.method
+        self.failed_topic = handler_conf.failed_topic or self.failed_topic
         self.timeout = handler_conf.timeout or self.timeout
         self.retries = handler_conf.retries or self.retries
         self.service_id = handler_conf.service_id or self.service_id
@@ -131,11 +134,12 @@ class HandlerConfEntity(env.dbman.Model):
                 version={}, path={}, method={}, retries={}, timeout={}, 
                 service_id={}, tags={}, return_to={}, port={}, hostname={}. 
                 startup={}, traffic={}, retired={}, reader_type={}, reader_endpoint={}, 
-                event_display_name={}, consul_service_id={}, group_id={}>
+                event_display_name={}, consul_service_id={}, group_id={}, failed_topic={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
             self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
             self.port, self.hostname, self.startup, self.traffic, self.retired, self.reader_type,
-            self.reader_endpoint, self.event_display_name, self.consul_service_id, self.group_id
+            self.reader_endpoint, self.event_display_name, self.consul_service_id, self.group_id,
+            self.failed_topic
         )

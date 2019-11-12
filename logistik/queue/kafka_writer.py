@@ -47,6 +47,18 @@ class KafkaWriter(IKafkaWriter):
     def log(self, topic: str, data: dict) -> None:
         self.producer.send(topic, data)
 
+    def fail(self, topic: str, data: dict) -> None:
+        if topic is None:
+            self.logger.warning(f'no failed topic configured, dropping message: {data}')
+            return
+
+        try:
+            self.producer.send(topic, data)
+        except Exception as e:
+            self.logger.error(f'could not send failed event to topic {topic} because: {str(e)}')
+            self.logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+
     def publish(self, conf: HandlerConf, message: Response) -> None:
         str_msg = None
         try:
