@@ -74,7 +74,7 @@ class DatabaseManager(IDatabase):
         self.env.dbman.session.commit()
 
     @with_session
-    def promote_or_demote(self, node_id: str, type_str: str, new_model_type: str) -> Union[HandlerConf, None]:
+    def _promote_or_demote(self, node_id: str, type_str: str, new_model_type: str) -> Union[HandlerConf, None]:
         service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
 
         handler = HandlerConfEntity.query.filter_by(
@@ -95,10 +95,10 @@ class DatabaseManager(IDatabase):
         return handler.to_repr()
 
     def demote_model(self, node_id: str) -> Union[HandlerConf, None]:
-        return self.promote_or_demote(node_id, 'demoting', ModelTypes.CANARY)
+        return self._promote_or_demote(node_id, 'demoting', ModelTypes.CANARY)
 
     def promote_canary(self, node_id: str) -> Union[HandlerConf, None]:
-        return self.promote_or_demote(node_id, 'promoting', ModelTypes.MODEL)
+        return self._promote_or_demote(node_id, 'promoting', ModelTypes.MODEL)
 
     @with_session
     def timing_per_node(self) -> dict:
