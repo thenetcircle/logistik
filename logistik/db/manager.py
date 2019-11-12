@@ -74,46 +74,31 @@ class DatabaseManager(IDatabase):
         self.env.dbman.session.commit()
 
     @with_session
+    def promote_or_demote(self, node_id: str, type_str: str, new_model_type: str) -> Union[HandlerConf, None]:
+        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
+
+        handler = HandlerConfEntity.query.filter_by(
+            service_id=service_id,
+            hostname=hostname,
+            model_type=model_type,
+            node=node
+        ).first()
+
+        if handler is None:
+            logger.debug('handler with node id "{}" does not exist'.format(node_id))
+            return None
+
+        logger.info(f'{type_str} to {model_type} {node_id}')
+        handler.model_type = new_model_type
+        self.env.dbman.session.add(handler)
+        self.env.dbman.session.commit()
+        return handler.to_repr()
+
     def demote_model(self, node_id: str) -> Union[HandlerConf, None]:
-        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
+        return self.promote_or_demote(node_id, 'demoting', ModelTypes.CANARY)
 
-        handler = HandlerConfEntity.query.filter_by(
-            service_id=service_id,
-            hostname=hostname,
-            model_type=model_type,
-            node=node
-        ).first()
-
-        if handler is None:
-            logger.debug('handler with node id "{}" does not exist'.format(node_id))
-            return None
-
-        logger.info('demoting model to canary {}'.format(node_id))
-        handler.model_type = ModelTypes.CANARY
-        self.env.dbman.session.add(handler)
-        self.env.dbman.session.commit()
-        return handler.to_repr()
-
-    @with_session
     def promote_canary(self, node_id: str) -> Union[HandlerConf, None]:
-        service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
-
-        handler = HandlerConfEntity.query.filter_by(
-            service_id=service_id,
-            hostname=hostname,
-            model_type=model_type,
-            node=node
-        ).first()
-
-        if handler is None:
-            logger.debug('handler with node id "{}" does not exist'.format(node_id))
-            return None
-
-        logger.info('promoting canary model {}'.format(node_id))
-        handler.model_type = ModelTypes.MODEL
-        self.env.dbman.session.add(handler)
-        self.env.dbman.session.commit()
-        return handler.to_repr()
+        return self.promote_or_demote(node_id, 'promoting', ModelTypes.MODEL)
 
     @with_session
     def timing_per_node(self) -> dict:
