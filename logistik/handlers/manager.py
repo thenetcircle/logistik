@@ -87,6 +87,9 @@ class HandlersManager(IHandlersManager):
                 original = handler_conf.__getattribute__(field)
                 updated = json_response.get(field)
 
+                if field in {'retries', 'timeout'}:
+                    updated = int(float(updated))
+
                 self.logger.info(f'updating field "{field}" from "{original}" to "{updated}"')
                 handler_conf.__setattr__(field, updated)
 
