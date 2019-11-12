@@ -88,6 +88,7 @@ class HandlerConfEntity(env.dbman.Model):
             method=self.method,
             retries=self.retries,
             model_type=self.model_type,
+            group_id=self.group_id,
             timeout=self.timeout,
             tags=self.tags,
             event_display_name=self.event_display_name,
