@@ -89,6 +89,12 @@ def get_failed_events(config, from_topic, to_topic):
             event = str(message.value, 'utf-8')
             events_to_publish.append(event)
             if message.offset >= to_offset - 1:
+                """
+                from kafka-python team on github (https://github.com/dpkp/kafka-python/issues/645):
+                    "the metadata is really just an opaque string. You can also pass None. 
+                    Nothing uses metadata internally, it is there as a way for you to s
+                    tore application-specific data if needed." 
+                """
                 commit_options[partition] = OffsetAndMetadata(message.offset + 1, None)
                 break
 
