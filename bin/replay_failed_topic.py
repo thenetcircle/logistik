@@ -23,7 +23,7 @@ def load_secrets_file(config: dict) -> dict:
         try:
             secrets = yaml.safe_load(open(secrets_path))
         except Exception as e:
-            raise RuntimeError("Failed to open secrets configuration {0}: {1}".format(secrets_path, str(e)))
+            raise RuntimeError(f'failed to open secrets configuration {secrets_path}: {str(e)}')
         template = Template(template)
         template = template.safe_substitute(secrets)
 
