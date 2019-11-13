@@ -2,7 +2,7 @@ import yaml
 import os
 import psycopg2
 import sys
-from kafka import KafkaConsumer, TopicPartition, KafkaProducer
+from kafka import KafkaConsumer, TopicPartition, KafkaProducer, OffsetAndMetadata
 
 lk_env = os.getenv('LK_ENVIRONMENT') or sys.argv[1]
 if lk_env is None:
@@ -62,32 +62,37 @@ def get_failed_events(config, from_topic, to_topic):
         auto_commit_interval_ms=1000,
         group_id=to_topic
     )
-    partition = TopicPartition(from_topic, 0)
-    consumer.assign([partition])
 
-    # we'll start reading from this position
-    from_offset = consumer.position(partition)
-
-    # obtain the last offset value
-    consumer.seek_to_end(partition)
-    to_offset = consumer.position(partition)
-
-    print(f'from_offset: {from_offset}, to_offset: {to_offset}')
-
-    # no new events since last replay
-    if from_offset >= to_offset + 1:
-        return list()
-
-    consumer.seek(partition, from_offset - 1)
-
+    n_partitions = len(consumer.partitions_for_topic(from_topic))
     events_to_publish = list()
-    for message in consumer:
-        event = str(message.value, 'utf-8')
-        events_to_publish.append(event)
-        if message.offset >= to_offset - 1:
-            break
+    commit_options = dict()
 
-    consumer.commit()
+    for partition_idx in range(n_partitions):
+        partition = TopicPartition(from_topic, partition_idx)
+        consumer.assign([partition])
+
+        # we'll start reading from this position
+        from_offset = consumer.position(partition)
+
+        # obtain the last offset value
+        consumer.seek_to_end(partition)
+        to_offset = consumer.position(partition)
+
+        print(f'partition_idx: {partition_idx}, from_offset: {from_offset}, to_offset: {to_offset}')
+        # no new events since last replay
+        if from_offset >= to_offset:
+            continue
+
+        consumer.seek(partition, from_offset)
+
+        for message in consumer:
+            event = str(message.value, 'utf-8')
+            events_to_publish.append(event)
+            if message.offset >= to_offset - 1:
+                commit_options[partition] = OffsetAndMetadata(message.offset + 1, None)
+                break
+
+    consumer.commit(commit_options)
     return events_to_publish
 
 
