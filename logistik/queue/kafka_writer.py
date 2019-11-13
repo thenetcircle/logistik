@@ -52,12 +52,22 @@ class KafkaWriter(IKafkaWriter):
             self.logger.warning(f'no failed topic configured, dropping message: {data}')
             return
 
+        if 'retries' in data.keys():
+            if data['retries'] >= 3:
+                self.logger.warning(f'event has failed 3 times in a row, dropping message: {data}')
+                return
+
+            data['retries'] += 1
+        else:
+            data['retries'] = 1
+
         try:
             self.producer.send(topic, data)
         except Exception as e:
             self.logger.error(f'could not send failed event to topic {topic} because: {str(e)}')
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
+            self.drop_msg(data)
 
     def publish(self, conf: HandlerConf, message: Response) -> None:
         str_msg = None
@@ -72,6 +82,9 @@ class KafkaWriter(IKafkaWriter):
         try:
             if conf.return_to is None or len(conf.return_to.strip()) == 0:
                 return
+
+            if 'retries' in str_msg:
+                del str_msg['retries']
 
             self.try_to_publish(conf, str_msg)
         except Exception as e:
