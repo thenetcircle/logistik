@@ -10,7 +10,7 @@
 
 ![Flow](docs/workflow-for-recs.png)
 
-![Diagram](docs/diagram.png)
+![Diagram](docs/diagram.png =570x)
 
 ## Starting the consul agent
 
