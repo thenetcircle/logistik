@@ -10,6 +10,8 @@
 
 ![Flow](docs/workflow-for-recs.png)
 
+![Diagram](docs/logistik-diagram.png)
+
 ## Starting the consul agent
 
 ```bash
