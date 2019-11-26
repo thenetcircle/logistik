@@ -48,7 +48,7 @@ statsd==3.2.2
 strict-rfc3339==0.7
 ttldict==0.3.0
 typing==3.6.4
-urllib3==1.24.2
+urllib3==1.25.7
 vine==1.1.4
-Werkzeug==0.15.6
+Werkzeug==0.16.0
 Yapsy==1.11.223
