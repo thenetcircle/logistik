@@ -10,7 +10,7 @@
 
 ![Flow](docs/workflow-for-recs.png)
 
-![Diagram](docs/diagram.png =570x)
+<a href="docs/diagram.png"><img src="docs/diagram.png" width="570" alt="Diagram"></a>
 
 ## Starting the consul agent
 
