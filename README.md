@@ -30,10 +30,12 @@ LK_ENVIRONMENT=default gunicorn \
 
 ## Starting a model
 
+Either register your model manually in Consul, or use a wrapper like `ianitor` to do it for you.
+
 ```bash
 #!/bin/bash
 ianitor -v \
-  --id $(uuidgen | cut -c 1-8) \  # needs to be unique, not used by logistik
+  --id the_service_name_5052 \  # needs to be unique
   --address 10.60.1.125 \  # address to this node
   --consul-agent=10.60.1.124 \  # which consul agent to connect to
   --tags logistik \  # this is needed for logistik to not ignore your service in consul
@@ -47,8 +49,9 @@ gunicorn \  # this is whatever command is used to start your model, here we're u
   --worker-class eventlet \
   --workers 1 \
   --threads 1 \
-  --worker-connections 500 \
-  --timeout 180 \
+  --name the_service_name \
+  --worker-connections 50 \
+  --timeout 240 \
   --bind 0.0.0.0:5053 \
   app:app
 ```
