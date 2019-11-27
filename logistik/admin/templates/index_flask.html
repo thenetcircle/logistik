@@ -67,11 +67,6 @@
             Model Handlers
           </a>
       </li>
-      <li>
-          <a href="#nav-statistics" role="tab" data-toggle="tab">
-            Statistics & Timings
-          </a>
-      </li>
     </ul>
 
     <div class="tab-content">
@@ -95,9 +90,7 @@
                         </div>
 
                         <div class="model-info">
-                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
-                            Average: {{ handler['average'] }} ms<br />
-                            Stddev: {{ handler['stddev'] }}
+                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span>
                         </div>
                         <div class="footer">
                             <div class="left">
@@ -130,9 +123,7 @@
                         </div>
 
                         <div class="model-info">
-                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
-                            Average: {{ handler['average'] }} ms<br />
-                            Stddev: {{ handler['stddev'] }}
+                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span>
                         </div>
                         <div class="footer">
                             <div class="left">
@@ -158,10 +149,6 @@
                 <th>Type</th>
                 <th>Traffic Allocation</th>
                 <th>Uptime</th>
-                <th>Average runtime (ms)</th>
-                <th>Min (ms)</th>
-                <th>Max (ms)</th>
-                <th>Standard deviation</th>
             </thead>
             <tbody>
                 {% for handler in handlers %}
@@ -176,10 +163,6 @@
                             <td>(balanced)</td>
                         {% endif %}
                         <td class="uptime">{{ handler['uptime'] }}</td>
-                        <td>{{ handler['average'] }}</td>
-                        <td>{{ handler['min'] }}</td>
-                        <td>{{ handler['max'] }}</td>
-                        <td>{{ handler['stddev'] }}</td>
                     </tr>
                     {% endif %}
                 {% endfor %}
@@ -204,9 +187,7 @@
                         </div>
 
                         <div class="model-info">
-                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span><br />
-                            Average: {{ handler['average'] }} ms<br />
-                            Stddev: {{ handler['stddev'] }}
+                            Uptime: <span class="uptime">{{ handler['uptime'] }}</span>
                         </div>
                         <div class="footer">
                             <div class="left">
@@ -325,8 +306,6 @@
                 <th>Retries</th>
                 <th>Service ID</th>
                 <th>Return-To</th>
-                <th>Average runtime (ms)</th>
-                <th>Standard deviation</th>
             </thead>
             <tbody>
                 {% for handler in handlers %}
@@ -341,64 +320,6 @@
                         <td>{{ handler['retries'] }}</td>
                         <td>{{ handler['service_id'] }}</td>
                         <td>{{ handler['return_to'] }}</td>
-                        <td>{{ handler['average'] }}</td>
-                        <td>{{ handler['stddev'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-      </div>
-
-      <div class="tab-pane active in" id="nav-statistics">
-        <h2>Aggregated Statistics</h2>
-        <table id="aggregated" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>Event</th>
-                <th>Service ID</th>
-                <th>Type</th>
-                <th>Model Type</th>
-                <th>Node</th>
-                <th>Count</th>
-            </thead>
-            <tbody>
-                {% for stat in agg_stats %}
-                    <tr>
-                        <td>{{ stat['event'] }}</td>
-                        <td>{{ stat['service_id'] }}</td>
-                        <td>{{ stat['stat_type'] }}</td>
-                        <td>{{ stat['model_type'] }}</td>
-                        <td>{{ stat['node'] }}</td>
-                        <td>{{ stat['count'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <h2>Timings per version</h2>
-        <table id="timings" class="display responsive" cellspacing="0" width="100%">
-            <thead>
-                <th>Service ID</th>
-                <th>Hostname</th>
-                <th>Node</th>
-                <th>Type</th>
-                <th>Version</th>
-                <th>Average runtime (ms)</th>
-                <th>Min (ms)</th>
-                <th>Max (ms)</th>
-                <th>Standard deviation</th>
-            </thead>
-            <tbody>
-                {% for timing in timings['version'] %}
-                    <tr>
-                        <td>{{ timing['service_id'] }}</td>
-                        <td>{{ timing['hostname'] }}</td>
-                        <td>{{ timing['node'] }}</td>
-                        <td>{{ timing['model_type'] }}</td>
-                        <td>{{ timing['version'] }}</td>
-                        <td>{{ timing['average'] }}</td>
-                        <td>{{ timing['min'] }}</td>
-                        <td>{{ timing['max'] }}</td>
-                        <td>{{ timing['stddev'] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

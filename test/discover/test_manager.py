@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from logistik.cache import ICache
 from logistik.config import ModelTypes
-from logistik.db import HandlerConf, EventConf
+from logistik.db import HandlerConf
 from test.base import MockEnv
 from logistik.discover.manager import DiscoveryService
 from logistik.discover.consul.mock import MockConsulService
@@ -54,12 +54,6 @@ class MockCache(ICache):
         pass
 
     def set_enabled_handlers_for(self, event_name: str, handlers: List[HandlerConf]):
-        pass
-
-    def get_event_conf_for(self, event_name: str) -> EventConf:
-        pass
-
-    def set_event_conf_for(self, event_name: str, conf: EventConf):
         pass
 
 

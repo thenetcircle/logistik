@@ -1,7 +1,6 @@
 from unittest import TestCase
 from test.base import MockEnv
 
-from logistik.db.reprs.event import EventConf
 from logistik.db.reprs.handler import HandlerConf
 from logistik.cache.redis import CacheRedis
 
@@ -23,15 +22,3 @@ class TestRedisCache(TestCase):
         self.assertIsNone(self.cache.get_enabled_handlers_for('existing'))
         self.cache.set_enabled_handlers_for('existing', [HandlerConf()])
         self.assertIsNotNone(self.cache.get_enabled_handlers_for('existing'))
-
-    def test_get_event_conf_non_existing(self):
-        self.assertIsNone(self.cache.get_event_conf_for('non-existing'))
-
-    def test_set_event_conf_existing(self):
-        self.assertIsNone(self.cache.get_event_conf_for('existing'))
-        self.cache.set_event_conf_for('existing', EventConf())
-        self.assertIsNotNone(self.cache.get_event_conf_for('existing'))
-
-    def test_get_event_conf_existing(self):
-        self.cache.set_event_conf_for('existing', EventConf())
-        self.assertIsNotNone(self.cache.get_event_conf_for('existing'))

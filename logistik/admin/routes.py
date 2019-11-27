@@ -15,7 +15,6 @@ from werkzeug.wrappers import Response
 from logistik import environ
 from logistik.config import ConfigKeys
 from logistik.server import app
-from logistik.db.reprs.agg_stats import AggregatedHandlerStats
 from logistik.db.reprs.handler import HandlerConf
 
 logger = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ def is_blank(s: str):
     return s is None or len(s.strip()) == 0
 
 
-def api_response(code, data: Union[dict, List[dict]]=None, message: Union[dict, str]=None):
+def api_response(code, data: Union[dict, List[dict]] = None, message: Union[dict, str] = None):
     if data is None:
         data = dict()
     if message is None:
@@ -177,36 +176,7 @@ def get_agg_stats():
 @app.route('/api/graph', methods=['GET'])
 @requires_auth
 def get_graph():
-    """ Get aggregated statistics """
-    def stats_for(handler: HandlerConf) -> List[AggregatedHandlerStats]:
-        matching = list()
-        for _stat in agg_stats:
-            if _stat['service_id'] != handler.service_id:
-                continue
-            if _stat['event'] != handler.event:
-                continue
-            if _stat['model_type'] != handler.model_type:
-                continue
-            if _stat['node'] != handler.node:
-                continue
-            matching.append(_stat)
-        return matching
-
     handlers = environ.env.db.get_all_handlers()
-    agg_stats = environ.env.db.get_all_aggregated_stats()
-    stats_per_service = dict()
-    stats_per_node = dict()
-
-    for stat in agg_stats:
-        if stat['service_id'] not in stats_per_service:
-            stats_per_service[stat['service_id']] = 0
-        stats_per_service[stat['service_id']] += stat['count']
-
-        node_id = HandlerConf.to_node_id(stat['service_id'], stat['hostname'], stat['model_type'], stat['node'])
-        if node_id not in stats_per_node:
-            stats_per_node[node_id] = 0
-        stats_per_node[node_id] += stat['count']
-
     node_id_enabled = {
         HandlerConf.to_node_id(h.service_id, h.hostname, h.model_type, h.node): h.enabled
         for h in handlers
@@ -222,22 +192,13 @@ def get_graph():
             'id': 'h-{}-{}'.format(service_id, str(uuid())),
             'label': service_id,
             'event': service_id_event.get(service_id),
-            'value': stats_per_service.get(service_id, 0),
             'children': [{
                 'id': 'm-{}'.format(handler.identity),
                 'enabled': node_id_enabled.get(HandlerConf.to_node_id(
                     handler.service_id, handler.hostname,
                     handler.model_type, handler.node), False),
                 'model_type': handler.model_type,
-                'label': '{}-{}-{}'.format(handler.hostname, handler.model_type, handler.node),
-                'value': stats_per_node.get(HandlerConf.to_node_id(
-                    handler.service_id, handler.hostname,
-                    handler.model_type, handler.node), 0),
-                'children': [{
-                    'id': 's-{}-{}-{}'.format(service_id, handler.identity, stat['stat_type']),
-                    'label': stat['stat_type'],
-                    'value': str(stat['count'])
-                } for stat in stats_for(handler)]
+                'label': '{}-{}-{}'.format(handler.hostname, handler.model_type, handler.node)
             } for handler in handlers if handler.service_id == service_id]
         } for service_id in {h.service_id for h in handlers}]
     }
@@ -276,20 +237,6 @@ def get_graph():
                 'label': str(model['value'])
             })
 
-            for stat in model['children']:
-                s_node = {
-                    'id': stat['id'],
-                    'label': stat['label'],
-                    'group': stat['label']
-                }
-
-                nodes.append(s_node)
-                edges.append({
-                    'from': m_node['id'],
-                    'to': stat['id'],
-                    'label': stat['value']
-                })
-
     return api_response(200, {'nodes': nodes, 'edges': edges})
 
 
@@ -301,31 +248,10 @@ def index():
 
     all_handlers = environ.env.db.get_all_handlers(include_retired=True)
     handlers = [handler for handler in all_handlers if not handler.retired]
-
-    agg_stats_json = environ.env.db.get_all_aggregated_stats()
     consumers = environ.env.handlers_manager.get_handlers()
-    timings = environ.env.timing.get_timing_summary()
 
     handlers_json = [handler.to_json() for handler in handlers]
     all_handlers_json = [handler.to_json() for handler in all_handlers]
-
-    for handler in handlers_json:
-        if handler['node_id'] in timings['node']:
-            handler['average'] = '%.2f' % (timings['node'][handler['node_id']]['average'] or 0)
-            handler['stddev'] = '%.2f' % (timings['node'][handler['node_id']]['stddev'] or 0)
-            handler['min'] = '%.2f' % (timings['node'][handler['node_id']]['min'] or 0)
-            handler['max'] = '%.2f' % (timings['node'][handler['node_id']]['max'] or 0)
-        else:
-            handler['average'] = '---'
-            handler['stddev'] = '---'
-            handler['min'] = '---'
-            handler['max'] = '---'
-
-    for timing in timings['version']:
-        timing['average'] = '%.2f' % (timing['average'] or 0)
-        timing['stddev'] = '%.2f' % (timing['stddev'] or 0)
-        timing['min'] = '%.2f' % (timing['min'] or 0)
-        timing['max'] = '%.2f' % (timing['max'] or 0)
 
     return render_template(
         'index_flask.html',
@@ -334,9 +260,7 @@ def index():
             'ROOT_URL': environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB),
             'FLOATING_MENU': floating_menu
         },
-        timings=timings,
         consumers=consumers,
-        agg_stats=agg_stats_json,
         handlers=handlers_json,
         all_handlers=all_handlers_json,
         version=tag_name)
@@ -349,5 +273,4 @@ def send_static(path):
 
 @app.errorhandler(404)
 def page_not_found(_):
-    # your processing here
     return index()

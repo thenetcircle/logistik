@@ -6,7 +6,6 @@ from typing import Union
 from ttldict import TTLOrderedDict
 
 from logistik.cache import ICache
-from logistik.db.reprs.event import EventConf
 from logistik.db.reprs.handler import HandlerConf
 from logistik.environ import GNEnvironment
 
@@ -41,12 +40,3 @@ class CacheRedis(ICache):
 
     def set_enabled_handlers_for(self, event_name: str, handlers: List[HandlerConf]):
         self.ttl_dict['handlers-{}'.format(event_name)] = handlers
-
-    def get_event_conf_for(self, event_name: str) -> Union[None, EventConf]:
-        try:
-            return self.ttl_dict.get('events-{}'.format(event_name))
-        except KeyError:
-            return None
-
-    def set_event_conf_for(self, event_name: str, conf: EventConf):
-        self.ttl_dict['events-{}'.format(event_name)] = conf

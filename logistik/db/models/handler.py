@@ -1,44 +1,8 @@
 from logistik.environ import env
 from logistik.db.reprs.handler import HandlerConf
-from logistik.db.reprs.handler import HandlerStats
 from logistik.config import ModelTypes
 
 from sqlalchemy import UniqueConstraint
-
-
-class HandlerStatsEntity(env.dbman.Model):
-    __tablename__ = 'handler_stats_entity'
-
-    id = env.dbman.Column(env.dbman.Integer(), primary_key=True)
-    service_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    name = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    event = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    endpoint = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    hostname = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    version = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    stat_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    event_time = env.dbman.Column(env.dbman.DateTime(), unique=False, nullable=False)
-    event_id = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    event_verb = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    model_type = env.dbman.Column(env.dbman.String(128), unique=False, nullable=False)
-    node = env.dbman.Column(env.dbman.Integer(), unique=False, nullable=False)
-
-    def to_repr(self) -> HandlerStats:
-        return HandlerStats(
-            identity=self.id,
-            name=self.name,
-            service_id=self.service_id,
-            hostname=self.hostname,
-            endpoint=self.endpoint,
-            version=self.version,
-            event=self.event,
-            event_time=self.event_time,
-            event_id=self.event_id,
-            stat_type=self.stat_type,
-            event_verb=self.event_verb,
-            node=self.node,
-            model_type=self.model_type
-        )
 
 
 class HandlerConfEntity(env.dbman.Model):

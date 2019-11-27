@@ -51,17 +51,3 @@ class IHandler(ABC):
     @abstractmethod
     def stop(self):
         pass
-
-
-class IHandlerStats(ABC):
-    @abstractmethod
-    def failure(self, conf: HandlerConf, event: Activity=None) -> None:
-        pass
-
-    @abstractmethod
-    def success(self, conf: HandlerConf, event: Activity=None) -> None:
-        pass
-
-    @abstractmethod
-    def error(self, conf: HandlerConf, event: Activity=None) -> None:
-        pass
