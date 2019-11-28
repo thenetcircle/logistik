@@ -41,11 +41,20 @@ class MockHandler(BaseHandler):
         return BaseHandler.OK, ErrorCodes.OK, dict()
 
 
+class MockResponse:
+    def __init__(self, status_code, data=None):
+        self.status_code = status_code
+        self.data = data
+
+    def json(self):
+        return self.data
+
+
 class MockRequester(IRequester):
-    def __init__(self, response):
+    def __init__(self, response: MockResponse):
         self.response = response
 
-    def request(self, method, url, json, headers):
+    def request(self, method, url, json=None, headers=None):
         if self.response.status_code == 400:
             raise ConnectionError()
         return self.response

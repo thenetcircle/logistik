@@ -5,7 +5,7 @@ from logistik.config import ModelTypes
 from logistik.db.reprs.handler import HandlerConf
 from logistik.discover.consul.mock import MockConsulService
 from logistik.handlers.manager import HandlersManager
-from test.base import MockEnv, MockStats, MockWriter
+from test.base import MockEnv, MockStats, MockWriter, MockRequester, MockResponse
 from test.discover.test_manager import MockCache, MockDb
 
 
@@ -46,3 +46,35 @@ class ManagerTest(TestCase):
         self.manager.setup()
         handler_configs = self.manager.get_handlers()
         self.assertEqual(12, len(handler_configs))
+
+    def test_query_offline(self):
+        conf = HandlerConf(model_type=ModelTypes.MODEL, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+        self.manager.add_handler(conf)
+
+        handlers = self.manager.get_handlers()
+        self.assertListEqual(list(), handlers)
+
+    def test_query_not_implemented(self):
+        self.manager.requester = MockRequester(MockResponse(status_code=404))
+
+        conf = HandlerConf(model_type=ModelTypes.MODEL, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+        self.manager.add_handler(conf)
+
+        handlers = self.manager.get_handlers()
+        self.assertListEqual(list(), handlers)
+
+    def test_query_online(self):
+        response = {
+            'return_to': 'return',
+            'event': 'the-event'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+
+        conf = HandlerConf(model_type=ModelTypes.MODEL, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+        self.env.db.register_handler(conf)
+        self.manager.add_handler(conf)
+
+        handlers = self.manager.get_handlers()
+        self.assertEqual(1, len(handlers))
+        self.assertEqual(self.db.get_all_handlers()[0].event, 'the-event')
+        self.assertEqual(self.db.get_all_handlers()[0].return_to, 'return')

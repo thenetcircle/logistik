@@ -3,6 +3,7 @@ import requests
 
 from logistik.db import HandlerConf
 from logistik.handlers import IHandlersManager
+from logistik.handlers.request import Requester
 from logistik.utils.exceptions import QueryException
 from logistik.utils.exceptions import HandlerNotFoundException
 
@@ -10,6 +11,7 @@ from logistik.utils.exceptions import HandlerNotFoundException
 class HandlersManager(IHandlersManager):
     def __init__(self, env):
         self.env = env
+        self.requester = Requester()
         self.logger = logging.getLogger(__name__)
         self.handlers = dict()
 
@@ -67,7 +69,7 @@ class HandlersManager(IHandlersManager):
         url = f'http://{handler_conf.endpoint}:{handler_conf.port}/info'
 
         try:
-            response = requests.request(method='GET', url=url)
+            response = self.requester.request(method='GET', url=url)
         except Exception as e:
             # likely the model is offline
             raise QueryException(e)

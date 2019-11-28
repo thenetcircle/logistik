@@ -1,14 +1,10 @@
 import sys
 import types
+from test.base import MockResponse
 
 
 def request(method, url, json, headers):
-    return Response(status_code=200)
-
-
-class Response:
-    def __init__(self, status_code):
-        self.status_code = status_code
+    return MockResponse(status_code=200)
 
 
 class models:
@@ -19,7 +15,7 @@ module_name = 'requests'
 bogus_module = types.ModuleType(module_name)
 sys.modules[module_name] = bogus_module
 bogus_module.request = request
-bogus_module.Response = Response
+bogus_module.Response = MockResponse
 bogus_module.models = models
 
 from unittest import TestCase
@@ -46,11 +42,11 @@ class HttpHandlerTest(TestCase):
         from logistik.handlers.http import HttpHandler
         self.handler = HttpHandler.create(env=self.env, conf=self.conf)
 
-        self.mock_requester = MockRequester(Response(status_code=200))
+        self.mock_requester = MockRequester(MockResponse(status_code=200))
         self.handler.requester = self.mock_requester
 
     def test_handle_200(self):
-        self.handler.requester = MockRequester(Response(status_code=200))
+        self.handler.requester = MockRequester(MockResponse(status_code=200))
 
         data = {'verb': 'test'}
         act = activitystreams.parse(data)
@@ -60,7 +56,7 @@ class HttpHandlerTest(TestCase):
         self.assertEqual(response[0], ErrorCodes.OK)
 
     def test_handle_not_found(self):
-        self.handler.requester = MockRequester(Response(status_code=404))
+        self.handler.requester = MockRequester(MockResponse(status_code=404))
 
         data = {'verb': 'test'}
         act = activitystreams.parse(data)
@@ -70,7 +66,7 @@ class HttpHandlerTest(TestCase):
         self.assertEqual(response[0], ErrorCodes.HANDLER_ERROR)
 
     def test_handle_unknown(self):
-        self.handler.requester = MockRequester(Response(status_code=123))
+        self.handler.requester = MockRequester(MockResponse(status_code=123))
 
         data = {'verb': 'test'}
         act = activitystreams.parse(data)
@@ -91,7 +87,7 @@ class HttpHandlerTest(TestCase):
         HttpHandler.create(env=self.env, conf=conf)
 
     def test_handle_retries_exceeded(self):
-        self.handler.requester = MockRequester(Response(status_code=400))
+        self.handler.requester = MockRequester(MockResponse(status_code=400))
 
         data = {'verb': 'test'}
         act = activitystreams.parse(data)

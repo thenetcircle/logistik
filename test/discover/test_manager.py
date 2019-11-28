@@ -44,6 +44,15 @@ class MockDb(object):
         self.handlers[new_node_id] = self.handlers[node_id]
         del self.handlers[node_id]
 
+    def update_handler(self, handler_conf: HandlerConf):
+        if handler_conf.node_id() not in self.handlers:
+            return
+
+        fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path', 'failed_topic']
+        for field in fields:
+            updated = handler_conf.__getattribute__(field)
+            self.handlers[handler_conf.node_id()].__setattr__(field, updated)
+
     def enable_handler(self, node_id):
         if node_id not in self.handlers:
             return
