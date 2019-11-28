@@ -3,13 +3,14 @@ import logging
 import sys
 import time
 import traceback
+from abc import ABC
+from abc import abstractmethod
 from collections import defaultdict
 from typing import Union
 from uuid import uuid4 as uuid
 
 from activitystreams import Activity
 from activitystreams import parse as parse_as
-from kafka import KafkaConsumer
 
 from logistik.config import ConfigKeys, ModelTypes, ErrorCodes
 from logistik.db.reprs.handler import HandlerConf
@@ -25,6 +26,21 @@ logging.getLogger('kafka.conn').setLevel(logging.WARNING)
 ONE_MINUTE = 60_000
 
 
+class IKafkaFactory(ABC):
+    @abstractmethod
+    def create_consumer(self, *args, **kwargs):
+        """pass"""
+
+
+class KafkaFactory(IKafkaFactory):
+    """
+    for mocking purposes
+    """
+    def create_consumer(self, *args, **kwargs):
+        from kafka import KafkaConsumer
+        return KafkaConsumer(*args, **kwargs)
+
+
 class KafkaReader(IKafkaReader):
     def __init__(self, env: GNEnvironment, handler_conf: HandlerConf, handler: IHandler):
         self.logger = logging.getLogger(__name__)
@@ -32,18 +48,19 @@ class KafkaReader(IKafkaReader):
         self.conf: HandlerConf = handler_conf
         self.handler = handler
         self.enabled = True
-        self.consumer: KafkaConsumer = None
+        self.consumer = None
         self.failed_msg_log = None
         self.dropped_msg_log = None
+        self.kafka_factory = KafkaFactory()
 
-    def run(self) -> None:
+    def run(self, sleep_time=3, exit_on_failure=False) -> None:
         if self.conf.event == 'UNMAPPED':
             self.logger.info('not enabling reading for {}, no event mapped'.format(self.conf.node_id()))
             return
 
         self.create_loggers()
         self.create_consumer()
-        self.start_consuming()
+        self.start_consuming(sleep_time=sleep_time, exit_on_failure=exit_on_failure)
 
     def create_consumer(self):
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
@@ -52,7 +69,7 @@ class KafkaReader(IKafkaReader):
         self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
         self.logger.info('consuming from topic {}'.format(topic_name))
 
-        self.consumer = KafkaConsumer(
+        self.consumer = self.kafka_factory.create_consumer(
             topic_name,
             group_id=self.group_id(),
             bootstrap_servers=bootstrap_servers,
@@ -64,9 +81,10 @@ class KafkaReader(IKafkaReader):
             max_poll_records=10  # default: 500
         )
 
-    def start_consuming(self):
-        logger.info('sleeping for 3 second before consuming')
-        time.sleep(3)
+    def start_consuming(self, sleep_time=3, exit_on_failure=False):
+        if sleep_time > 0:
+            logger.info('sleeping for {} second before consuming'.format(sleep_time))
+            time.sleep(sleep_time)
 
         while True:
             if not self.enabled:
@@ -82,6 +100,10 @@ class KafkaReader(IKafkaReader):
                 logger.error('could not read from kafka: {}'.format(str(e)))
                 logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
+
+                if exit_on_failure:
+                    break
+
                 time.sleep(1)
 
     def group_id(self):
@@ -97,7 +119,7 @@ class KafkaReader(IKafkaReader):
         for message in self.consumer:
             if not self.enabled:
                 logger.info(f'stopping consumption of {self.conf.node_id()}')
-                time.sleep(3)
+                time.sleep(0.1)
                 break
 
             try:
