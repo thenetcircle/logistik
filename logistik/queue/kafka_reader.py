@@ -1,22 +1,22 @@
 import json
-import sys
 import logging
+import sys
 import time
 import traceback
 from collections import defaultdict
 from typing import Union
 from uuid import uuid4 as uuid
 
-from kafka import KafkaConsumer
-from activitystreams import parse as parse_as
 from activitystreams import Activity
+from activitystreams import parse as parse_as
+from kafka import KafkaConsumer
 
-from logistik.utils.exceptions import ParseException
-from logistik.queue import IKafkaReader
 from logistik.config import ConfigKeys, ModelTypes, ErrorCodes
+from logistik.db.reprs.handler import HandlerConf
 from logistik.environ import GNEnvironment
 from logistik.handlers.base import IHandler
-from logistik.db.reprs.handler import HandlerConf
+from logistik.queue import IKafkaReader
+from logistik.utils.exceptions import ParseException
 
 logger = logging.getLogger(__name__)
 logging.getLogger('kafka').setLevel(logging.WARNING)
@@ -37,42 +37,24 @@ class KafkaReader(IKafkaReader):
         self.dropped_msg_log = None
 
     def run(self) -> None:
-        logger.info('sleeping for 3 second before consuming')
-        time.sleep(3)
-
-        self.create_loggers()
-
-        def _create_logger(_path: str, _name: str) -> logging.Logger:
-            msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
-            msg_handler = logging.FileHandler(_path)
-            msg_handler.setFormatter(msg_formatter)
-            msg_logger = logging.getLogger(_name)
-            msg_logger.setLevel(logging.INFO)
-            msg_logger.addHandler(msg_handler)
-            return msg_logger
-
-        d_msg_path = self.env.config.get(ConfigKeys.DROPPED_MESSAGE_LOG, default='/tmp/logistik-dropped-msgs.log')
-        self.dropped_msg_log = _create_logger(d_msg_path, 'DroppedMessages')
-
         if self.conf.event == 'UNMAPPED':
             self.logger.info('not enabling reading for {}, no event mapped'.format(self.conf.node_id()))
             return
 
+        self.create_loggers()
+        self.create_consumer()
+        self.start_consuming()
+
+    def create_consumer(self):
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
-        self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
-
         topic_name = self.conf.event
-        self.logger.info('consuming from topic {}'.format(topic_name))
 
-        if self.conf.model_type == ModelTypes.CANARY:
-            group_id = 'logistik-{}-{}'.format(self.conf.build_group_id(), str(uuid()))
-            self.logger.info('canary model using Group ID {} to get all messages'.format(group_id))
-        else:
-            group_id = 'logistik-{}'.format(self.conf.build_group_id())
+        self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
+        self.logger.info('consuming from topic {}'.format(topic_name))
 
         self.consumer = KafkaConsumer(
             topic_name,
-            group_id=group_id,
+            group_id=self.group_id(),
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
             auto_offset_reset='latest',
@@ -81,6 +63,10 @@ class KafkaReader(IKafkaReader):
             session_timeout_ms=ONE_MINUTE,  # default: 10s
             max_poll_records=10  # default: 500
         )
+
+    def start_consuming(self):
+        logger.info('sleeping for 3 second before consuming')
+        time.sleep(3)
 
         while True:
             if not self.enabled:
@@ -98,24 +84,14 @@ class KafkaReader(IKafkaReader):
                 self.env.capture_exception(sys.exc_info())
                 time.sleep(1)
 
-    def create_loggers(self):
-        def _create_logger(_path: str, _name: str) -> logging.Logger:
-            msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
-            msg_handler = logging.FileHandler(_path)
-            msg_handler.setFormatter(msg_formatter)
-            msg_logger = logging.getLogger(_name)
-            msg_logger.setLevel(logging.INFO)
-            msg_logger.addHandler(msg_handler)
-            return msg_logger
+    def group_id(self):
+        if self.conf.model_type == ModelTypes.CANARY:
+            group_id = 'logistik-{}-{}'.format(self.conf.build_group_id(), str(uuid()))
+            self.logger.info('canary model using Group ID {} to get all messages'.format(group_id))
+        else:
+            group_id = 'logistik-{}'.format(self.conf.build_group_id())
 
-        f_msg_path = self.env.config.get(
-            ConfigKeys.FAILED_MESSAGE_LOG, default='/tmp/logistik-failed-msgs.log')
-
-        d_msg_path = self.env.config.get(
-            ConfigKeys.DROPPED_MESSAGE_LOG, default='/tmp/logistik-dropped-msgs.log')
-
-        self.failed_msg_log = _create_logger(f_msg_path, 'FailedMessages')
-        self.dropped_msg_log = _create_logger(d_msg_path, 'DroppedMessages')
+        return group_id
 
     def try_to_read(self):
         for message in self.consumer:
@@ -134,14 +110,6 @@ class KafkaReader(IKafkaReader):
                 self.env.capture_exception(sys.exc_info())
                 self.fail_msg(message, original_topic=None, decoded_value=None)
                 time.sleep(1)
-
-    def get_consumer_config(self):
-        if self.consumer is None:
-            return defaultdict(default_factory=str)
-        return self.consumer.config
-
-    def stop(self):
-        self.enabled = False
 
     def handle_message(self, message) -> None:
         self.logger.debug("%s:%d:%d: key=%s" % (
@@ -174,25 +142,14 @@ class KafkaReader(IKafkaReader):
             self.fail_msg(message, message.topic, message_value)
             return
         except Exception as e:
-            self.logger.error('got uncaught exception: {}'.format(str(e)))
-            self.logger.error('event was: {}'.format(str(message)))
-            self.logger.exception(traceback.format_exc())
-            self.env.capture_exception(sys.exc_info())
-            self.fail_msg(message, message.topic, message_value)
-            return
-
-        error_code = ErrorCodes.OK
+            return self.fail(e, message, message_value)
 
         try:
             error_code, error_msg = self.handler.handle(data, activity)
         except InterruptedError:
             raise
         except Exception as e:
-            self.logger.error('got uncaught exception: {}'.format(str(e)))
-            self.logger.error('event was: {}'.format(str(data)))
-            self.logger.exception(traceback.format_exc())
-            self.env.capture_exception(sys.exc_info())
-            self.fail_msg(message, message.topic, message_value)
+            return self.fail(e, message, message_value)
 
         if error_code == ErrorCodes.RETRIES_EXCEEDED:
             node_id = self.conf.node_id()
@@ -211,6 +168,44 @@ class KafkaReader(IKafkaReader):
             return enriched_data, activity
         except Exception as e:
             raise ParseException(e)
+
+    def fail(self, e, message, message_value):
+        self.logger.error('got uncaught exception: {}'.format(str(e)))
+        self.logger.error('event was: {}'.format(str(message)))
+        self.logger.exception(traceback.format_exc())
+        self.env.capture_exception(sys.exc_info())
+        self.fail_msg(message, message.topic, message_value)
+
+    @staticmethod
+    def create_logger(_path: str, _name: str) -> logging.Logger:
+        msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
+        msg_handler = logging.FileHandler(_path)
+        msg_handler.setFormatter(msg_formatter)
+        msg_logger = logging.getLogger(_name)
+        msg_logger.setLevel(logging.INFO)
+        msg_logger.addHandler(msg_handler)
+        return msg_logger
+
+    def create_loggers(self):
+        f_msg_path = self.env.config.get(
+            ConfigKeys.FAILED_MESSAGE_LOG,
+            default='/tmp/logistik-failed-msgs.log'
+        )
+        d_msg_path = self.env.config.get(
+            ConfigKeys.DROPPED_MESSAGE_LOG,
+            default='/tmp/logistik-dropped-msgs.log'
+        )
+
+        self.failed_msg_log = KafkaReader.create_logger(f_msg_path, 'FailedMessages')
+        self.dropped_msg_log = KafkaReader.create_logger(d_msg_path, 'DroppedMessages')
+
+    def get_consumer_config(self):
+        if self.consumer is None:
+            return defaultdict(default_factory=str)
+        return self.consumer.config
+
+    def stop(self):
+        self.enabled = False
 
     def fail_msg(self, message, original_topic: Union[str, None], decoded_value: Union[dict, None]):
         try:
