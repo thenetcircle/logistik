@@ -9,6 +9,8 @@ class ErrorCodes(Enum):
 
     RETRIES_EXCEEDED = 300
 
+    NOT_FOUND = 404
+
     MISSING_ACTOR_ID = 500
     MISSING_OBJECT_ID = 501
     MISSING_TARGET_ID = 502

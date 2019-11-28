@@ -8,62 +8,62 @@ from logistik.db.reprs.handler import HandlerConf
 class IDatabase(ABC):
     @abstractmethod
     def get_enabled_handlers_for(self, event_name: str) -> List[HandlerConf]:
-        pass
+        """pass"""
 
     @abstractmethod
     def retire_model(self, node_id: str) -> None:
-        pass
+        """pass"""
 
     @abstractmethod
     def delete_handler(self, node_id: str) -> None:
-        pass
+        """pass"""
 
     @abstractmethod
     def demote_model(self, node_id: str) -> Union[HandlerConf, None]:
-        pass
+        """pass"""
 
     @abstractmethod
     def promote_canary(self, node_id: str) -> Union[HandlerConf, None]:
-        pass
+        """pass"""
 
     @abstractmethod
     def get_all_handlers(self) -> List[HandlerConf]:
-        pass
+        """pass"""
 
     @abstractmethod
     def get_all_enabled_handlers(self) -> List[HandlerConf]:
-        pass
+        """pass"""
 
     @abstractmethod
     def get_handler_for(self, node_id: str) -> HandlerConf:
-        pass
+        """pass"""
 
     @abstractmethod
     def disable_handler(self, node_id) -> None:
-        pass
+        """pass"""
 
     @abstractmethod
     def enable_handler(self, node_id) -> None:
-        pass
+        """pass"""
 
     @abstractmethod
     def find_one_handler(self, service_id, hostname, node) -> Union[HandlerConf, None]:
-        pass
+        """pass"""
 
     @abstractmethod
     def find_one_similar_handler(self, service_id):
-        pass
+        """pass"""
 
     @abstractmethod
     def register_handler(self, handler_conf: HandlerConf) -> HandlerConf:
-        pass
+        """pass"""
 
     @abstractmethod
     def update_consul_service_id_and_group_id(
             self, handler_conf: HandlerConf, consul_service_id: str, tags: dict
     ) -> HandlerConf:
-        pass
+        """pass"""
 
     @abstractmethod
     def update_handler(self, handler_conf: HandlerConf):
-        pass
+        """pass"""

@@ -68,26 +68,34 @@ class HandlerConfEntity(env.dbman.Model):
     def update(self, handler_conf: HandlerConf):
         self.name = handler_conf.name or self.name
         self.event = handler_conf.event or self.event
-        self.enabled = handler_conf.enabled or self.enabled
-        self.retired = handler_conf.retired or self.retired
+
+        if handler_conf.enabled is not None:
+            self.enabled = handler_conf.enabled
+        if handler_conf.retired is not None:
+            self.retired = handler_conf.retired
+        if handler_conf.node is not None:
+            self.node = handler_conf.node
+        if handler_conf.timeout is not None:
+            self.timeout = handler_conf.timeout
+        if handler_conf.retries is not None:
+            self.retries = handler_conf.retries
+        if handler_conf.traffic is not None:
+            self.traffic = handler_conf.traffic
+
         self.endpoint = handler_conf.endpoint or self.endpoint
         self.hostname = handler_conf.hostname or self.hostname
         self.port = handler_conf.port or self.port
         self.version = handler_conf.version or self.version
         self.path = handler_conf.path or self.path
         self.model_type = handler_conf.model_type or self.model_type
-        self.node = handler_conf.node or self.node
         self.method = handler_conf.method or self.method
         self.failed_topic = handler_conf.failed_topic or self.failed_topic
-        self.timeout = handler_conf.timeout or self.timeout
-        self.retries = handler_conf.retries or self.retries
         self.service_id = handler_conf.service_id or self.service_id
         self.group_id = handler_conf.group_id or self.group_id
         self.return_to = handler_conf.return_to or self.return_to
         self.tags = handler_conf.tags or self.tags
         self.event_display_name = handler_conf.event_display_name or self.event_display_name
         self.startup = handler_conf.startup or self.startup
-        self.traffic = handler_conf.traffic or self.traffic
         self.reader_type = handler_conf.reader_type or self.reader_type
         self.reader_endpoint = handler_conf.reader_endpoint or self.reader_endpoint
         self.consul_service_id = handler_conf.consul_service_id or self.consul_service_id

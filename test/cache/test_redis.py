@@ -22,3 +22,15 @@ class TestRedisCache(TestCase):
         self.assertIsNone(self.cache.get_enabled_handlers_for('existing'))
         self.cache.set_enabled_handlers_for('existing', [HandlerConf()])
         self.assertIsNotNone(self.cache.get_enabled_handlers_for('existing'))
+
+    def test_reset_handler(self):
+        self.cache.set_enabled_handlers_for('existing', [HandlerConf()])
+        self.assertIsNotNone(self.cache.get_enabled_handlers_for('existing'))
+
+        self.cache.reset_enabled_handlers_for('existing')
+        self.assertIsNone(self.cache.get_enabled_handlers_for('existing'))
+
+    def test_reset_non_existing_handler(self):
+        self.assertIsNone(self.cache.get_enabled_handlers_for('existing'))
+        self.cache.reset_enabled_handlers_for('existing')
+        self.assertIsNone(self.cache.get_enabled_handlers_for('existing'))

@@ -16,7 +16,6 @@ from logistik.config import StatsKeys
 from logistik.config import ModelTypes
 from logistik.handlers import IHandler
 from logistik.handlers import HandlerConf
-from logistik import environ
 from logistik import utils
 
 
@@ -35,6 +34,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.port = None
         self.url = None
         self.endpoint: str = None
+        self.env = None
         self.schema: str = None
         self.timeout: int = None
         self.n_retries: int = 1
@@ -53,14 +53,15 @@ class BaseHandler(IHandler, IPlugin, ABC):
                     diff = (after-before) * 1000
 
                     key = StatsKeys.handler_timing(self.conf.node_id())
-                    environ.env.stats.timing(key, diff)
+                    self.env.stats.timing(key, diff)
 
                 return error_code, response
             except Exception as e:
                 self.logger.error('attempt {}/{} failed for endpoint {}, error was: {}'.format(
                     str(i+1), self.n_retries, self.endpoint, str(e))
                 )
-                environ.env.capture_exception(sys.exc_info())
+                self.logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
 
         utils.fail_message(data)
         return ErrorCodes.RETRIES_EXCEEDED, None
@@ -89,28 +90,27 @@ class BaseHandler(IHandler, IPlugin, ABC):
         if error_code == ErrorCodes.RETRIES_EXCEEDED:
             error_msg = 'exceeded max retries, disabling handler'
             self.logger.info(error_msg)
-            environ.env.kafka_writer.fail(self.conf.failed_topic, data)
+            self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.RETRIES_EXCEEDED, error_msg
 
         if response is None:
             error_msg = 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code)
             self.logger.warning(error_msg)
-            environ.env.kafka_writer.fail(self.conf.failed_topic, data)
+            self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.HANDLER_ERROR, error_msg
 
         elif status_code == BaseHandler.OK:
-            environ.env.kafka_writer.publish(self.conf, response)
+            self.env.kafka_writer.publish(self.conf, response)
             return ErrorCodes.OK, response
 
         else:
             error_msg = 'not publishing response since request failed: {}'.format(response)
             self.logger.error(error_msg)
-            environ.env.kafka_writer.fail(self.conf.failed_topic, data)
-            return ErrorCodes.HANDLER_ERROR, error_msg
+            self.env.kafka_writer.fail(self.conf.failed_topic, data)
+            return ErrorCodes.HANDLER_ERROR, response
 
     def handle_and_return_response(self, data: dict, activity: Activity) -> (bool, str, Response):
         if not self.enabled:
-            environ.env.handler_stats.failure(self.conf, activity)
             return BaseHandler.FAIL, ErrorCodes.HANDLER_DISABLED, None
 
         try:
@@ -118,17 +118,14 @@ class BaseHandler(IHandler, IPlugin, ABC):
         except Exception as e:
             self.logger.error('could not execute handler {}: {}'.format(self.name, str(e)))
             self.logger.exception(traceback.format_exc())
-            environ.env.capture_exception(sys.exc_info())
-            environ.env.handler_stats.failure(self.conf, activity)
+            self.env.capture_exception(sys.exc_info())
             return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)
 
         if error_code == ErrorCodes.OK:
-            environ.env.handler_stats.success(self.conf, activity)
             return BaseHandler.OK, ErrorCodes.OK, response
         else:
             self.logger.error('handler {} failed with code: {}, response: {}'.format(
                 str(self), str(error_code), str(response)))
-            environ.env.handler_stats.failure(self.conf, activity)
             return BaseHandler.FAIL, error_code, response
 
     @property

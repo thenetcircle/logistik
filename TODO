@@ -1,0 +1,2 @@
+Use nginx and uWSGI instead of gunicorn for models:
+https://medium.com/hackernoon/a-guide-to-scaling-machine-learning-models-in-production-aa8831163846

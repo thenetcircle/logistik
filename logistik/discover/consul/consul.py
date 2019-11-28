@@ -1,4 +1,4 @@
-import consul
+from consul import Consul
 
 from logistik.config import ConfigKeys
 from logistik.discover.consul import IConsulService
@@ -10,7 +10,7 @@ class ConsulService(IConsulService):
         host = env.config.get(ConfigKeys.HOST, domain=ConfigKeys.DISCOVERY, default='127.0.0.1')
         port = env.config.get(ConfigKeys.PORT, domain=ConfigKeys.DISCOVERY, default=8500)
 
-        self.consul = consul.Consul(host=host, port=port)
+        self.consul = Consul(host=host, port=port)
 
     def get_service(self, name: str) -> dict:
         return self.consul.catalog.service(name)

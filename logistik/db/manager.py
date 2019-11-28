@@ -18,8 +18,10 @@ class DatabaseManager(IDatabase):
         self.env = env
 
     @with_session
-    def get_all_handlers(self, include_retired=False) -> List[HandlerConf]:
-        if include_retired:
+    def get_all_handlers(self, include_retired=False, only_enabled=False) -> List[HandlerConf]:
+        if only_enabled:
+            handlers = HandlerConfEntity.query.filter_by(enabled=True).all()
+        elif include_retired:
             handlers = HandlerConfEntity.query.all()
         else:
             handlers = HandlerConfEntity.query.filter_by(retired=False).all()
@@ -91,10 +93,8 @@ class DatabaseManager(IDatabase):
     def promote_canary(self, node_id: str) -> Union[HandlerConf, None]:
         return self._promote_or_demote(node_id, 'promoting', ModelTypes.MODEL)
 
-    @with_session
     def get_all_enabled_handlers(self):
-        handlers = HandlerConfEntity.query.filter_by(enabled=True).all()
-        return [handler.to_repr() for handler in handlers]
+        return self.get_all_handlers(only_enabled=True)
 
     @with_session
     def enable_handler(self, node_id) -> None:
@@ -129,6 +129,10 @@ class DatabaseManager(IDatabase):
             model_type=model_type,
             node=node
         ).first()
+
+        if handler is None:
+            logger.debug('handler with node id "{}" does not exist'.format(handler_conf.node_id()))
+            return
 
         fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path', 'failed_topic']
         for field in fields:

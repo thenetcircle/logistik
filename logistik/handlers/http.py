@@ -4,7 +4,7 @@ import requests
 import os
 
 from typing import Union
-from requests.models import Response
+from requests import models
 from activitystreams import Activity
 
 from logistik import environ
@@ -15,12 +15,14 @@ from logistik.db.reprs.handler import HandlerConf
 from logistik.queue.kafka_reader import KafkaReader
 from logistik.queue.mock_reader import MockReader
 from logistik.queue.rest_reader import RestReader
+from logistik.handlers.request import Requester
 
 
 class HttpHandler(BaseHandler):
     def __init__(self):
         super().__init__()
         self.env: environ.GNEnvironment = None
+        self.requester = Requester()
         self.method: str = None
         self.json_header = {'Context-Type': 'application/json'}
         self.schema = 'http://'
@@ -29,10 +31,6 @@ class HttpHandler(BaseHandler):
         log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
         if log_level == 'DEBUG':
             log_level = logging.DEBUG
-        elif log_level == 'INFO':
-            log_level = logging.INFO
-        elif log_level in {'WARNING', 'WARN'}:
-            log_level = logging.WARNING
         else:
             log_level = logging.INFO
 
@@ -79,12 +77,7 @@ class HttpHandler(BaseHandler):
 
     def setup(self, env: environ.GNEnvironment) -> None:
         self.env = env
-        try:
-            self.logger = logging.getLogger(__name__)
-        except Exception:
-            self.logger.info('no config enabled for {}, not enabling plugin'.format(self.__class__.__name__))
-            return
-
+        self.logger = logging.getLogger(__name__)
         self.logger.info(self.conf)
 
         if self.conf.reader_type == 'kafka':
@@ -107,11 +100,11 @@ class HttpHandler(BaseHandler):
     def stop(self):
         self.reader.stop()
 
-    def handle_once(self, data: dict, _: Activity, **kwargs) -> (ErrorCodes, Union[None, Response]):
+    def handle_once(self, data: dict, _: Activity, **kwargs) -> (ErrorCodes, Union[None, models.Response]):
         self.logger.debug(f'data to send: {data}')
         self.logger.debug(f'method={self.method}, url={self.url}, json=<data>, headers={self.json_header}')
 
-        response = requests.request(
+        response = self.requester.request(
             method=self.method, url=self.url,
             json=data, headers=self.json_header
         )

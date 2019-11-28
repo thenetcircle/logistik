@@ -24,10 +24,7 @@ class CacheRedis(ICache):
             self.redis = Redis(host=host, port=port, db=db)
 
     def get_enabled_handlers_for(self, event_name: str) -> Union[None, List[HandlerConf]]:
-        try:
-            return self.ttl_dict.get('handlers-{}'.format(event_name))
-        except KeyError:
-            return None
+        return self.ttl_dict.get('handlers-{}'.format(event_name))
 
     def reset_enabled_handlers_for(self, event_name: str) -> None:
         handler_name = 'handlers-{}'.format(event_name)
