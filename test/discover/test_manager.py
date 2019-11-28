@@ -4,6 +4,7 @@ from unittest import TestCase
 from logistik.cache import ICache
 from logistik.config import ModelTypes, ConfigKeys, ServiceTags
 from logistik.db import HandlerConf
+from logistik.utils.exceptions import HandlerNotFoundException
 from test.base import MockEnv
 from logistik.discover.manager import DiscoveryService
 from logistik.discover.consul.mock import MockConsulService
@@ -12,6 +13,11 @@ from logistik.discover.consul.mock import MockConsulService
 class MockDb(object):
     def __init__(self):
         self.handlers = dict()
+
+    def get_handler_for(self, node_id):
+        if node_id not in self.handlers:
+            raise HandlerNotFoundException(node_id)
+        return self.handlers[node_id]
 
     def get_all_enabled_handlers(self):
         handlers = list()

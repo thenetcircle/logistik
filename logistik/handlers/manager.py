@@ -89,8 +89,24 @@ class HandlersManager(IHandlersManager):
                 original = handler_conf.__getattribute__(field)
                 updated = json_response.get(field)
 
-                if field in {'retries', 'timeout'}:
-                    updated = int(float(updated))
+                field_defaults = {
+                    'retries': 1,
+                    'timeout': 0
+                }
+
+                if field in field_defaults.keys():
+                    try:
+                        updated = int(float(updated))
+                    except ValueError:
+                        self.logger.warning('invalid value for "{}": "{}", will use default value of {}'.format(
+                            field, updated, field_defaults[field])
+                        )
+                        updated = field_defaults[field]
+                elif type(updated) != str:
+                    self.logger.warning('invalid value for "{}": "{}", not of type str but of "{}"'.format(
+                        field, updated, type(updated)
+                    ))
+                    continue
 
                 self.logger.info(f'updating field "{field}" from "{original}" to "{updated}"')
                 handler_conf.__setattr__(field, updated)

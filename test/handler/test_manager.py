@@ -78,3 +78,146 @@ class ManagerTest(TestCase):
         self.assertEqual(1, len(handlers))
         self.assertEqual(self.db.get_all_handlers()[0].event, 'the-event')
         self.assertEqual(self.db.get_all_handlers()[0].return_to, 'return')
+
+    def test_add_no_model_type(self):
+        response = {
+            'return_to': 'return',
+            'event': 'the-event'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+
+        conf = HandlerConf(model_type=None, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+        self.manager.add_handler(conf)
+
+        handlers = self.manager.get_handlers()
+        self.assertEqual(0, len(handlers))
+
+    def test_add_correct_model_type(self):
+        response = {
+            'return_to': 'return',
+            'event': 'the-event'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+        self.manager.add_handler(conf)
+
+        handlers = self.manager.get_handlers()
+        self.assertEqual(1, len(handlers))
+
+    def test_add_twice(self):
+        response = {
+            'return_to': 'return',
+            'event': 'the-event'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+
+        self.manager.add_handler(conf)
+        handlers = self.manager.get_handlers()
+        self.assertEqual(1, len(handlers))
+
+        self.manager.add_handler(conf)
+        handlers = self.manager.get_handlers()
+        self.assertEqual(1, len(handlers))
+
+    def test_query_ints(self):
+        response = {
+            'retries': '6',
+            'timeout': '37'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+
+        self.env.db.register_handler(conf)
+        self.manager.add_handler(conf)
+
+        self.assertEqual(self.db.get_all_handlers()[0].retries, 6)
+        self.assertEqual(self.db.get_all_handlers()[0].timeout, 37)
+
+    def test_query_wrong_ints(self):
+        response = {
+            'retries': 'three',
+            'timeout': 'ten'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+
+        self.env.db.register_handler(conf)
+        self.manager.add_handler(conf)
+
+        self.assertEqual(self.db.get_all_handlers()[0].retries, 1)
+        self.assertEqual(self.db.get_all_handlers()[0].timeout, 0)
+
+    def test_query_invalid_field(self):
+        response = {
+            'event': 3
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+
+        self.env.db.register_handler(conf)
+        self.manager.add_handler(conf)
+
+        self.assertNotEqual(self.db.get_all_handlers()[0].event, 3)
+
+    def test_start_handler(self):
+        response = {
+            'return_to': 'return',
+            'event': 'the-event'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+
+        self.env.db.register_handler(conf)
+        self.manager.start_handler(conf.node_id())
+
+        handlers = self.manager.get_handlers()
+        self.assertEqual(1, len(handlers))
+
+    def test_start_non_existing_handler(self):
+        response = {
+            'return_to': 'return',
+            'event': 'the-event'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+
+        self.manager.start_handler(conf.node_id())
+
+        handlers = self.manager.get_handlers()
+        self.assertEqual(0, len(handlers))
+
+    def test_stop_non_existing_handler(self):
+        response = {
+            'return_to': 'return',
+            'event': 'the-event'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+
+        self.manager.stop_handler(conf.node_id())
+
+        handlers = self.manager.get_handlers()
+        self.assertEqual(0, len(handlers))
+
+    def test_stop_existing_handler(self):
+        response = {
+            'return_to': 'return',
+            'event': 'the-event'
+        }
+        self.manager.requester = MockRequester(MockResponse(status_code=200, data=response))
+        conf = HandlerConf(model_type=ModelTypes.DECOY, reader_type='kafka', service_id=str(uuid()), event='UNMAPPED')
+
+        self.env.db.register_handler(conf)
+        self.manager.start_handler(conf.node_id())
+        handlers = self.manager.get_handlers()
+        self.assertEqual(1, len(handlers))
+
+        self.manager.stop_handler(conf.node_id())
+        handlers = self.manager.get_handlers()
+        self.assertEqual(0, len(handlers))
