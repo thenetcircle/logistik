@@ -532,6 +532,7 @@ def init_kafka_writer(gn_env: GNEnvironment):
 
     from logistik.queue.kafka_writer import KafkaWriter
     gn_env.kafka_writer = KafkaWriter(gn_env)
+    gn_env.kafka_writer.setup()
 
 
 @timeit(logger, 'init consul service')

@@ -2,16 +2,13 @@ from logistik.config import ModelTypes, ConfigKeys
 from logistik.db import HandlerConf
 from logistik.discover.consul.mock import MockConsulService
 from logistik.enrich.manager import EnrichmentManager
-from logistik.queue.kafka_reader import IKafkaFactory, KafkaReader
+from logistik.queue.kafka_reader import IKafkaReaderFactory, KafkaReader
 from test.base import BaseTest, MockHandlersManager
 from test.base import MockRequester
 from test.base import MockResponse
 from test.base import MockEnv
 from test.base import MockWriter
 from test.base import MockStats
-from test.base import MockHandler
-
-from activitystreams import parse
 
 from test.discover.test_manager import MockDb, MockCache
 
@@ -46,7 +43,7 @@ class FailConsumer:
         raise ConnectionError()
 
 
-class MockKafkaFactory(IKafkaFactory):
+class MockKafkaFactory(IKafkaReaderFactory):
     def __init__(self, message):
         self.message = message
 
@@ -54,7 +51,7 @@ class MockKafkaFactory(IKafkaFactory):
         return MockConsumer(message=self.message)
 
 
-class KafkaFailFactory(IKafkaFactory):
+class KafkaFailFactory(IKafkaReaderFactory):
     def __init__(self, message):
         self.message = message
 
@@ -84,7 +81,7 @@ class KafkaReaderTest(BaseTest):
         self.reader = KafkaReader(self.env, self.conf, self.handler)
 
         message = MockKafkaMessage(b'{"verb":"test"}')
-        self.reader.kafka_factory = MockKafkaFactory(message)
+        self.reader.reader_factory = MockKafkaFactory(message)
 
     def test_create_cosnumer(self):
         self.assertIsNone(self.reader.consumer)
@@ -179,7 +176,7 @@ class KafkaReaderTest(BaseTest):
 
     def test_run_consume_fails(self):
         message = MockKafkaMessage(b'{"verb":"test"}')
-        self.reader.kafka_factory = KafkaFailFactory(message)
+        self.reader.reader_factory = KafkaFailFactory(message)
         self.reader.conf.event = 'event'
         self.reader.enabled = True
         self.reader.run(sleep_time=0.1, exit_on_failure=True)
@@ -197,7 +194,7 @@ class KafkaReaderTest(BaseTest):
 
     def test_try_to_read_disabled_handler(self):
         message = MockKafkaMessage(b'{"verb":"test"}')
-        self.reader.kafka_factory = MockKafkaFactory(message)
+        self.reader.reader_factory = MockKafkaFactory(message)
         self.reader.conf.event = 'event'
         self.reader.enabled = False
         self.reader.create_consumer()
@@ -216,7 +213,7 @@ class KafkaReaderTest(BaseTest):
         self.reader.failed_msg_log = failed_log
 
         message = InvalidKafkaMessage(b'test')
-        self.reader.kafka_factory = MockKafkaFactory(message)
+        self.reader.reader_factory = MockKafkaFactory(message)
         self.reader.create_consumer()
 
         self.assertEqual(0, failed_log.failed)
@@ -238,6 +235,22 @@ class KafkaReaderTest(BaseTest):
         self.assertEqual(0, failed_log.failed)
         self.reader.fail_msg('asdf', 'some-topic', dict())
         self.assertEqual(1, failed_log.failed)
+
+    def test_drop_msg_kafka_writer_fails(self):
+        class DropLog:
+            def __init__(self):
+                self.dropped = 0
+
+            def info(self, *args, **kwargs):
+                self.dropped += 1
+
+        dropped_log = DropLog()
+        self.reader.dropped_msg_log = dropped_log
+        self.env.kafka_writer = None
+
+        self.assertEqual(0, dropped_log.dropped)
+        self.reader.drop_msg('asdf', 'some-topic', dict())
+        self.assertEqual(1, dropped_log.dropped)
 
     def test_parsing(self):
         verb = 'foo'

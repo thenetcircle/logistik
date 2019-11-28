@@ -1,37 +1,42 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from requests import Response
 
 from logistik.db.reprs.handler import HandlerConf
 
 
 class IRestReader(ABC):
+    @abstractmethod
     def run(self):
-        raise NotImplementedError()
+        """pass"""
 
+    @abstractmethod
     def stop(self):
-        raise NotImplementedError()
+        """pass"""
 
 
 class IKafkaReader(ABC):
+    @abstractmethod
     def run(self):
-        raise NotImplementedError()
+        """pass"""
 
+    @abstractmethod
     def stop(self):
-        raise NotImplementedError()
+        """pass"""
 
+    @abstractmethod
     def get_consumer_config(self) -> dict:
-        raise NotImplementedError()
+        """pass"""
 
 
 class IKafkaWriter(ABC):
+    @abstractmethod
     def log(self, topic: str, data: dict) -> None:
-        raise NotImplementedError()
+        """pass"""
 
+    @abstractmethod
     def fail(self, topic: str, data: dict) -> None:
-        raise NotImplementedError()
+        """pass"""
 
-    def drop(self, topic: str, data: dict) -> None:
-        raise NotImplementedError()
-
+    @abstractmethod
     def publish(self, conf: HandlerConf, message: Response) -> None:
-        raise NotImplementedError()
+        """pass"""

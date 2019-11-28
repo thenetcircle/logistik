@@ -26,13 +26,13 @@ logging.getLogger('kafka.conn').setLevel(logging.WARNING)
 ONE_MINUTE = 60_000
 
 
-class IKafkaFactory(ABC):
+class IKafkaReaderFactory(ABC):
     @abstractmethod
     def create_consumer(self, *args, **kwargs):
         """pass"""
 
 
-class KafkaFactory(IKafkaFactory):
+class KafkaReaderFactory(IKafkaReaderFactory):
     """
     for mocking purposes
     """
@@ -51,7 +51,7 @@ class KafkaReader(IKafkaReader):
         self.consumer = None
         self.failed_msg_log = None
         self.dropped_msg_log = None
-        self.kafka_factory = KafkaFactory()
+        self.reader_factory = KafkaReaderFactory()
 
     def run(self, sleep_time=3, exit_on_failure=False) -> None:
         if self.conf.event == 'UNMAPPED':
@@ -69,7 +69,7 @@ class KafkaReader(IKafkaReader):
         self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
         self.logger.info('consuming from topic {}'.format(topic_name))
 
-        self.consumer = self.kafka_factory.create_consumer(
+        self.consumer = self.reader_factory.create_consumer(
             topic_name,
             group_id=self.group_id(),
             bootstrap_servers=bootstrap_servers,
