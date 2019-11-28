@@ -15,8 +15,7 @@ from logistik.config import ErrorCodes
 from logistik.config import StatsKeys
 from logistik.config import ModelTypes
 from logistik.handlers import IHandler
-from logistik.handlers import HandlerConf
-from logistik import utils
+from logistik.utils import helpers
 
 
 class BaseHandler(IHandler, IPlugin, ABC):
@@ -38,7 +37,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.schema: str = None
         self.timeout: int = None
         self.n_retries: int = 1
-        self.conf: HandlerConf = None
+        self.conf = None
         self.reader = None
         self.reader_thread: GreenThread = None
 
@@ -63,7 +62,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
                 self.logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
 
-        utils.fail_message(data)
+        helpers.fail_message(data)
         return ErrorCodes.RETRIES_EXCEEDED, None
 
     def is_canary(self):

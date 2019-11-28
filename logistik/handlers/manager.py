@@ -1,11 +1,10 @@
 import logging
-
 import requests
 
 from logistik.db import HandlerConf
 from logistik.handlers import IHandlersManager
-from logistik.handlers.http import HttpHandler
-from logistik.utils.exceptions import HandlerNotFoundException, QueryException
+from logistik.utils.exceptions import QueryException
+from logistik.utils.exceptions import HandlerNotFoundException
 
 
 class HandlersManager(IHandlersManager):
@@ -60,6 +59,7 @@ class HandlersManager(IHandlersManager):
             return
 
         self.logger.info('adding handler for node id "{}"'.format(node_id))
+        from logistik.handlers.http import HttpHandler
         handler = HttpHandler.create(self.env, handler_conf)
         self.handlers[node_id] = handler
 

@@ -3,10 +3,8 @@ from abc import abstractmethod
 from typing import Union
 
 from activitystreams import Activity
-from requests import Response
 
 from logistik.config import ErrorCodes
-from logistik.db.reprs.handler import HandlerConf
 
 
 class IRequester(ABC):
@@ -33,13 +31,13 @@ class IHandlersManager(ABC):
         """pass"""
 
     @abstractmethod
-    def query_model_for_info(self, handler_conf: HandlerConf):
+    def query_model_for_info(self, handler_conf):
         """pass"""
 
 
 class IHandler(ABC):
     @abstractmethod
-    def configure(self, conf: HandlerConf):
+    def configure(self, conf):
         """pass"""
 
     @abstractmethod
@@ -47,7 +45,7 @@ class IHandler(ABC):
         """pass"""
 
     @abstractmethod
-    def handle_once(self, data: dict, _: Activity, **kwargs) -> (ErrorCodes, Union[None, Response]):
+    def handle_once(self, data: dict, _: Activity, **kwargs) -> tuple:
         """pass"""
 
     @abstractmethod

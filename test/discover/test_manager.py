@@ -13,6 +13,15 @@ class MockDb(object):
     def __init__(self):
         self.handlers = dict()
 
+    def get_all_enabled_handlers(self):
+        handlers = list()
+
+        for handler in self.handlers.values():
+            if handler.enabled:
+                handlers.append(handler)
+
+        return handlers
+
     def get_all_handlers(self) -> list:
         return list(self.handlers.values())
 

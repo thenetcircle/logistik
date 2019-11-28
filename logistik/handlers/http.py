@@ -1,15 +1,10 @@
 import logging
 import eventlet
-import requests
 import os
 
-from typing import Union
-from requests import models
 from activitystreams import Activity
 
-from logistik import environ
 from logistik.config import ErrorCodes
-from logistik.environ import GNEnvironment
 from logistik.handlers.base import BaseHandler
 from logistik.db.reprs.handler import HandlerConf
 from logistik.queue.kafka_reader import KafkaReader
@@ -21,7 +16,7 @@ from logistik.handlers.request import Requester
 class HttpHandler(BaseHandler):
     def __init__(self):
         super().__init__()
-        self.env: environ.GNEnvironment = None
+        self.env = None
         self.requester = Requester()
         self.method: str = None
         self.json_header = {'Context-Type': 'application/json'}
@@ -42,7 +37,7 @@ class HttpHandler(BaseHandler):
         return HttpHandler.__class__.__name__
 
     @staticmethod
-    def create(env: GNEnvironment, conf: HandlerConf):
+    def create(env, conf: HandlerConf):
         handler = HttpHandler()
         handler.configure(conf)
         handler.setup(env)
@@ -75,7 +70,7 @@ class HttpHandler(BaseHandler):
         )
         self.logger.debug('configured {} for url {}'.format(str(self), self.url))
 
-    def setup(self, env: environ.GNEnvironment) -> None:
+    def setup(self, env) -> None:
         self.env = env
         self.logger = logging.getLogger(__name__)
         self.logger.info(self.conf)
@@ -100,7 +95,7 @@ class HttpHandler(BaseHandler):
     def stop(self):
         self.reader.stop()
 
-    def handle_once(self, data: dict, _: Activity, **kwargs) -> (ErrorCodes, Union[None, models.Response]):
+    def handle_once(self, data: dict, _: Activity, **kwargs) -> tuple:
         self.logger.debug(f'data to send: {data}')
         self.logger.debug(f'method={self.method}, url={self.url}, json=<data>, headers={self.json_header}')
 
