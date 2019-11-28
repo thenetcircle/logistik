@@ -111,6 +111,50 @@ class KafkaWriterTest(BaseTest):
         self.writer.publish(self._gen_conf(), ResponseObject({'verb': 'test', 'retries': 2}))
         self.assertNotIn('retries', list(self.writer.producer.sent.values())[0])
 
+    def test_publish_producer_fails(self):
+        class DropLog:
+            def __init__(self):
+                self.dropped = 0
+
+            def info(self, *args, **kwargs):
+                self.dropped += 1
+
+        dropped_log = DropLog()
+        self.writer.dropped_response_log = dropped_log
+        self.writer.producer = None
+
+        self.assertEqual(0, dropped_log.dropped)
+        self.writer.publish(self._gen_conf(), ResponseObject({'verb': 'test'}))
+        self.assertEqual(1, dropped_log.dropped)
+
+    def test_fail_logging_to_kafka(self):
+        self.writer.setup()
+        self.writer.fail('some-topic', {'verb': 'test'})
+        self.assertEqual(1, len(self.writer.producer.sent))
+
+    def test_fail_logging_increments_retries_value(self):
+        self.writer.setup()
+        self.writer.fail('some-topic', {'verb': 'test', 'retries': 1})
+        self.assertEqual(1, len(self.writer.producer.sent))
+        self.assertEqual(2, list(self.writer.producer.sent.values())[0][0]['retries'])
+
+    def test_fail_logging_adds_retries_value(self):
+        self.writer.setup()
+        self.writer.fail('some-topic', {'verb': 'test'})
+        self.assertEqual(1, len(self.writer.producer.sent))
+        self.assertEqual(1, list(self.writer.producer.sent.values())[0][0]['retries'])
+
+    def test_fail_logging_adds_drops_after_three_tries(self):
+        self.writer.setup()
+        self.writer.fail('some-topic', {'verb': 'test', 'retries': 2})
+        self.assertEqual(1, len(self.writer.producer.sent))
+        self.assertEqual(3, list(self.writer.producer.sent.values())[0][0]['retries'])
+
+        # should be dropped
+        self.writer.fail('some-topic', {'verb': 'test', 'retries': 3})
+        self.assertEqual(1, len(self.writer.producer.sent))
+        self.assertEqual(3, list(self.writer.producer.sent.values())[-1][0]['retries'])
+
     def _gen_conf(self, enabled=False, hostname='machine_a'):
         handler_conf = HandlerConf()
         handler_conf.service_id = 'testthing'
