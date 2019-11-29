@@ -21,13 +21,3 @@ def fail_message(data: dict) -> None:
         pass
 
     increase_counter(data, 'failed')
-
-
-def drop_message(data: dict) -> None:
-    try:
-        environ.env.dropped_msg_log.info(data)
-    except:
-        # TODO: sentry
-        pass
-
-    increase_counter(data, 'dropped')
