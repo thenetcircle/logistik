@@ -28,6 +28,21 @@ class TestRestConsumer(TestCase):
 
         self.reader = RestReader(self.env, self.handler_conf, self.handler)
         self.consumer = RestConsumer(env=self.env, reader=self.reader, conf=self.handler_conf, handler=self.handler)
+        self.consumer.get_json = lambda: {'verb': 'test'}
+
+    def test_post(self):
+        _, error_code = self.consumer.post()
+        self.assertEqual(200, error_code)
+
+    def test_post_get_json_fails(self):
+        self.consumer.get_json = None
+        _, error_code = self.consumer.post()
+        self.assertEqual(400, error_code)
+
+    def test_post_handle_message_fails(self):
+        self.consumer.handle_message = None
+        _, error_code = self.consumer.post()
+        self.assertEqual(500, error_code)
 
     def test_handle_message(self):
         response, error_code = self.consumer.handle_message({'verb': 'test'})

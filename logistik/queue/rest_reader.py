@@ -42,12 +42,16 @@ class RestConsumer(Resource):
     def start(self):
         self.enabled = True
 
+    def get_json(self):
+        """for mocking purposes"""
+        return request.get_json()
+
     def post(self) -> (Union[dict, str], int):
         if not self.enabled:
             return 'endpoint disabled', 400
 
         try:
-            json_data = request.get_json()
+            json_data = self.get_json()
         except Exception as e:
             error_msg = 'failed to parse json data: {}'.format(str(e))
             self.logger.error(error_msg)
