@@ -2,50 +2,13 @@ from logistik.config import ConfigKeys, ModelTypes
 from logistik.db import HandlerConf
 from logistik.discover.consul.mock import MockConsulService
 from logistik.enrich.manager import EnrichmentManager
-from logistik.queue.kafka_writer import IKafkaWriterFactory, KafkaWriter
-from test.base import BaseTest
+from logistik.queue.kafka_writer import KafkaWriter
+from test.base import BaseTest, MockKafkaWriterFactory, ResponseObject
 from test.base import MockEnv
 from test.base import MockWriter
 from test.base import MockStats
 
 from test.discover.test_manager import MockDb, MockCache
-
-
-class ResponseObject:
-    def __init__(self, msg):
-        self.content = msg
-
-    def json(self):
-        return self.content
-
-
-class MockKafkaMessage(object):
-    def __init__(self, msg):
-        self.value = msg
-        self.topic = 'test-topic'
-        self.partition = 0
-        self.offset = 1
-        self.key = None
-
-
-class InvalidKafkaMessage(object):
-    def __init__(self, msg):
-        self.value = msg
-
-
-class MockProducer:
-    def __init__(self, **kwargs):
-        self.sent = dict()
-
-    def send(self, topic, data):
-        if topic not in self.sent:
-            self.sent[topic] = list()
-        self.sent[topic].append(data)
-
-
-class MockKafkaWriterFactory(IKafkaWriterFactory):
-    def create_producer(self, **kwargs):
-        return MockProducer(**kwargs)
 
 
 class KafkaWriterTest(BaseTest):
@@ -126,6 +89,49 @@ class KafkaWriterTest(BaseTest):
         self.assertEqual(0, dropped_log.dropped)
         self.writer.publish(self._gen_conf(), ResponseObject({'verb': 'test'}))
         self.assertEqual(1, dropped_log.dropped)
+
+    def test_fail_producer_fails(self):
+        class DropLog:
+            def __init__(self):
+                self.dropped = 0
+
+            def info(self, *args, **kwargs):
+                self.dropped += 1
+
+        dropped_log = DropLog()
+        self.writer.dropped_response_log = dropped_log
+        self.writer.producer = None
+
+        self.assertEqual(0, dropped_log.dropped)
+        self.writer.fail('some-topic', dict())
+        self.assertEqual(1, dropped_log.dropped)
+
+    def test_fail_with_topic(self):
+        self.writer.setup()
+        self.assertEqual(0, len(self.writer.producer.sent))
+
+        self.writer.fail('some-topic', dict())
+        self.assertEqual(1, len(self.writer.producer.sent))
+
+    def test_fail_without_topic(self):
+        self.writer.setup()
+        self.assertEqual(0, len(self.writer.producer.sent))
+
+        self.writer.fail(None, dict())
+        self.assertEqual(0, len(self.writer.producer.sent))
+
+    def test_fail_with_blank_topic(self):
+        self.writer.setup()
+        self.assertEqual(0, len(self.writer.producer.sent))
+
+        self.writer.fail('', dict())
+        self.assertEqual(0, len(self.writer.producer.sent))
+
+    def test_drop_msg_failure(self):
+        self.writer.dropped_response_log = None
+
+        # shoudl not sthrow exception
+        self.writer.drop_msg('asdf')
 
     def test_fail_logging_to_kafka(self):
         self.writer.setup()

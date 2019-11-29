@@ -41,12 +41,16 @@ class MockConsumer(Resource):
     def start(self):
         self.enabled = True
 
+    def get_json(self):
+        """for mocking purposes"""
+        return request.get_json()
+
     def post(self) -> (Union[dict, str], int):
         if not self.enabled:
             return 'endpoint disabled', 400
 
         try:
-            json_data = request.get_json()
+            json_data = self.get_json()
         except Exception as e:
             error_msg = 'failed to parse json data: {}'.format(str(e))
             self.logger.error(error_msg)
@@ -69,13 +73,11 @@ class MockConsumer(Resource):
 
         try:
             data, activity = self.try_to_parse(message)
-            self.log_pre_processed_request(self.conf.reader_endpoint, data)
         except ParseException as e:
             error_msg = 'could not enrich/parse data because "{}", original data was: {}'.format(str(e), str(message))
             self.logger.error(error_msg)
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            self.env.handler_stats.error(self.conf, None)
             self.fail_msg(message)
             return error_msg, 400
         except Exception as e:
@@ -84,7 +86,6 @@ class MockConsumer(Resource):
             self.logger.error('event was: {}'.format(str(message)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            self.env.handler_stats.error(self.conf, None)
             self.fail_msg(message)
             return error_msg, 500
 
@@ -95,9 +96,8 @@ class MockConsumer(Resource):
             else:
                 return response, 500
         except InterruptedError:
-            error_msg = 'got interrupt, dropping message'.format(str(message.value))
+            error_msg = 'got interrupt, dropping message'.format(data)
             self.logger.warning(error_msg)
-            self.env.handler_stats.failure(self.conf, activity)
             self.drop_msg(message)
             return error_msg, 500
         except Exception as e:
@@ -106,18 +106,8 @@ class MockConsumer(Resource):
             self.logger.error('event was: {}'.format(str(data)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            self.env.handler_stats.error(self.conf, activity)
             self.fail_msg(data)
             return error_msg, 500
-
-    def log_pre_processed_request(self, original_topic: str, data: dict):
-        log_topic = '{}-preprocessed'.format(original_topic)
-        try:
-            self.env.kafka_writer.log(log_topic, data)
-        except Exception as e:
-            self.logger.error('could not publish pre-processed request to kafka: {}'.format(str(e)))
-            self.logger.exception(e)
-            self.env.capture_exception(sys.exc_info())
 
     def try_to_parse(self, data) -> (dict, Activity):
         try:
@@ -174,6 +164,7 @@ class MockReader(IRestReader):
         self.conf: HandlerConf = handler_conf
         self.handler = handler
         self.enabled = True
+        self.url = None
         self.consumers: List[MockConsumer] = list()
 
     def get_consumer_config(self):
@@ -184,8 +175,8 @@ class MockReader(IRestReader):
             self.logger.info('not enabling reading for {}, no event mapped'.format(self.conf.node_id()))
             return
 
-        url = '/api/v1/{}'.format(self.conf.reader_endpoint)
-        self.logger.info('added rest endpoint {}'.format(url))
+        self.url = '/api/v1/{}'.format(self.conf.reader_endpoint)
+        self.logger.info('added rest endpoint {}'.format(self.url))
 
     def register_consumer(self, consumer: MockConsumer):
         self.consumers.append(consumer)

@@ -25,7 +25,7 @@ from logistik.config import ModelTypes, ErrorCodes
 from logistik.db import HandlerConf
 from logistik.discover.consul.mock import MockConsulService
 from test.base import MockEnv, MockStats, MockWriter, MockRequester
-from test.discover.test_manager import MockDb, MockCache
+from test.base import MockDb, MockCache
 
 
 class HttpHandlerTest(TestCase):

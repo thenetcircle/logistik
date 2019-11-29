@@ -2,9 +2,11 @@ from activitystreams import Activity
 from flask import Flask
 from flask_testing import TestCase
 from requests import Response
+from typing import List
 
+from logistik.cache import ICache
 from logistik.cache.redis import CacheRedis
-from logistik.config import ErrorCodes
+from logistik.config import ErrorCodes, ServiceTags, ModelTypes
 from logistik.db import HandlerConf
 from logistik.enrich.identity import IdentityEnrichment
 from logistik.enrich.manager import EnrichmentManager
@@ -14,7 +16,46 @@ from logistik.environ import GNEnvironment
 from logistik.handlers import IRequester
 from logistik.handlers.base import BaseHandler
 from logistik.queue import IKafkaWriter
+from logistik.queue.kafka_writer import IKafkaWriterFactory
 from logistik.stats import IStats
+from logistik.utils.exceptions import HandlerNotFoundException
+
+
+class ResponseObject:
+    def __init__(self, msg):
+        self.content = msg
+
+    def json(self):
+        return self.content
+
+
+class MockKafkaMessage(object):
+    def __init__(self, msg):
+        self.value = msg
+        self.topic = 'test-topic'
+        self.partition = 0
+        self.offset = 1
+        self.key = None
+
+
+class InvalidKafkaMessage(object):
+    def __init__(self, msg):
+        self.value = msg
+
+
+class MockProducer:
+    def __init__(self, **kwargs):
+        self.sent = dict()
+
+    def send(self, topic, data):
+        if topic not in self.sent:
+            self.sent[topic] = list()
+        self.sent[topic].append(data)
+
+
+class MockKafkaWriterFactory(IKafkaWriterFactory):
+    def create_producer(self, **kwargs):
+        return MockProducer(**kwargs)
 
 
 class MockLogger(object):
@@ -108,6 +149,125 @@ class MockHandlersManager(object):
             self.started.remove(node_id)
         self.stopped.add(node_id)
         self.env.db.disable_handler(node_id)
+
+
+class MockKafkaWriter:
+    def publish(self, conf, message):
+        return
+
+
+class MockEnrichmentManager:
+    def handle(self, data):
+        return data
+
+
+class FailLog:
+    def __init__(self):
+        self.failed = 0
+
+    def info(self, *args, **kwargs):
+        self.failed += 1
+
+
+class DropLog:
+    def __init__(self):
+        self.dropped = 0
+
+    def info(self, *args, **kwargs):
+        self.dropped += 1
+
+
+class MockDb(object):
+    def __init__(self):
+        self.handlers = dict()
+
+    def get_handler_for(self, node_id):
+        if node_id not in self.handlers:
+            raise HandlerNotFoundException(node_id)
+        return self.handlers[node_id]
+
+    def get_all_enabled_handlers(self):
+        handlers = list()
+
+        for handler in self.handlers.values():
+            if handler.enabled:
+                handlers.append(handler)
+
+        return handlers
+
+    def get_all_handlers(self) -> list:
+        return list(self.handlers.values())
+
+    def register_handler(self, handler_conf):
+        self.handlers[handler_conf.node_id()] = handler_conf
+        return handler_conf
+
+    def disable_handler(self, node_id):
+        if node_id not in self.handlers:
+            return
+        self.handlers[node_id].enabled = False
+
+    def promote_canary(self, node_id: str):
+        if node_id not in self.handlers:
+            return
+
+        self.handlers[node_id].model_type = ModelTypes.MODEL
+
+        new_node_id = node_id.replace(ModelTypes.CANARY, ModelTypes.MODEL)
+        self.handlers[new_node_id] = self.handlers[node_id]
+        del self.handlers[node_id]
+
+    def update_handler(self, handler_conf: HandlerConf):
+        if handler_conf.node_id() not in self.handlers:
+            return
+
+        fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path', 'failed_topic']
+        for field in fields:
+            updated = handler_conf.__getattribute__(field)
+            self.handlers[handler_conf.node_id()].__setattr__(field, updated)
+
+    def enable_handler(self, node_id):
+        if node_id not in self.handlers:
+            return
+        self.handlers[node_id].enabled = True
+
+    def find_one_handler(self, service_id, hostname, node):
+        for model_type in [ModelTypes.MODEL, ModelTypes.CANARY]:
+            node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
+            handler = self.handlers.get(node_id, None)
+            if handler is not None:
+                return handler
+        return None
+
+    def update_consul_service_id_and_group_id(
+            self, handler_conf: HandlerConf, consul_service_id: str, tags: dict
+    ) -> HandlerConf:
+        handler = self.handlers[handler_conf.node_id()]
+        if handler is None:
+            return handler
+
+        handler.consul_service_id = consul_service_id
+        handler.group_id = tags.get(ServiceTags.GROUP_ID, None) or handler.service_id.split('-')[0]
+
+        return handler
+
+    def find_one_similar_handler(self, query_service_id):
+        for node_id, handler_conf in self.handlers.items():
+            service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
+            if service_id == query_service_id:
+                return handler_conf
+        return None
+
+
+class MockCache(ICache):
+    def get_enabled_handlers_for(self, event_name: str) -> List[HandlerConf]:
+        pass
+
+    def reset_enabled_handlers_for(self, event_name: str) -> None:
+        pass
+
+    def set_enabled_handlers_for(self, event_name: str, handlers: List[HandlerConf]):
+        pass
 
 
 class MockEnv(GNEnvironment):

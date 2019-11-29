@@ -92,7 +92,7 @@ class KafkaWriter(IKafkaWriter):
         self.producer.send(topic, data)
 
     def fail(self, topic: str, data: dict) -> None:
-        if topic is None:
+        if topic is None or len(topic.strip()) == 0:
             self.logger.warning(f'no failed topic configured, dropping message: {data}')
             return
 

@@ -9,8 +9,7 @@ from test.base import MockResponse
 from test.base import MockEnv
 from test.base import MockWriter
 from test.base import MockStats
-
-from test.discover.test_manager import MockDb, MockCache
+from test.base import MockDb, MockCache
 
 
 class MockKafkaMessage(object):
@@ -119,6 +118,26 @@ class KafkaReaderTest(BaseTest):
         self.assertEqual(0, dropped_log.dropped)
         self.reader.handle_message(message)
         self.assertEqual(1, dropped_log.dropped)
+
+    def test_handle_fail(self):
+        class FailLog:
+            def __init__(self):
+                self.failed = 0
+
+            def info(self, *args, **kwargs):
+                self.failed += 1
+
+        failed_log = FailLog()
+        self.reader.failed_msg_log = failed_log
+
+        # make sure an exception is thrown so we fail() the call
+        self.reader.try_to_parse = None
+
+        message = MockKafkaMessage(b'{"verb":"test"}')
+
+        self.assertEqual(0, failed_log.failed)
+        self.reader.handle_message(message)
+        self.assertEqual(1, failed_log.failed)
 
     def test_can_not_parse_message(self):
         class FailLog:

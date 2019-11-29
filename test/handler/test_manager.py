@@ -6,7 +6,7 @@ from logistik.db.reprs.handler import HandlerConf
 from logistik.discover.consul.mock import MockConsulService
 from logistik.handlers.manager import HandlersManager
 from test.base import MockEnv, MockStats, MockWriter, MockRequester, MockResponse
-from test.discover.test_manager import MockCache, MockDb
+from test.base import MockCache, MockDb
 
 
 class ManagerTest(TestCase):
