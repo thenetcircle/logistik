@@ -5,12 +5,13 @@ from logistik.db import HandlerConf
 from logistik.discover.consul.mock import MockConsulService
 from logistik.handlers.http import HttpHandler
 from logistik.queue.mock_reader import MockConsumer, MockReader
+from logistik.queue.rest_reader import RestReader, RestConsumer
 from logistik.utils.exceptions import ParseException
 from test.base import MockEnv, MockRequester, MockResponse, MockEnrichmentManager, MockKafkaWriter, FailLog, DropLog
 from test.base import MockDb, MockCache
 
 
-class TestMockReader(TestCase):
+class TestRestReader(TestCase):
     def setUp(self) -> None:
         self.db = MockDb()
         self.cache = MockCache()
@@ -25,8 +26,8 @@ class TestMockReader(TestCase):
         self.handler = HttpHandler.create(env=self.env, conf=self.handler_conf)
         self.handler.requester = self.mock_requester
 
-        self.reader = MockReader(self.env, self.handler_conf, self.handler)
-        self.consumer = MockConsumer(env=self.env, reader=self.reader, conf=self.handler_conf, handler=self.handler)
+        self.reader = RestReader(self.env, self.handler_conf, self.handler)
+        self.consumer = RestConsumer(env=self.env, reader=self.reader, conf=self.handler_conf, handler=self.handler)
 
     def test_handle_message(self):
         self.assertIsNone(self.reader.url)

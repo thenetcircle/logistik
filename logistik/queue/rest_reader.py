@@ -70,13 +70,11 @@ class RestConsumer(Resource):
 
         try:
             data, activity = self.try_to_parse(message)
-            self.log_pre_processed_request(self.conf.reader_endpoint, data)
         except ParseException as e:
             error_msg = 'could not enrich/parse data because "{}", original data was: {}'.format(str(e), str(message))
             self.logger.error(error_msg)
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            self.env.handler_stats.error(self.conf, None)
             self.fail_msg(message)
             return error_msg, 400
         except Exception as e:
@@ -85,7 +83,6 @@ class RestConsumer(Resource):
             self.logger.error('event was: {}'.format(str(message)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            self.env.handler_stats.error(self.conf, None)
             self.fail_msg(message)
             return error_msg, 500
 
@@ -96,9 +93,8 @@ class RestConsumer(Resource):
             else:
                 return response, 500
         except InterruptedError:
-            error_msg = 'got interrupt, dropping message'.format(str(message.value))
+            error_msg = 'got interrupt, dropping message: {}'.format(data)
             self.logger.warning(error_msg)
-            self.env.handler_stats.failure(self.conf, activity)
             self.drop_msg(message)
             return error_msg, 500
         except Exception as e:
@@ -107,18 +103,8 @@ class RestConsumer(Resource):
             self.logger.error('event was: {}'.format(str(data)))
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            self.env.handler_stats.error(self.conf, activity)
             self.fail_msg(data)
             return error_msg, 500
-
-    def log_pre_processed_request(self, original_topic: str, data: dict):
-        log_topic = '{}-preprocessed'.format(original_topic)
-        try:
-            self.env.kafka_writer.log(log_topic, data)
-        except Exception as e:
-            self.logger.error('could not publish pre-processed request to kafka: {}'.format(str(e)))
-            self.logger.exception(e)
-            self.env.capture_exception(sys.exc_info())
 
     def try_to_parse(self, data) -> (dict, Activity):
         try:
@@ -175,6 +161,7 @@ class RestReader(IRestReader):
         self.conf: HandlerConf = handler_conf
         self.handler = handler
         self.enabled = True
+        self.url = None
         self.consumers: List[RestConsumer] = list()
 
     def get_consumer_config(self):
@@ -185,11 +172,11 @@ class RestReader(IRestReader):
             self.logger.info('not enabling reading for {}, no event mapped'.format(self.conf.node_id()))
             return
 
-        url = '/api/v1/{}'.format(self.conf.reader_endpoint)
+        self.url = '/api/v1/{}'.format(self.conf.reader_endpoint)
         try:
             self.env.api.add_resource(
                 RestConsumer,
-                url,
+                self.url,
                 resource_class_kwargs={
                     'conf': self.conf,
                     'env': self.env,
@@ -198,9 +185,10 @@ class RestReader(IRestReader):
                 }
             )
         except Exception as e:
-            self.logger.info('seems we already have one for {}'.format(url))
+            self.logger.info('seems we already have one for {}'.format(self.url))
+            self.logger.exception(e)
             return
-        self.logger.info('added rest endpoint {}'.format(url))
+        self.logger.info('added rest endpoint {}'.format(self.url))
 
     def register_consumer(self, consumer: RestConsumer):
         self.consumers.append(consumer)
