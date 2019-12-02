@@ -78,44 +78,46 @@ class HandlersManager(IHandlersManager):
             # likely doesn't implement the query interface
             raise QueryException(response.status_code)
 
-        json_response = response.json()
         fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path', 'failed_topic']
+        json_response = response.json()
 
         try:
             for field in fields:
-                if field not in json_response:
-                    continue
-
-                original = handler_conf.__getattribute__(field)
-                updated = json_response.get(field)
-
-                field_defaults = {
-                    'retries': 1,
-                    'timeout': 0
-                }
-
-                if field in field_defaults.keys():
-                    try:
-                        updated = int(float(updated))
-                    except ValueError:
-                        self.logger.warning('invalid value for "{}": "{}", will use default value of {}'.format(
-                            field, updated, field_defaults[field])
-                        )
-                        updated = field_defaults[field]
-                elif type(updated) != str:
-                    self.logger.warning('invalid value for "{}": "{}", not of type str but of "{}"'.format(
-                        field, updated, type(updated)
-                    ))
-                    continue
-
-                self.logger.info(f'updating field "{field}" from "{original}" to "{updated}"')
-                handler_conf.__setattr__(field, updated)
-
+                self.update_handler_value(handler_conf, json_response, field)
         except Exception as e:
             self.logger.error(f'could not update fields on handler with node_id {handler_conf.node_id()}: {str(e)}')
             raise QueryException(e)
 
         self.env.db.update_handler(handler_conf)
+
+    def update_handler_value(self, handler_conf: HandlerConf, json_response: dict, field: str):
+        if field not in json_response:
+            return
+
+        original = handler_conf.__getattribute__(field)
+        updated = json_response.get(field)
+
+        field_defaults = {
+            'retries': 1,
+            'timeout': 0
+        }
+
+        if field in field_defaults.keys():
+            try:
+                updated = int(float(updated))
+            except ValueError:
+                self.logger.warning('invalid value for "{}": "{}", will use default value of {}'.format(
+                    field, updated, field_defaults[field])
+                )
+                updated = field_defaults[field]
+        elif type(updated) != str:
+            self.logger.warning('invalid value for "{}": "{}", not of type str but of "{}"'.format(
+                field, updated, type(updated)
+            ))
+            return
+
+        self.logger.info(f'updating field "{field}" from "{original}" to "{updated}"')
+        handler_conf.__setattr__(field, updated)
 
     def start_handler(self, node_id: str):
         try:
