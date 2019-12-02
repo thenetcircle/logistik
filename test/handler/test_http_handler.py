@@ -95,6 +95,65 @@ class HttpHandlerTest(TestCase):
 
         self.assertEqual(response[0], ErrorCodes.RETRIES_EXCEEDED)
 
+    def test_handle_canary_skips(self):
+        self.conf.model_type = ModelTypes.CANARY
+        self.conf.traffic = 0
+        all_ok, _ = self.handler.handle(None, None)
+        self.assertTrue(all_ok)
+
+    def test_handle_check_canary_is_model(self):
+        self.conf.model_type = ModelTypes.MODEL
+        self.assertFalse(self.handler.is_canary_and_should_skip())
+
+    def test_handle_check_canary_is_decoy(self):
+        self.conf.model_type = ModelTypes.DECOY
+        self.assertFalse(self.handler.is_canary_and_should_skip())
+
+    def test_handle_check_canary_is_canary_full_traffic(self):
+        self.conf.model_type = ModelTypes.CANARY
+        self.conf.traffic = 1
+        self.assertFalse(self.handler.is_canary_and_should_skip())
+
+    def test_handle_check_canary_is_canary_no_traffic(self):
+        self.conf.model_type = ModelTypes.CANARY
+        self.conf.traffic = 0
+        self.assertTrue(self.handler.is_canary_and_should_skip())
+
+    def test_handle_empty_response(self):
+        def empty_response(*args):
+            return 200, ErrorCodes.OK, None
+
+        self.handler.handle_and_return_response = empty_response
+
+        data = {'verb': 'test'}
+        act = activitystreams.parse(data)
+        error_code, _ = self.handler.handle(data, act)
+
+        self.assertEqual(error_code, ErrorCodes.HANDLER_ERROR)
+
+    def test_handle_and_return_response_disabled_handler(self):
+        self.handler.enabled = False
+
+        data = {'verb': 'test'}
+        act = activitystreams.parse(data)
+        all_ok, error_code, _ = self.handler.handle_and_return_response(data, act)
+
+        self.assertFalse(all_ok)
+        self.assertEqual(error_code, ErrorCodes.HANDLER_DISABLED)
+
+    def test_handle_and_return_response_try_to_handle_fails(self):
+        self.handler.try_to_handle = None
+
+        data = {'verb': 'test'}
+        act = activitystreams.parse(data)
+        all_ok, error_code, _ = self.handler.handle_and_return_response(data, act)
+
+        self.assertFalse(all_ok)
+        self.assertEqual(error_code, ErrorCodes.HANDLER_ERROR)
+
+    def test_name_set(self):
+        self.assertEqual(self.handler.name, self.conf.name)
+
     def _gen_conf(self, enabled=False, hostname='machine_a'):
         handler_conf = HandlerConf()
         handler_conf.service_id = 'testthing'

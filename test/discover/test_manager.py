@@ -187,6 +187,13 @@ class TestDiscoveryManager(TestCase):
         self.assertEqual('machine_a', service.hostname)
         self.assertEqual(False, service.enabled)
 
+    def test_run_exists_on_interrupt(self):
+        def poll_raises_interrupt():
+            raise InterruptedError()
+
+        self.service.poll_services = poll_raises_interrupt
+        self.service.run()
+
     def _gen_conf(self, enabled=False, hostname='machine_a'):
         handler_conf = HandlerConf()
         handler_conf.service_id = 'testthing'

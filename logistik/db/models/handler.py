@@ -107,12 +107,13 @@ class HandlerConfEntity(env.dbman.Model):
                 version={}, path={}, method={}, retries={}, timeout={}, 
                 service_id={}, tags={}, return_to={}, port={}, hostname={}. 
                 startup={}, traffic={}, retired={}, reader_type={}, reader_endpoint={}, 
-                event_display_name={}, consul_service_id={}, group_id={}, failed_topic={}>
+                event_display_name={}, consul_service_id={}, group_id={}, failed_topic={}
+                node={}, model_type={}>
         """
         return repr_string.format(
             self.id, self.name, self.event, self.enabled, self.endpoint, self.version, self.path,
             self.method, self.retries, self.timeout, self.service_id, self.tags, self.return_to,
             self.port, self.hostname, self.startup, self.traffic, self.retired, self.reader_type,
             self.reader_endpoint, self.event_display_name, self.consul_service_id, self.group_id,
-            self.failed_topic
+            self.failed_topic, self.node, self.model_type
         )

@@ -65,24 +65,24 @@ class BaseHandler(IHandler, IPlugin, ABC):
         helpers.fail_message(data)
         return ErrorCodes.RETRIES_EXCEEDED, None
 
-    def is_canary(self):
-        return self.conf.model_type == ModelTypes.CANARY
+    def is_canary_and_should_skip(self):
+        if self.conf.model_type != ModelTypes.CANARY:
+            return False
+
+        # only handle part of the traffic for canary models
+        r = random.randint(0, 99)
+        traffic = int(self.conf.traffic * 100)
+
+        if r > traffic:
+            self.logger.debug('dice shows {}, traffic is {}, skipping event'.format(r, traffic))
+            return True
+
+        self.logger.debug('dice shows {}, traffic is {}, processing event'.format(r, traffic))
+        return False
 
     def handle(self, data: dict, activity: Activity):
-        if self.is_canary():
-            # only handle part of the traffic for canary models
-            r = random.randint(0, 99)
-
-            if r > self.conf.traffic * 100:
-                self.logger.debug(
-                    'dice shows {}, traffic is {}, skipping event'
-                    .format(r, int(self.conf.traffic*100)))
-
-                return ErrorCodes.OK, 'skipped, canary'
-
-            self.logger.debug(
-                'dice shows {}, traffic is {}, processing event'
-                .format(r, int(self.conf.traffic*100)))
+        if self.is_canary_and_should_skip():
+            return ErrorCodes.OK, 'skipped, canary'
 
         status_code, error_code, response = self.handle_and_return_response(data, activity)
 
