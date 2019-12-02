@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from base64 import b64encode
 from typing import Union
 from typing import List
 from typing import Tuple
@@ -173,21 +172,6 @@ class GNEnvironment(object):
         self.event_handler_map = dict()
         self.event_handlers = dict()
         self.consul: IConsulService = None
-
-
-def b64e(s: str) -> str:
-    if s is None:
-        return ''
-
-    s = s.strip()
-    if len(s) == 0:
-        return ''
-
-    try:
-        return str(b64encode(bytes(s, 'utf-8')), 'utf-8')
-    except Exception as e:
-        logger.error('could not b64encode because: %s, value was: \n%s' % (str(e), str(s)))
-    return ''
 
 
 def find_config(config_paths: list) -> tuple:
@@ -414,44 +398,6 @@ def init_logging(gn_env: GNEnvironment) -> None:
     gn_env.capture_exception = capture_exception
 
 
-@timeit(logger, 'init plugins')
-def init_plugins(gn_env: GNEnvironment):
-    from yapsy.PluginManager import PluginManager
-    logging.getLogger('yapsy').setLevel(gn_env.config.get(ConfigKeys.LOG_LEVEL, logging.INFO))
-
-    plugin_manager = PluginManager()
-    plugin_manager.setPluginPlaces(['logistik/handlers'])
-    plugin_manager.collectPlugins()
-
-    for pluginInfo in plugin_manager.getAllPlugins():
-        plugin_manager.activatePluginByName(pluginInfo.name)
-        gn_env.event_handlers[pluginInfo.name] = pluginInfo.plugin_object
-
-    handlers = gn_env.config.get(ConfigKeys.EVENT_HANDLERS, None)
-    if handlers is None:
-        return
-
-    for key in handlers.keys():
-        if key not in gn_env.event_handler_map:
-            gn_env.event_handler_map[key] = list()
-        plugins = handlers[key].copy()
-        handlers[key] = dict()
-        for plugin_info in plugins:
-            plugin_name = plugin_info.get('name')
-            handlers[key][plugin_name] = plugin_info
-            try:
-                gn_env.event_handler_map[key].append(gn_env.event_handlers[plugin_name])
-            except KeyError:
-                raise KeyError('specified plugin "{}" does not exist'.format(key))
-
-    # TODO: need to be able to enabled/disable/add/remove handlers from web
-
-    gn_env.config.set(ConfigKeys.EVENT_HANDLERS, handlers)
-
-    for pluginInfo in plugin_manager.getAllPlugins():
-        pluginInfo.plugin_object.setup(gn_env)
-
-
 @timeit(logger, 'init web auth service')
 def init_web_auth(gn_env: GNEnvironment) -> None:
     """
@@ -552,7 +498,6 @@ def initialize_env(lk_env):
     init_handlers_manager(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
-    init_plugins(lk_env)
     init_consul(lk_env)
     init_enrichment_service(lk_env)
     init_discovery_service(lk_env)
