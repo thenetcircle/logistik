@@ -15,7 +15,6 @@ from logistik.config import ErrorCodes
 from logistik.config import StatsKeys
 from logistik.config import ModelTypes
 from logistik.handlers import IHandler
-from logistik.utils import helpers
 
 
 class BaseHandler(IHandler, IPlugin, ABC):
@@ -62,7 +61,6 @@ class BaseHandler(IHandler, IPlugin, ABC):
                 self.logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
 
-        helpers.fail_message(data)
         return ErrorCodes.RETRIES_EXCEEDED, None
 
     def is_canary_and_should_skip(self):
