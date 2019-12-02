@@ -2,6 +2,7 @@ import logging
 import eventlet
 import os
 
+from multiprocessing import Process
 from activitystreams import Activity
 
 from logistik.config import ErrorCodes
