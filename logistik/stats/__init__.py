@@ -1,18 +1,24 @@
 from abc import ABC
+from abc import abstractmethod
 
 
 class IStats(ABC):
+    @abstractmethod
     def incr(self, key: str) -> None:
-        raise NotImplementedError()
+        """pass"""
 
+    @abstractmethod
     def decr(self, key: str) -> None:
-        raise NotImplementedError()
+        """pass"""
 
+    @abstractmethod
     def timing(self, key: str, ms: float):
-        raise NotImplementedError()
+        """pass"""
 
+    @abstractmethod
     def gauge(self, key: str, value: int):
-        raise NotImplementedError()
+        """pass"""
 
+    @abstractmethod
     def set(self, key: str, value: int):
-        raise NotImplementedError()
+        """pass"""
