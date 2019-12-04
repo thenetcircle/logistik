@@ -1,6 +1,5 @@
 import logging
 
-from logistik.config import HandlerTypes
 from logistik.db import HandlerConf
 from logistik.handlers import IHandlersManager
 from logistik.handlers.request import Requester
@@ -38,7 +37,7 @@ class HandlersManager(IHandlersManager):
         return [
             format_config(
                 node_id,
-                self.handlers[node_id][HandlerTypes.DEFAULT].reader.get_consumer_config()
+                self.handlers[node_id][self.env.handler_types[0].name].reader.get_consumer_config()
             )
             for node_id in self.handlers
         ]
@@ -64,9 +63,9 @@ class HandlersManager(IHandlersManager):
         from logistik.handlers.http import HttpHandler
 
         self.handlers[node_id] = dict()
-        for handler_type in HandlerTypes.all_types:
+        for handler_type in self.env.handler_types:
             handler = HttpHandler.create(self.env, handler_conf, handler_type=handler_type)
-            self.handlers[node_id][handler_type] = handler
+            self.handlers[node_id][handler_type.name] = handler
 
     def query_model_for_info(self, handler_conf: HandlerConf):
         url = f'http://{handler_conf.endpoint}:{handler_conf.port}/info'

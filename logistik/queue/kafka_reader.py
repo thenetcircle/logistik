@@ -13,7 +13,7 @@ import multiprocessing
 from activitystreams import Activity
 from activitystreams import parse as parse_as
 
-from logistik.config import ConfigKeys, ModelTypes, ErrorCodes, HandlerTypes
+from logistik.config import ConfigKeys, ModelTypes, ErrorCodes, HandlerType
 from logistik.db.reprs.handler import HandlerConf
 from logistik.environ import GNEnvironment
 from logistik.handlers.base import IHandler
@@ -43,11 +43,14 @@ class KafkaReaderFactory(IKafkaReaderFactory):
 
 
 class KafkaReader(IKafkaReader, multiprocessing.Process):
-    def __init__(self, env: GNEnvironment, handler_conf: HandlerConf, handler: IHandler, handler_type: str = None):
+    def __init__(
+            self, env: GNEnvironment, handler_conf: HandlerConf,
+            handler: IHandler, handler_type: HandlerType = None
+    ):
         super().__init__()
         self.logger = logging.getLogger(__name__)
         self.env = env
-        self.handler_type = handler_type
+        self.handler_type: HandlerType = handler_type
         self.conf: HandlerConf = handler_conf
         self.handler = handler
         self.enabled = True
@@ -69,8 +72,8 @@ class KafkaReader(IKafkaReader, multiprocessing.Process):
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
         topic_name = self.conf.event
 
-        if self.handler_type is not None and self.handler_type != HandlerTypes.DEFAULT:
-            topic_name = f'{topic_name}-{self.handler_type}'
+        if self.handler_type is not None and len(self.handler_type.suffix) > 0:
+            topic_name = f'{topic_name}-{self.handler_type.suffix}'
 
         self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
         self.logger.info('consuming from topic {}'.format(topic_name))

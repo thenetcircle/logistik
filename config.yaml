@@ -39,6 +39,12 @@ discovery:
   host: '$LK_CONSUL_HOST'
   port: '$LK_CONSUL_PORT'
 
+handler_types:
+  - name: 'default'
+  - name: 'low_priority'
+    delay: 0.2
+    suffix: 'low'
+
 web:
   type: 'oauth'
   root_url: '$LK_WEB_ROOT_URL'

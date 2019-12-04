@@ -33,16 +33,11 @@ class ErrorCodes(Enum):
     INVALID_VERB = 607
 
 
-class HandlerTypes:
-    DEFAULT = 'default'
-    LOW_PRIORITY = 'low'
-    all_types: List[str] = None
-
-
-HandlerTypes.all_types = [
-    HandlerTypes.__dict__[key] for key in list(HandlerTypes.__dict__.keys())
-    if not key.startswith('_') and key[0].isupper()
-]
+class HandlerType:
+    def __init__(self, name: str, delay: float = 0.0, suffix=''):
+        self.name = name
+        self.delay = delay
+        self.suffix = suffix
 
 
 class StatsKeys(object):
@@ -108,6 +103,10 @@ class ConfigKeys(object):
     DISCOVERY = 'discovery'
     INTERVAL = 'interval'
     TAG = 'tag'
+
+    HANDLER_TYPES = 'handler_types'
+    DELAY = 'delay'
+    SUFFIX = 'suffix'
 
     # for the admin interface
     ROOT_URL = 'root_url'

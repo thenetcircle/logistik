@@ -9,6 +9,7 @@ import pkg_resources
 import yaml
 
 from logistik.config import ConfigKeys
+from logistik.config import HandlerType
 from logistik.discover.consul import IConsulService
 from logistik.handlers import IHandlersManager
 from logistik.enrich import IEnrichmentManager
@@ -167,6 +168,7 @@ class GNEnvironment(object):
         self.enrichment_manager: IEnrichmentManager = None
         self.enrichers: List[Tuple[str, IEnricher]] = list()
 
+        self.handler_types: List[HandlerType] = list()
         self.handlers_manager: IHandlersManager = None
         self.kafka_writer: IKafkaWriter = None
         self.event_handler_map = dict()
@@ -491,6 +493,22 @@ def init_consul(gn_env: GNEnvironment):
     gn_env.consul = ConsulService(gn_env)
 
 
+def init_handler_types(gn_env: GNEnvironment):
+    configs = gn_env.config.get(ConfigKeys.HANDLER_TYPES, None)
+    if configs is None:
+        configs = [{ConfigKeys.NAME: 'default', ConfigKeys.DELAY: 0.0, ConfigKeys.SUFFIX: ''}]
+
+    handler_types = list()
+    for conf in configs:
+        handler_types.append(HandlerType(
+            name=conf.get(ConfigKeys.NAME),
+            delay=conf.get(ConfigKeys.DELAY, 0.0),
+            suffix=conf.get(ConfigKeys.SUFFIX, '')
+        ))
+
+    gn_env.handler_types = handler_types
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
@@ -502,6 +520,7 @@ def initialize_env(lk_env):
     init_enrichment_service(lk_env)
     init_discovery_service(lk_env)
     init_kafka_writer(lk_env)
+    init_handler_types(lk_env)
     logger.info('startup done!')
 
 

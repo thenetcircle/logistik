@@ -4,7 +4,7 @@ import os
 import eventlet
 from activitystreams import Activity
 
-from logistik.config import ErrorCodes
+from logistik.config import ErrorCodes, HandlerType
 from logistik.db.reprs.handler import HandlerConf
 from logistik.handlers.base import BaseHandler
 from logistik.handlers.request import Requester
@@ -14,10 +14,10 @@ from logistik.queue.rest_reader import RestReader
 
 
 class HttpHandler(BaseHandler):
-    def __init__(self, handler_type: str = None):
+    def __init__(self, handler_type: HandlerType = None):
         super().__init__()
         self.env = None
-        self.handler_type = handler_type
+        self.handler_type: HandlerType = handler_type
         self.requester = Requester()
         self.method: str = None
         self.json_header = {'Context-Type': 'application/json'}
@@ -38,7 +38,7 @@ class HttpHandler(BaseHandler):
         return HttpHandler.__class__.__name__
 
     @staticmethod
-    def create(env, conf: HandlerConf, handler_type: str = None):
+    def create(env, conf: HandlerConf, handler_type: HandlerType = None):
         handler = HttpHandler(handler_type=handler_type)
         handler.configure(conf)
         handler.setup(env)

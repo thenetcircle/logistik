@@ -6,7 +6,7 @@ from typing import List
 
 from logistik.cache import ICache
 from logistik.cache.redis import CacheRedis
-from logistik.config import ErrorCodes, ServiceTags, ModelTypes, HandlerTypes
+from logistik.config import ErrorCodes, ServiceTags, ModelTypes, HandlerType
 from logistik.db import HandlerConf
 from logistik.enrich.identity import IdentityEnrichment
 from logistik.enrich.manager import EnrichmentManager
@@ -180,43 +180,47 @@ class DropLog:
 class MockDb(object):
     def __init__(self):
         self.handlers = dict()
+        self.env = None
+
+    def setup(self, env):
+        self.env = env
 
     def get_handler_for(self, node_id):
         if node_id not in self.handlers:
             raise HandlerNotFoundException(node_id)
-        return self.handlers[node_id][HandlerTypes.DEFAULT]
+        return self.handlers[node_id][self.env.handler_types[0].name]
 
     def get_all_enabled_handlers(self):
         handlers = list()
 
         for handlers in self.handlers.values():
-            if handlers[HandlerTypes.DEFAULT].enabled:
-                handlers.append(handlers[HandlerTypes.DEFAULT])
+            if handlers[self.env.handler_types[0].name].enabled:
+                handlers.append(handlers[self.env.handler_types[0].name])
 
         return handlers
 
     def get_all_handlers(self) -> list:
-        return [handlers[HandlerTypes.DEFAULT] for handlers in self.handlers.values()]
+        return [handlers[self.env.handler_types[0].name] for handlers in self.handlers.values()]
 
     def register_handler(self, handler_conf):
         self.handlers[handler_conf.node_id()] = dict()
-        for handler_type in HandlerTypes.all_types:
-            self.handlers[handler_conf.node_id()][handler_type] = handler_conf
+        for handler_type in self.env.handler_types:
+            self.handlers[handler_conf.node_id()][handler_type.name] = handler_conf
         return handler_conf
 
     def disable_handler(self, node_id):
         if node_id not in self.handlers:
             return
 
-        for handler_type in HandlerTypes.all_types:
-            self.handlers[node_id][handler_type].enabled = False
+        for handler_type in self.env.handler_types:
+            self.handlers[node_id][handler_type.name].enabled = False
 
     def promote_canary(self, node_id: str):
         if node_id not in self.handlers:
             return
 
-        for handler_type in HandlerTypes.all_types:
-            self.handlers[node_id][handler_type].model_type = ModelTypes.MODEL
+        for handler_type in self.env.handler_types:
+            self.handlers[node_id][handler_type.name].model_type = ModelTypes.MODEL
 
         new_node_id = node_id.replace(ModelTypes.CANARY, ModelTypes.MODEL)
         self.handlers[new_node_id] = self.handlers[node_id]
@@ -227,24 +231,24 @@ class MockDb(object):
             return
 
         fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path', 'failed_topic']
-        for handler_type in HandlerTypes.all_types:
+        for handler_type in self.env.handler_types:
             for field in fields:
                 updated = handler_conf.__getattribute__(field)
-                self.handlers[handler_conf.node_id()][handler_type].__setattr__(field, updated)
+                self.handlers[handler_conf.node_id()][handler_type.name].__setattr__(field, updated)
 
     def enable_handler(self, node_id):
         if node_id not in self.handlers:
             return
 
-        for handler_type in HandlerTypes.all_types:
-            self.handlers[node_id][handler_type].enabled = True
+        for handler_type in self.env.handler_types:
+            self.handlers[node_id][handler_type.name].enabled = True
 
     def find_one_handler(self, service_id, hostname, node):
         for model_type in [ModelTypes.MODEL, ModelTypes.CANARY]:
             node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
             handlers = self.handlers.get(node_id, None)
             if handlers is not None:
-                return handlers[HandlerTypes.DEFAULT]
+                return handlers[self.env.handler_types[0].name]
         return None
 
     def update_consul_service_id_and_group_id(
@@ -254,18 +258,18 @@ class MockDb(object):
         if handlers is None:
             return None
 
-        for handler_type in HandlerTypes.all_types:
-            handlers[handler_type].consul_service_id = consul_service_id
-            handlers[handler_type].group_id = \
-                tags.get(ServiceTags.GROUP_ID, None) or handlers[handler_type].service_id.split('-')[0]
+        for handler_type in self.env.handler_types:
+            handlers[handler_type.name].consul_service_id = consul_service_id
+            handlers[handler_type.name].group_id = \
+                tags.get(ServiceTags.GROUP_ID, None) or handlers[handler_type.name].service_id.split('-')[0]
 
-        return handlers[HandlerTypes.DEFAULT]
+        return handlers[self.env.handler_types[0].name]
 
     def find_one_similar_handler(self, query_service_id):
         for node_id, handlers in self.handlers.items():
             service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
             if service_id == query_service_id:
-                return handlers[HandlerTypes.DEFAULT]
+                return handlers[self.env.handler_types[0].name]
         return None
 
 
@@ -288,9 +292,17 @@ class MockEnv(GNEnvironment):
         self.stats = MockStats()
         self.cache = cache
         self.db = db
+
+        if self.db is not None:
+            self.db.setup(self)
+
         self.consul = consul
         self.event_handler_map = dict()
         self.handlers_manager = MockHandlersManager(self)
+        self.handler_types = [
+            HandlerType('default'),
+            HandlerType('low_priority', 0.2, 'low')
+        ]
         self.enrichment_manager = None
         self.enrichers = [
             ('published', PublishedEnrichment()),
