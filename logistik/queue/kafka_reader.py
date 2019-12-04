@@ -144,6 +144,9 @@ class KafkaReader(IKafkaReader, multiprocessing.Process):
                 self.fail_msg(message, original_topic=None, decoded_value=None)
                 time.sleep(1)
 
+            if self.handler_type.delay > 0:
+                time.sleep(self.handler_type.delay)
+
     def handle_message(self, message) -> None:
         self.logger.debug("%s:%d:%d: key=%s" % (
             message.topic, message.partition,
