@@ -1,4 +1,4 @@
-from logistik.config import ModelTypes, ConfigKeys
+from logistik.config import ModelTypes, ConfigKeys, HandlerType
 from logistik.db import HandlerConf
 from logistik.discover.consul.mock import MockConsulService
 from logistik.enrich.manager import EnrichmentManager
@@ -73,11 +73,12 @@ class KafkaReaderTest(BaseTest):
 
         from logistik.handlers.http import HttpHandler
         self.handler = HttpHandler.create(env=self.env, conf=self.conf)
+        self.env.handler_types = [HandlerType('default')]
 
         self.mock_requester = MockRequester(MockResponse(status_code=200))
         self.handler.requester = self.mock_requester
 
-        self.reader = KafkaReader(self.env, self.conf, self.handler)
+        self.reader = KafkaReader(self.env, self.conf, self.handler, self.env.handler_types[0])
 
         message = MockKafkaMessage(b'{"verb":"test"}')
         self.reader.reader_factory = MockKafkaFactory(message)
