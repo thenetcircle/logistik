@@ -1,5 +1,7 @@
 from enum import Enum
 
+from typing import List
+
 
 class ErrorCodes(Enum):
     OK = 200
@@ -29,6 +31,18 @@ class ErrorCodes(Enum):
     INVALID_OBJECT_TYPE = 605
     INVALID_BAN_DURATION = 606
     INVALID_VERB = 607
+
+
+class HandlerTypes:
+    DEFAULT = 'default'
+    LOW_PRIORITY = 'low'
+    all_types: List[str] = None
+
+
+HandlerTypes.all_types = [
+    HandlerTypes.__dict__[key] for key in list(HandlerTypes.__dict__.keys())
+    if not key.startswith('_') and key[0].isupper()
+]
 
 
 class StatsKeys(object):

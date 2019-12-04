@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from logistik.config import ModelTypes, ConfigKeys
+from logistik.config import ModelTypes, ConfigKeys, HandlerTypes
 from logistik.db import HandlerConf
 from logistik.discover.consul.mock import MockConsulService
 from logistik.discover.manager import DiscoveryService
@@ -88,8 +88,8 @@ class TestDiscoveryManager(TestCase):
         self.assertEqual(1, len(list(self.db.handlers.values())))
 
         handlers = list(self.db.handlers.values())
-        self.db.promote_canary(handlers[0].node_id())
-        self.db.enable_handler(handlers[0].node_id())
+        self.db.promote_canary(handlers[0][HandlerTypes.DEFAULT].node_id())
+        self.db.enable_handler(handlers[0][HandlerTypes.DEFAULT].node_id())
 
         # poll again and make sure we only have one
         self.service.poll_services()
@@ -107,7 +107,7 @@ class TestDiscoveryManager(TestCase):
         handlers = list(self.db.handlers.values())
         self.assertEqual(1, len(handlers))
 
-        self.assertEqual(hostname, handlers[0].hostname)
+        self.assertEqual(hostname, handlers[0][HandlerTypes.DEFAULT].hostname)
 
     def test_discover_none(self):
         self.service.poll_services()
@@ -119,7 +119,8 @@ class TestDiscoveryManager(TestCase):
         registered_services = list(self.db.handlers.values())
         self.assertEqual(1, len(registered_services))
 
-        service = registered_services.pop()
+        services = registered_services.pop()
+        service = services[HandlerTypes.DEFAULT]
         self.assertEqual('8888', service.port)
         self.assertEqual('machine_a', service.hostname)
         self.assertEqual('testthing', service.name)
@@ -131,7 +132,8 @@ class TestDiscoveryManager(TestCase):
         registered_services = list(self.db.handlers.values())
         self.assertEqual(1, len(registered_services))
 
-        service = registered_services.pop()
+        services = registered_services.pop()
+        service = services[HandlerTypes.DEFAULT]
         self.assertEqual('9999', service.port)
         self.assertEqual('machine_a', service.hostname)
         self.assertEqual('testthing', service.name)
@@ -142,7 +144,8 @@ class TestDiscoveryManager(TestCase):
         registered_services = list(self.db.handlers.values())
         self.assertEqual(1, len(registered_services))
 
-        service = registered_services.pop()
+        services = registered_services.pop()
+        service = services[HandlerTypes.DEFAULT]
         self.assertEqual('8888', service.port)
         self.assertEqual('machine_a', service.hostname)
         self.assertEqual('testthing', service.name)
@@ -155,7 +158,8 @@ class TestDiscoveryManager(TestCase):
         registered_services = list(self.db.handlers.values())
         self.assertEqual(1, len(registered_services))
 
-        service = registered_services.pop()
+        services = registered_services.pop()
+        service = services[HandlerTypes.DEFAULT]
         self.assertEqual('machine_b', service.hostname)
 
         self.service.poll_services()
@@ -163,9 +167,12 @@ class TestDiscoveryManager(TestCase):
         registered_services = list(self.db.handlers.values())
         self.assertEqual(2, len(registered_services))
 
-        service = registered_services.pop()
+        services = registered_services.pop()
+        service = services[HandlerTypes.DEFAULT]
         self.assertEqual('machine_a', service.hostname)
-        service = registered_services.pop()
+
+        services = registered_services.pop()
+        service = services[HandlerTypes.DEFAULT]
         self.assertEqual('machine_b', service.hostname)
 
     def test_remove_from_consul_disables_old_handler(self):
@@ -174,7 +181,8 @@ class TestDiscoveryManager(TestCase):
         registered_services = list(self.db.handlers.values())
         self.assertEqual(1, len(registered_services))
 
-        service = registered_services.pop()
+        services = registered_services.pop()
+        service = services[HandlerTypes.DEFAULT]
         self.assertEqual('machine_a', service.hostname)
         self.assertEqual(True, service.enabled)
 
@@ -183,7 +191,8 @@ class TestDiscoveryManager(TestCase):
         registered_services = list(self.db.handlers.values())
         self.assertEqual(1, len(registered_services))
 
-        service = registered_services.pop()
+        services = registered_services.pop()
+        service = services[HandlerTypes.DEFAULT]
         self.assertEqual('machine_a', service.hostname)
         self.assertEqual(False, service.enabled)
 

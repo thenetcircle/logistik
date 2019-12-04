@@ -1,23 +1,23 @@
 import logging
-import eventlet
 import os
 
-from multiprocessing import Process
+import eventlet
 from activitystreams import Activity
 
 from logistik.config import ErrorCodes
-from logistik.handlers.base import BaseHandler
 from logistik.db.reprs.handler import HandlerConf
+from logistik.handlers.base import BaseHandler
+from logistik.handlers.request import Requester
 from logistik.queue.kafka_reader import KafkaReader
 from logistik.queue.mock_reader import MockReader
 from logistik.queue.rest_reader import RestReader
-from logistik.handlers.request import Requester
 
 
 class HttpHandler(BaseHandler):
-    def __init__(self):
+    def __init__(self, handler_type: str = None):
         super().__init__()
         self.env = None
+        self.handler_type = handler_type
         self.requester = Requester()
         self.method: str = None
         self.json_header = {'Context-Type': 'application/json'}
@@ -38,8 +38,8 @@ class HttpHandler(BaseHandler):
         return HttpHandler.__class__.__name__
 
     @staticmethod
-    def create(env, conf: HandlerConf):
-        handler = HttpHandler()
+    def create(env, conf: HandlerConf, handler_type: str = None):
+        handler = HttpHandler(handler_type=handler_type)
         handler.configure(conf)
         handler.setup(env)
         return handler
@@ -77,7 +77,7 @@ class HttpHandler(BaseHandler):
         self.logger.info(self.conf)
 
         if self.conf.reader_type == 'kafka':
-            self.reader = KafkaReader(env, self.conf, self)
+            self.reader = KafkaReader(env, self.conf, self, self.handler_type)
             self.reader_thread = eventlet.spawn(self.reader.run)
         elif self.conf.reader_type == 'rest':
             self.reader = RestReader(env, self.conf, self)
@@ -104,6 +104,7 @@ class HttpHandler(BaseHandler):
             method=self.method, url=self.url,
             json=data, headers=self.json_header
         )
+
         if response.status_code == 200:
             return ErrorCodes.OK, response
         elif response.status_code == 404:
