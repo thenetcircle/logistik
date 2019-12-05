@@ -1,14 +1,17 @@
 <template>
   <div class="section">
     <!-- Rooms table -->
-    <datatable title="Models" :data="models" :actions="datatableActions">
+    <datatable title="Models" :data="events" :actions="datatableActions">
       <p slot="header" class="is-size-5">
         Models
         <a class="button is-primary is-small"><span class="icon"><i class="fa fa-plus"></i></span></a>
       </p>
-      <column slot="columns" display="Sort Order" field="sort" sortable="true"/>
-      <column slot="columns" display="name" field="name" sortable="true"/>
-      <column slot="columns" display="UUID" field="uuid"/>
+      <column slot="columns" display="Event" field="event" sortable="true"/>
+      <column slot="columns" display="Name" field="name" sortable="true"/>
+      <column slot="columns" display="Mpde" field="node" sortable="true"/>
+      <column slot="columns" display="Hostname" field="hostname" sortable="true"/>
+      <column slot="columns" display="Port" field="port" sortable="true"/>
+      <column slot="columns" display="Path" field="path" sortable="true"/>
     </datatable>
   </div>
 </template>
@@ -29,7 +32,7 @@ export default {
   components: { Datatable, Column, Modal, Loading, Tooltip },
   data () {
     return {
-      models: [],
+      events: [],
       modalOpen: false,
       loading: { name: false, destroying: false }
     }
@@ -38,8 +41,48 @@ export default {
   },
   created () {
   },
-  mounted () {
+  mounted() {
     this.resetModal()
+    const self = this
+
+    window.addEventListener('keydown', (e) => {
+      const key = e.which || e.keyCode
+
+      if (key === 39) { // right
+        self.currentClaim++
+        if (self.currentClaim >= self.claims.length) {
+          self.currentClaim = self.claims.length - 1
+          return
+        }
+        self.fetchImage(self.claims[self.currentClaim].id)
+      }
+      else if (key === 37) { // left
+        self.currentClaim--
+        if (self.currentClaim < 0) {
+          self.currentClaim = 0
+          return
+        }
+        self.fetchImage(self.claims[self.currentClaim].id)
+      }
+    })
+
+    fetch('http://localhost:5656/api/v1/models')
+      .then((response) => {
+          if (response.status !== 200) {
+            console.log('Looks like there was a problem. Status Code: ' +
+              response.status)
+            return
+          }
+
+          response.json().then((data) => {
+            console.log(data.data)
+            self.events = data.data
+          })
+        },
+      )
+      .catch((err) => {
+        console.log('Fetch Error :-S', err)
+      })
   },
   methods: {
     /**

@@ -76,6 +76,21 @@ def requires_auth(f):
     return decorated
 
 
+@app.route('/api/v1/models')
+def list_models():
+    handlers = environ.env.db.get_all_enabled_handlers()
+    return api_response(200, [
+        {
+            'event': handler.event,
+            'name': handler.name,
+            'node': handler.node,
+            'hostname': handler.hostname,
+            'port': handler.port,
+            'path': handler.path
+        } for handler in handlers
+    ])
+
+
 @app.route('/login')
 def login():
     root_url = environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB, default='/')
