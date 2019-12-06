@@ -47,8 +47,7 @@ export default {
     this.showGlobalLoading()
     const self = this
 
-    console.log('about to fetch')
-    fetch('http://localhost:5656/api/v1/stats/' + self.identity, {method: 'get'})
+    fetch('http://' + process.env.BACKEND_URL + '/api/v1/stats/' + self.identity, {method: 'get'})
       .then((response) => {
         self.hideGlobalLoading()
         if (response.status !== 200) {
@@ -57,7 +56,6 @@ export default {
         }
 
         response.json().then((data) => {
-          console.log(data.data)
           self.stats = [data.data]
         })
       })

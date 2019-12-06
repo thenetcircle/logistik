@@ -41,7 +41,7 @@ export default {
     const self = this
 
     console.log('about to fetch')
-    fetch('http://localhost:5656/api/v1/query/' + self.identity, {
+    fetch('http://' + process.env.BACKEND_URL + '/api/v1/query/' + self.identity, {
         method: 'post',
         body: JSON.stringify({
           'version': '2.0',
@@ -75,7 +75,6 @@ export default {
           if (data.data.object === undefined || data.data.object.attachments === undefined) {
             return
           }
-          console.log(data.data)
           self.response = data.data.object.attachments
         })
       })

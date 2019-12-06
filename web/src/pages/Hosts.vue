@@ -44,7 +44,7 @@ export default {
     const self = this
 
     console.log('about to fetch')
-    fetch('http://localhost:5656/api/v1/hosts')
+    fetch('http://' + process.env.BACKEND_URL + '/api/v1/hosts')
       .then((response) => {
           if (response.status !== 200) {
             console.log('Looks like there was a problem. Status Code: ' +

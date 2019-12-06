@@ -55,13 +55,10 @@ export default {
     this.resetModal()
     const self = this
 
-    console.log('about to fetch')
-    let url = 'http://localhost:5656/api/v1/models'
+    let url = 'http://' + process.env.BACKEND_URL + '/api/v1/models'
     if (self.ip !== undefined) {
       url += '/ip/' + self.ip
     }
-
-    console.log(self.$router.params)
 
     fetch(url)
       .then((response) => {
@@ -72,8 +69,6 @@ export default {
           }
 
           response.json().then((data) => {
-            console.log(data.data)
-
             data.data = data.data.filter((handler) => {
               return handler.event !== 'UNMAPPED'
             })
