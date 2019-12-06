@@ -5,6 +5,7 @@ import socket
 from functools import wraps
 from typing import List
 from typing import Union
+from datetime import datetime as dt
 
 import requests
 from flask import jsonify
@@ -181,15 +182,31 @@ def stats_for_handler(handler_id: int):
         worker = {
             'requests': '',
             'exceptions': '',
-            'running_time': '',
+            'last_spawn': '',
             'status': 'no stats'
         }
         dd = {'load': ''}
 
+    def format_time(ts):
+        if ts == '':
+            return ''
+
+        diff = dt.utcnow() - dt.utcfromtimestamp(int(ts))
+        total_seconds = diff.seconds
+        days = int(total_seconds / (60 * 60 * 24))
+        hours = int((total_seconds - days*60*60*24) / (60*60))
+        minutes = int((total_seconds - days*60*60*24 - hours*60*60) / 60)
+
+        if days > 0:
+            return f'{days}d {hours}h {minutes}m'
+        if hours > 0:
+            return f'{hours}h {minutes}m'
+        return f'{minutes}m'
+
     return {
         'requests': worker['requests'],
         'exceptions': worker['exceptions'],
-        'running_time': worker['running_time'],
+        'running_time': format_time(worker['last_spawn']),
         'status': worker['status'],
         'load': dd['load']
     }
