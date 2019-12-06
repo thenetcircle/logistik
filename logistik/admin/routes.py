@@ -1,9 +1,11 @@
 import logging
 import os
+import json
 from functools import wraps
 from typing import List
 from typing import Union
 
+import requests
 from flask import jsonify
 from flask import redirect
 from flask import render_template
@@ -14,8 +16,8 @@ from werkzeug.wrappers import Response
 
 from logistik import environ
 from logistik.config import ConfigKeys
-from logistik.server import app
 from logistik.db.reprs.handler import HandlerConf
+from logistik.server import app
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -81,14 +83,37 @@ def list_models():
     handlers = environ.env.db.get_all_enabled_handlers()
     return api_response(200, [
         {
+            'identity': handler.identity,
             'event': handler.event,
             'name': handler.name,
             'node': handler.node,
+            'endpoint': handler.endpoint,
             'hostname': handler.hostname,
             'port': handler.port,
             'path': handler.path
         } for handler in handlers
     ])
+
+
+@app.route('/api/v1/query/<handler_id>', methods=['POST'])
+def query_model(handler_id):
+    try:
+        int(handler_id)
+    except ValueError:
+        return api_response(400, message='not a valid id')
+
+    handler = environ.env.db.get_handler_for_identity(handler_id)
+    url = f'http://{handler.endpoint}:{handler.port}/{handler.path}'
+
+    data = json.loads(str(request.data, 'utf-8'))
+
+    response = requests.request(
+        method=handler.method, url=url,
+        json=data, headers={'Context-Type': 'application/json'}
+    )
+    logger.info(response)
+
+    return api_response(response.status_code, response.json())
 
 
 @app.route('/login')

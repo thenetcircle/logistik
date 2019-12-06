@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Main from '@/pages/Main'
 import Model from '@/pages/Model'
-import Overview from '@/pages/Overview'
+import Query from '@/pages/Query'
 import config from '@/config'
 
 Vue.use(Router)
@@ -14,8 +14,8 @@ const router = new Router({
       path: config.base,
       component: Main,
       children: [
-        { path: config.base, name: 'home', component: Overview },
-        { path: 'model', name: 'model', component: Model }
+        { path: config.base, name: 'home', component: Model },
+        { path: 'query', name: 'query', component: Query }
       ]
     },
     {

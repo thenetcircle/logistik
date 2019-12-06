@@ -39,6 +39,10 @@ class IDatabase(ABC):
         """pass"""
 
     @abstractmethod
+    def get_handler_for_identity(self, identity: int) -> HandlerConf:
+        """pass"""
+
+    @abstractmethod
     def disable_handler(self, node_id) -> None:
         """pass"""
 

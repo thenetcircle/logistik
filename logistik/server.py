@@ -4,6 +4,7 @@ from uuid import uuid4 as uuid
 
 from flask import Flask
 from flask_restful import Api
+from flask_cors import CORS
 from werkzeug.contrib.fixers import ProxyFix
 
 from logistik import environ
@@ -84,6 +85,7 @@ def create_app():
         template_folder='admin/templates/',
         static_folder='admin/static/'
     )
+    environ.env.cors = CORS(_app, resources={r"/api/*": {"origins": "*"}})
 
     _app.wsgi_app = ReverseProxied(ProxyFix(_app.wsgi_app))
 
@@ -109,7 +111,7 @@ def create_app():
 
 
 app, api = create_app()
-#environ.init_web_auth(environ.env)
+environ.init_web_auth(environ.env)
 
 # keep this, otherwise flask won't find any routes
 import logistik.admin.routes

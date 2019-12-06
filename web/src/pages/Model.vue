@@ -1,15 +1,14 @@
 <template>
   <div class="section">
-    <!-- Rooms table -->
     <datatable title="Models" :data="events" :actions="datatableActions">
       <p slot="header" class="is-size-5">
         Models
-        <a class="button is-primary is-small"><span class="icon"><i class="fa fa-plus"></i></span></a>
       </p>
       <column slot="columns" display="Event" field="event" sortable="true"/>
       <column slot="columns" display="Name" field="name" sortable="true"/>
-      <column slot="columns" display="Mpde" field="node" sortable="true"/>
+      <column slot="columns" display="Node" field="node" sortable="true"/>
       <column slot="columns" display="Hostname" field="hostname" sortable="true"/>
+      <column slot="columns" display="Endpoint" field="endpoint" sortable="true"/>
       <column slot="columns" display="Port" field="port" sortable="true"/>
       <column slot="columns" display="Path" field="path" sortable="true"/>
     </datatable>
@@ -34,6 +33,9 @@ export default {
     return {
       events: [],
       modalOpen: false,
+      datatableActions: [
+        { content: 'Query', handle: this.queryModel, color: 'info' }
+      ],
       loading: { name: false, destroying: false }
     }
   },
@@ -45,27 +47,7 @@ export default {
     this.resetModal()
     const self = this
 
-    window.addEventListener('keydown', (e) => {
-      const key = e.which || e.keyCode
-
-      if (key === 39) { // right
-        self.currentClaim++
-        if (self.currentClaim >= self.claims.length) {
-          self.currentClaim = self.claims.length - 1
-          return
-        }
-        self.fetchImage(self.claims[self.currentClaim].id)
-      }
-      else if (key === 37) { // left
-        self.currentClaim--
-        if (self.currentClaim < 0) {
-          self.currentClaim = 0
-          return
-        }
-        self.fetchImage(self.claims[self.currentClaim].id)
-      }
-    })
-
+    console.log('about to fetch')
     fetch('http://localhost:5656/api/v1/models')
       .then((response) => {
           if (response.status !== 200) {
@@ -76,9 +58,14 @@ export default {
 
           response.json().then((data) => {
             console.log(data.data)
+
+            data.data = data.data.filter((handler) => {
+              return handler.event !== 'UNMAPPED'
+            })
+
             self.events = data.data
           })
-        },
+        }
       )
       .catch((err) => {
         console.log('Fetch Error :-S', err)
@@ -107,6 +94,18 @@ export default {
     */
     closeModal () {
       this.modalOpen = false
+    },
+
+    /**
+     * Show model info
+     */
+    queryModel(model) {
+      this.$router.push({
+        name: 'query',
+        params: {
+          identity: model.identity
+        }
+      })
     }
   }
 }

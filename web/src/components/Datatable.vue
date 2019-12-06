@@ -81,8 +81,8 @@ export default {
     title: { required: true, type: String },
     data: { required: true, type: Array },
     actions: { type: Array, default: () => [] },
-    perPage: { type: Array, default: () => [10, 20, 30, 40, 50] },
-    defaultPerPage: { type: Number, default: 10 },
+    perPage: { type: Array, default: () => [50, 100] },
+    defaultPerPage: { type: Number, default: 50 },
     paginate: { type: Boolean, default: true },
     searchable: { type: Boolean, default: true }
   },

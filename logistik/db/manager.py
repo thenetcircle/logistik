@@ -182,6 +182,14 @@ class DatabaseManager(IDatabase):
         return handler.to_repr()
 
     @with_session
+    def get_handler_for_identity(self, identity: int) -> HandlerConf:
+        handler = HandlerConfEntity.query.get(identity)
+
+        if handler is None:
+            raise HandlerNotFoundException(identity)
+        return handler.to_repr()
+
+    @with_session
     def find_one_handler(self, service_id, hostname, node) -> Union[HandlerConf, None]:
         handler = HandlerConfEntity.query.filter_by(
             service_id=service_id,
