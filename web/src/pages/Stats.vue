@@ -47,7 +47,7 @@ export default {
     this.showGlobalLoading()
     const self = this
 
-    fetch('http://' + process.env.BACKEND_URL + '/api/v1/stats/' + self.identity, {method: 'get'})
+    fetch('http://' + process.env.ROOT_API + '/api/v1/stats/' + self.identity, {method: 'get'})
       .then((response) => {
         self.hideGlobalLoading()
         if (response.status !== 200) {

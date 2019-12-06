@@ -41,7 +41,7 @@ export default {
     const self = this
 
     console.log('about to fetch')
-    fetch('http://' + process.env.BACKEND_URL + '/api/v1/query/' + self.identity, {
+    fetch('http://' + process.env.ROOT_API + '/api/v1/query/' + self.identity, {
         method: 'post',
         body: JSON.stringify({
           'version': '2.0',

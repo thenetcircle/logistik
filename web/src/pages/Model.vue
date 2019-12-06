@@ -55,7 +55,7 @@ export default {
     this.resetModal()
     const self = this
 
-    let url = 'http://' + process.env.BACKEND_URL + '/api/v1/models'
+    let url = 'http://' + process.env.ROOT_API + '/api/v1/models'
     if (self.ip !== undefined) {
       url += '/ip/' + self.ip
     }
