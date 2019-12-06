@@ -52,15 +52,15 @@ export default {
           'object': {
             'id': Math.floor(Math.random() * 1000000).toString(),
             'objectType': 'image',
-            'url': 'http://8.bild.poppen.lab:7080/fsk16/8/D/8/1971-8D82A3763C66A5FA5A1078543B84EFB0.jpg'
+            'url': 'http://example.com:7080/8D82A3763C66A5FA5A1078543B84EFB0.jpg'
           },
           'provider': {
-            'id': 'poppen',
+            'id': 'someone',
             'objectType': 'community'
           },
           'published': '2019-12-05T08:32:23Z',
-          'title': 'image.nude_detect',
-          'verb': 'nude_detect',
+          'title': 'image.detect',
+          'verb': 'detect',
           'id': '76a734bb-60c3-4a78-8a34-d9a1d27c1237'
         })
       })
