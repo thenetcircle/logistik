@@ -55,3 +55,34 @@ gunicorn \  # this is whatever command is used to start your model, here we're u
   --bind 0.0.0.0:5053 \
   app:app
 ```
+
+If you use uWSGI instead of Gunicorn and exposes a http stats server, logistik will make use of it in the Web UI 
+(assuming the stats server is running on 100 port numbers higher than the model bind port):
+
+```bash
+#!/bin/bash
+ianitor -v \
+  --id the_service_name_5052 \  # needs to be unique
+  --address 10.60.1.125 \  # address to this node
+  --consul-agent=10.60.1.124 \  # which consul agent to connect to
+  --tags logistik \  # this is needed for logistik to not ignore your service in consul
+  --tags model=model \  # usually one of ['model', 'canary', 'deploy']
+  --tags node=3 \  # the instance number for this model on this host, if you run more than one
+  --tags hostname=mk2 \  # human-readable identifier for this host
+  --tags version=$(git describe) \  # usually the version of your model, using the git tag here
+  --port 5052 \
+  the_service_name -- \  # you should name your service here, likely the name of your model
+uwsgi \
+  --worker-reload-mercy 600 \
+  --http-socket 0.0.0.0:5053 \
+  --wsgi-file detect.py \
+  --master \
+  --processes 1 \
+  --threads 1 \
+  --stats 0.0.0.0:5153 \
+  --callable app
+```
+
+Statistics in the Web UI:
+
+<a href="docs/stats.png"><img src="docs/stats.png" width="570" alt="Model statistics"></a>
