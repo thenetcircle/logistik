@@ -1,19 +1,12 @@
 <template>
   <div class="section">
-    <datatable title="Models" :data="events" :actions="datatableActions">
+    <datatable title="Stats" :data="stats" :actions="datatableActions">
       <p slot="header" class="is-size-5">
-        Models
+        Model Statistics
       </p>
-      <column slot="columns" display="Event" field="event" sortable="true"/>
-      <column slot="columns" display="Name" field="name" sortable="true"/>
-      <column slot="columns" display="Node" field="node" sortable="true"/>
-      <column slot="columns" display="Hostname" field="hostname" sortable="true"/>
-      <column slot="columns" display="Endpoint" field="endpoint" sortable="true"/>
-      <column slot="columns" display="Port" field="port" sortable="true"/>
-      <!--column slot="columns" display="Path" field="path" sortable="true"/-->
       <column slot="columns" display="Requests" field="requests" sortable="true"/>
       <column slot="columns" display="Exceptions" field="exceptions" sortable="true"/>
-      <column slot="columns" display="Uptime" field="running_time" sortable="true"/>
+      <column slot="columns" display="Running Time" field="running_time" sortable="true"/>
       <column slot="columns" display="Status" field="status" sortable="true"/>
       <column slot="columns" display="Load" field="load" sortable="true"/>
     </datatable>
@@ -34,54 +27,40 @@ import doubleCheckDestroy from '@/mixins/doubleCheckDestroy'
 export default {
   mixins: [globalLoading, doubleCheckDestroy],
   components: { Datatable, Column, Modal, Loading, Tooltip },
-  data () {
+  data() {
     return {
-      events: [],
+      stats: [],
       modalOpen: false,
-      datatableActions: [
-        { content: 'Query', handle: this.queryModel, color: 'info' }
-      ],
+      datatableActions: [],
       loading: { name: false, destroying: false }
     }
   },
   computed: {
-    ip() {
-      return this.$route.params.ip
+    identity() {
+      return this.$route.params.identity
     }
   },
-  created () {
+  created() {
   },
   mounted() {
     this.resetModal()
+    this.showGlobalLoading()
     const self = this
 
     console.log('about to fetch')
-    let url = 'http://localhost:5656/api/v1/models'
-    if (self.ip !== undefined) {
-      url += '/ip/' + self.ip
-    }
-
-    console.log(self.$router.params)
-
-    fetch(url)
+    fetch('http://localhost:5656/api/v1/stats/' + self.identity, {method: 'get'})
       .then((response) => {
-          if (response.status !== 200) {
-            console.log('Looks like there was a problem. Status Code: ' +
-              response.status)
-            return
-          }
-
-          response.json().then((data) => {
-            console.log(data.data)
-
-            data.data = data.data.filter((handler) => {
-              return handler.event !== 'UNMAPPED'
-            })
-
-            self.events = data.data
-          })
+        self.hideGlobalLoading()
+        if (response.status !== 200) {
+          console.log('Looks like there was a problem. Status Code: ' + response.status)
+          return
         }
-      )
+
+        response.json().then((data) => {
+          console.log(data.data)
+          self.stats = [data.data]
+        })
+      })
       .catch((err) => {
         console.log('Fetch Error :-S', err)
       })
@@ -109,15 +88,6 @@ export default {
     */
     closeModal () {
       this.modalOpen = false
-    },
-
-    queryModel(model) {
-      this.$router.push({
-        name: 'query',
-        params: {
-          identity: model.identity
-        }
-      })
     }
   }
 }

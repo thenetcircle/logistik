@@ -67,7 +67,8 @@
       td {
         vertical-align: middle;
         white-space: nowrap;
-        font-size: $size-6;
+        font-size: 0.9rem;
+        padding: .1rem .5rem;
 
         @include desktop {
           &:first-child {

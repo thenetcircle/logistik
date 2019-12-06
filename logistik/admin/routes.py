@@ -1,6 +1,7 @@
+import json
 import logging
 import os
-import json
+import socket
 from functools import wraps
 from typing import List
 from typing import Union
@@ -18,6 +19,7 @@ from logistik import environ
 from logistik.config import ConfigKeys
 from logistik.db.reprs.handler import HandlerConf
 from logistik.server import app
+from logistik.utils.exceptions import HandlerNotFoundException
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -78,23 +80,131 @@ def requires_auth(f):
     return decorated
 
 
+def validate_number(view_func):
+    @wraps(view_func)
+    def decorator(*args, **kwargs):
+        number = args[0]
+        if number is None:
+            return api_response(400, message='no number specified')
+
+        try:
+            int(number)
+        except ValueError:
+            return api_response(400, message='not a valid number')
+
+        try:
+            return view_func(*args, **kwargs)
+        except Exception as e:
+            logger.error(f'could not run function: {str(e)}')
+            raise e
+    return decorator
+
+
+def format_handler(handler: HandlerConf) -> dict:
+    info = {
+        'identity': handler.identity,
+        'event': handler.event,
+        'name': handler.name.split('-')[0],
+        'node': handler.node,
+        'endpoint': handler.endpoint,
+        'hostname': handler.hostname,
+        'port': handler.port,
+        'path': handler.path
+    }
+
+    info.update(stats_for_handler(handler.identity))
+    return info
+
+
 @app.route('/api/v1/models')
 def list_models():
     handlers = environ.env.db.get_all_enabled_handlers()
     return api_response(200, [
-        {
-            'identity': handler.identity,
-            'event': handler.event,
-            'name': handler.name,
-            'node': handler.node,
-            'endpoint': handler.endpoint,
-            'hostname': handler.hostname,
-            'port': handler.port,
-            'path': handler.path
-        } for handler in handlers
+        format_handler(handler) for handler in handlers
+        if handler.event != 'UNMAPPED'
     ])
 
 
+@app.route('/api/v1/models/ip/<ip>')
+def list_models_for_ip(ip):
+    handlers = environ.env.db.get_all_enabled_handlers()
+    return api_response(200, [
+        format_handler(handler) for handler in handlers
+        if handler.event != 'UNMAPPED' and handler.endpoint == ip
+    ])
+
+
+@app.route('/api/v1/hosts')
+def list_hosts():
+    handlers = environ.env.db.get_all_enabled_handlers()
+    hosts = list()
+    host_dict = dict()
+
+    for handler in handlers:
+        if handler.event == 'UNMAPPED':
+            continue
+
+        if handler.endpoint not in host_dict:
+            host_dict[handler.endpoint] = list()
+
+        host_dict[handler.endpoint].append(handler)
+
+    for endpoint, host_handlers in host_dict.items():
+        hosts.append({
+            'ip': endpoint,
+            'hostname': host_handlers[0].hostname,
+            'models': len(host_handlers)
+        })
+
+    return api_response(200, hosts)
+
+
+def stats_for_handler(handler_id: int):
+    try:
+        handler = environ.env.db.get_handler_for_identity(handler_id)
+        if handler is None:
+            raise HandlerNotFoundException(handler_id)
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((handler.endpoint, int(handler.port) + 100))
+
+        js = ''
+        while True:
+            data = s.recv(4096)
+            if len(data) < 1:
+                break
+            js += data.decode('utf8', 'ignore')
+
+        dd = json.loads(js)
+        worker = dd['workers'][0]
+    except Exception:
+        worker = {
+            'requests': '',
+            'exceptions': '',
+            'running_time': '',
+            'status': 'no stats'
+        }
+        dd = {'load': ''}
+
+    return {
+        'requests': worker['requests'],
+        'exceptions': worker['exceptions'],
+        'running_time': worker['running_time'],
+        'status': worker['status'],
+        'load': dd['load']
+    }
+
+
+@validate_number
+@app.route('/api/v1/stats/<handler_id>')
+def get_handler_stats(handler_id: str):
+    try:
+        return api_response(200, stats_for_handler(int(handler_id)))
+    except Exception as e:
+        return api_response(500, message=f'could not get stats: {str(e)}')
+
+
+@validate_number
 @app.route('/api/v1/query/<handler_id>', methods=['POST'])
 def query_model(handler_id):
     try:

@@ -12,8 +12,9 @@ export default {
       id: 1,
       label: 'Logistik',
       children: [
-        { name: 'home', label: 'Models' }
+        { name: 'home', label: 'Models' },
+        { name: 'hosts', label: 'Hosts' }
       ]
     }
   ]
-}
+};

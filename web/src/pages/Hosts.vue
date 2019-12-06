@@ -2,20 +2,11 @@
   <div class="section">
     <datatable title="Models" :data="events" :actions="datatableActions">
       <p slot="header" class="is-size-5">
-        Models
+        Hosts
       </p>
-      <column slot="columns" display="Event" field="event" sortable="true"/>
-      <column slot="columns" display="Name" field="name" sortable="true"/>
-      <column slot="columns" display="Node" field="node" sortable="true"/>
       <column slot="columns" display="Hostname" field="hostname" sortable="true"/>
-      <column slot="columns" display="Endpoint" field="endpoint" sortable="true"/>
-      <column slot="columns" display="Port" field="port" sortable="true"/>
-      <!--column slot="columns" display="Path" field="path" sortable="true"/-->
-      <column slot="columns" display="Requests" field="requests" sortable="true"/>
-      <column slot="columns" display="Exceptions" field="exceptions" sortable="true"/>
-      <column slot="columns" display="Uptime" field="running_time" sortable="true"/>
-      <column slot="columns" display="Status" field="status" sortable="true"/>
-      <column slot="columns" display="Load" field="load" sortable="true"/>
+      <column slot="columns" display="IP" field="ip" sortable="true"/>
+      <column slot="columns" display="Models" field="models" sortable="true"/>
     </datatable>
   </div>
 </template>
@@ -39,15 +30,12 @@ export default {
       events: [],
       modalOpen: false,
       datatableActions: [
-        { content: 'Query', handle: this.queryModel, color: 'info' }
+        { content: 'Show models', handle: this.showModels, color: 'info' }
       ],
       loading: { name: false, destroying: false }
     }
   },
   computed: {
-    ip() {
-      return this.$route.params.ip
-    }
   },
   created () {
   },
@@ -56,14 +44,7 @@ export default {
     const self = this
 
     console.log('about to fetch')
-    let url = 'http://localhost:5656/api/v1/models'
-    if (self.ip !== undefined) {
-      url += '/ip/' + self.ip
-    }
-
-    console.log(self.$router.params)
-
-    fetch(url)
+    fetch('http://localhost:5656/api/v1/hosts')
       .then((response) => {
           if (response.status !== 200) {
             console.log('Looks like there was a problem. Status Code: ' +
@@ -73,11 +54,6 @@ export default {
 
           response.json().then((data) => {
             console.log(data.data)
-
-            data.data = data.data.filter((handler) => {
-              return handler.event !== 'UNMAPPED'
-            })
-
             self.events = data.data
           })
         }
@@ -111,11 +87,14 @@ export default {
       this.modalOpen = false
     },
 
-    queryModel(model) {
+    /**
+     * Show model info
+     */
+    showModels(host) {
       this.$router.push({
-        name: 'query',
+        name: 'home',
         params: {
-          identity: model.identity
+          ip: host.ip
         }
       })
     }
