@@ -56,8 +56,8 @@ gunicorn \  # this is whatever command is used to start your model, here we're u
   app:app
 ```
 
-If you use uWSGI instead of Gunicorn and exposes a http stats server, logistik will make use of it in the Web UI 
-(assuming the stats server is running on 100 port numbers higher than the model bind port):
+If you use uWSGI instead of Gunicorn and expose a http stats server, Logistik will make use of it in the Web UI 
+(it will assuming the stats server is running on 100 port numbers higher than the model bind port):
 
 ```bash
 #!/bin/bash
