@@ -192,7 +192,7 @@ def stats_for_handler(handler_id: int):
             return ''
 
         diff = dt.utcnow() - dt.utcfromtimestamp(int(ts))
-        total_seconds = diff.seconds
+        total_seconds = diff.total_seconds()
         days = int(total_seconds / (60 * 60 * 24))
         hours = int((total_seconds - days*60*60*24) / (60*60))
         minutes = int((total_seconds - days*60*60*24 - hours*60*60) / 60)
