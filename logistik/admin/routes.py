@@ -37,7 +37,7 @@ def is_blank(s: str):
     return s is None or len(s.strip()) == 0
 
 
-def api_response(code, data: Union[dict, List[dict]] = None, message: Union[dict, str] = None):
+def api_response(code, data: Union[dict, List[dict], str] = None, message: Union[dict, str] = None):
     if data is None:
         data = dict()
     if message is None:
@@ -224,13 +224,8 @@ def get_handler_stats(handler_id: str):
 @validate_number
 @app.route('/api/v1/query/<handler_id>', methods=['POST'])
 def query_model(handler_id):
-    try:
-        int(handler_id)
-    except ValueError:
-        return api_response(400, message='not a valid id')
-
     handler = environ.env.db.get_handler_for_identity(handler_id)
-    url = f'http://{handler.endpoint}:{handler.port}/{handler.path}'
+    url = f'http://{handler.endpoint}:{handler.port}{handler.path}'
 
     data = json.loads(str(request.data, 'utf-8'))
 
@@ -241,6 +236,27 @@ def query_model(handler_id):
     logger.info(response)
 
     return api_response(response.status_code, response.json())
+
+
+@validate_number
+@app.route('/api/v1/logs/<handler_id>', methods=['GET'])
+def model_logs(handler_id):
+    try:
+        handler = environ.env.db.get_handler_for_identity(handler_id)
+    except Exception as e:
+        logger.error(f'could not get handler: {str(e)}')
+        return api_response(400, message='no such handler')
+
+    if handler is None:
+        return api_response(400, message='no such handler')
+
+    response = requests.get(url=f'http://{handler.endpoint}:{handler.port}/log')
+
+    lines = list()
+    for line in response.json():
+        lines.append(line.replace('\n', ''))
+
+    return api_response(response.status_code, '\n'.join(lines))
 
 
 @app.route('/login')

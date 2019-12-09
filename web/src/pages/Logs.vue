@@ -1,8 +1,11 @@
 <template>
-  <div class="section">
-    <span v-for="(attachment, i) in response" v-bind:key="i">
-      <span>{{ attachment.objectType }}</span>: <span>{{ attachment.content }}</span><br />
-    </span>
+  <div class="section" style="text-align:left">
+    <p slot="header" class="is-size-5">
+      Model logs
+    </p>
+    <pre>
+      {{ lines }}
+    </pre>
   </div>
 </template>
 
@@ -22,7 +25,7 @@ export default {
   components: { Datatable, Column, Modal, Loading, Tooltip },
   data() {
     return {
-      response: [],
+      lines: [],
       modalOpen: false,
       datatableActions: [],
       loading: { name: false, destroying: false }
@@ -40,29 +43,7 @@ export default {
     this.showGlobalLoading()
     const self = this
 
-    fetch('http://' + process.env.ROOT_API + '/api/v1/query/' + self.identity, {
-        method: 'post',
-        body: JSON.stringify({
-          'version': '2.0',
-          'actor': {
-            'id': Math.floor(Math.random() * 1000000).toString(),
-            'objectType': 'user'
-          },
-          'object': {
-            'id': Math.floor(Math.random() * 1000000).toString(),
-            'objectType': 'image',
-            'url': 'http://8.bild.poppen.lab:7080/fsk16/8/D/8/1971-8D82A3763C66A5FA5A1078543B84EFB0.jpg'
-          },
-          'provider': {
-            'id': 'popcorn',
-            'objectType': 'community'
-          },
-          'published': '2019-12-05T08:32:23Z',
-          'title': 'image.detect',
-          'verb': 'detect',
-          'id': '76a734bb-60c3-4a78-8a34-d9a1d27c1237'
-        })
-      })
+    fetch('http://' + process.env.ROOT_API + '/api/v1/logs/' + self.identity, {method: 'get'})
       .then((response) => {
         self.hideGlobalLoading()
         if (response.status !== 200) {
@@ -71,10 +52,7 @@ export default {
         }
 
         response.json().then((data) => {
-          if (data.data.object === undefined || data.data.object.attachments === undefined) {
-            return
-          }
-          self.response = data.data.object.attachments
+          self.lines = data.data
         })
       })
       .catch((err) => {

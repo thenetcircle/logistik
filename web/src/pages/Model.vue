@@ -39,7 +39,8 @@ export default {
       events: [],
       modalOpen: false,
       datatableActions: [
-        { content: 'Query', handle: this.queryModel, color: 'info' }
+        { content: 'Query', handle: this.queryModel, color: 'info' },
+        { content: 'Logs', handle: this.modelLogs, color: 'info' }
       ],
       loading: { name: false, destroying: false }
     }
@@ -105,6 +106,15 @@ export default {
     queryModel(model) {
       this.$router.push({
         name: 'query',
+        params: {
+          identity: model.identity
+        }
+      })
+    },
+
+    modelLogs(model) {
+      this.$router.push({
+        name: 'logs',
         params: {
           identity: model.identity
         }

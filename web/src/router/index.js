@@ -5,6 +5,7 @@ import Model from '@/pages/Model'
 import Stats from '@/pages/Stats'
 import Query from '@/pages/Query'
 import Hosts from '@/pages/Hosts'
+import Logs from '@/pages/Logs'
 import config from '@/config'
 
 Vue.use(Router)
@@ -19,7 +20,8 @@ const router = new Router({
         { path: config.base, name: 'home', component: Model },
         { path: 'query', name: 'query', component: Query },
         { path: 'stats', name: 'stats', component: Stats },
-        { path: 'hosts', name: 'hosts', component: Hosts }
+        { path: 'hosts', name: 'hosts', component: Hosts },
+        { path: 'logs', name: 'logs', component: Logs }
       ]
     },
     {
