@@ -40,7 +40,6 @@ export default {
     this.showGlobalLoading()
     const self = this
 
-    console.log('about to fetch')
     fetch('http://' + process.env.ROOT_API + '/api/v1/query/' + self.identity, {
         method: 'post',
         body: JSON.stringify({

@@ -43,8 +43,7 @@ export default {
     this.resetModal()
     const self = this
 
-    console.log('about to fetch')
-    fetch('http://' + process.env.BACKEND_URL + '/api/v1/hosts')
+    fetch('http://' + process.env.ROOT_API + '/api/v1/hosts')
       .then((response) => {
           if (response.status !== 200) {
             console.log('Looks like there was a problem. Status Code: ' +
@@ -53,7 +52,6 @@ export default {
           }
 
           response.json().then((data) => {
-            console.log(data.data)
             self.events = data.data
           })
         }

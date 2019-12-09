@@ -69,10 +69,6 @@ export default {
           }
 
           response.json().then((data) => {
-            data.data = data.data.filter((handler) => {
-              return handler.event !== 'UNMAPPED'
-            })
-
             self.events = data.data
           })
         }
