@@ -3,8 +3,10 @@
     <p slot="header" class="is-size-5">
       Model logs
     </p>
+    <input type="text" v-model="search" placeholder="Filter..."/>
     <pre>
-      {{ lines }}
+      <template v-for="line in filteredLines">{{ line }}
+      </template>
     </pre>
   </div>
 </template>
@@ -25,6 +27,7 @@ export default {
   components: { Datatable, Column, Modal, Loading, Tooltip },
   data() {
     return {
+      search: '',
       lines: [],
       modalOpen: false,
       datatableActions: [],
@@ -34,6 +37,11 @@ export default {
   computed: {
     identity() {
       return this.$route.params.identity
+    },
+    filteredLines() {
+      return this.lines.filter(line => {
+        return line.toLowerCase().includes(this.search.toLowerCase())
+      })
     }
   },
   created() {
@@ -52,7 +60,7 @@ export default {
         }
 
         response.json().then((data) => {
-          self.lines = data.data
+          self.lines = data.data.split('\n')
         })
       })
       .catch((err) => {

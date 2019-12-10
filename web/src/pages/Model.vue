@@ -12,7 +12,7 @@
       <column slot="columns" display="Port" field="port" sortable="true"/>
       <!--column slot="columns" display="Path" field="path" sortable="true"/-->
       <column slot="columns" display="Requests" field="requests" sortable="true"/>
-      <column slot="columns" display="Exceptions" field="exceptions" sortable="true"/>
+      <!--column slot="columns" display="Exceptions" field="exceptions" sortable="true"/-->
       <column slot="columns" display="Uptime" field="running_time" sortable="true"/>
       <column slot="columns" display="Status" field="status" sortable="true"/>
       <column slot="columns" display="Load" field="load" sortable="true"/>
