@@ -89,15 +89,19 @@ class BaseHandler(IHandler, IPlugin, ABC):
             self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.RETRIES_EXCEEDED, error_msg
 
+        if error_code == ErrorCodes.NO_CONTENT:
+            return ErrorCodes.OK, None
+
+        # need a response, unless service returned 304 NO CONTENT
         if response is None:
             error_msg = 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code)
             self.logger.warning(error_msg)
             self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.HANDLER_ERROR, error_msg
 
-        elif status_code == BaseHandler.OK:
+        if status_code == BaseHandler.OK:
             self.env.kafka_writer.publish(self.conf, response)
-            return ErrorCodes.OK, response
+            return ErrorCodes.OK, None
 
         else:
             error_msg = 'not publishing response since request failed: {}'.format(response)
@@ -117,7 +121,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
             self.env.capture_exception(sys.exc_info())
             return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)
 
-        if error_code == ErrorCodes.OK:
+        if error_code in {ErrorCodes.OK, ErrorCodes.NO_CONTENT}:
             return BaseHandler.OK, ErrorCodes.OK, response
         else:
             self.logger.error('handler {} failed with code: {}, response: {}'.format(

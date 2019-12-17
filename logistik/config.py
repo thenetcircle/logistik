@@ -1,16 +1,31 @@
 from enum import Enum
 
-from typing import List
-
 
 class ErrorCodes(Enum):
+    """
+    It indicates that the REST API successfully carried out whatever action the client
+    requested and that no more specific code in the 2xx series is appropriate.
+    """
     OK = 200
+
+    """
+    The 204 status code is usually sent out in response to a PUT, POST, or DELETE request
+    when the REST API declines to send back any status message or representation in the
+    response message’s body.
+    """
+    NO_CONTENT = 204
+
     UNKNOWN_ERROR = 250
     HANDLER_ERROR = 260
     HANDLER_DISABLED = 270
 
     RETRIES_EXCEEDED = 300
 
+    """
+    The 404 error status code indicates that the REST API can’t map the client’s URI to 
+    a resource but may be available in the future. Subsequent requests by the client are 
+    permissible.
+    """
     NOT_FOUND = 404
 
     MISSING_ACTOR_ID = 500

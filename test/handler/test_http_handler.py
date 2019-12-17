@@ -52,7 +52,7 @@ class HttpHandlerTest(TestCase):
         act = activitystreams.parse(data)
         response = self.handler.handle(data, act)
 
-        self.assertEqual(response[1].status_code, 200)
+        self.assertIsNone(response[1])
         self.assertEqual(response[0], ErrorCodes.OK)
 
     def test_handle_not_found(self):

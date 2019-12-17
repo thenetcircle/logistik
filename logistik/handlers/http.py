@@ -105,11 +105,16 @@ class HttpHandler(BaseHandler):
             json=data, headers=self.json_header
         )
 
-        if response.status_code == 200:
+        if response.status_code == ErrorCodes.OK.value:
             return ErrorCodes.OK, response
-        elif response.status_code == 404:
+
+        elif response.status_code == ErrorCodes.NO_CONTENT.value:
+            return ErrorCodes.NO_CONTENT, None
+
+        elif response.status_code == ErrorCodes.NOT_FOUND.value:
             self.logger.error('shutting down handler, received 404 for conf: {}'.format(self.conf))
             self.stop()
             return ErrorCodes.NOT_FOUND, response
+
         else:
             return ErrorCodes.UNKNOWN_ERROR, response
