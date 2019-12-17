@@ -92,7 +92,6 @@ class BaseHandler(IHandler, IPlugin, ABC):
         if error_code == ErrorCodes.NO_CONTENT:
             return ErrorCodes.OK, None
 
-        # need a response, unless service returned 304 NO CONTENT
         if response is None:
             error_msg = 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code)
             self.logger.warning(error_msg)
@@ -122,7 +121,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
             return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)
 
         if error_code in {ErrorCodes.OK, ErrorCodes.NO_CONTENT}:
-            return BaseHandler.OK, ErrorCodes.OK, response
+            return BaseHandler.OK, error_code, response
         else:
             self.logger.error('handler {} failed with code: {}, response: {}'.format(
                 str(self), str(error_code), str(response)))
