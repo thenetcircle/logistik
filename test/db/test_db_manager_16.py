@@ -52,6 +52,7 @@ class TestDbManager(TestCase):
             reader_type = environ.env.dbman.Column(environ.env.dbman.String(), unique=False, nullable=False)
             reader_endpoint = environ.env.dbman.Column(environ.env.dbman.String(), unique=False, nullable=True)
             consul_service_id = environ.env.dbman.Column(environ.env.dbman.String(), unique=False, nullable=True)
+            environment = environ.env.dbman.Column(environ.env.dbman.String(), unique=False, nullable=True)
 
         with environ.env.app.app_context():
             environ.env.dbman.create_all()

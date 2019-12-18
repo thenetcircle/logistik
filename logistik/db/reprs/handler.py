@@ -8,7 +8,8 @@ class HandlerConf(object):
                  service_id=None, tags=None, return_to=None, port=None,
                  hostname=None, startup=None, traffic=None, retired=None,
                  reader_type=None, reader_endpoint=None, event_display_name=None,
-                 consul_service_id=None, group_id=None, failed_topic=None):
+                 consul_service_id=None, group_id=None, failed_topic=None,
+                 environment=None):
         self.identity: int = identity
         self.name: str = name
         self.event: str = event
@@ -35,6 +36,7 @@ class HandlerConf(object):
         self.reader_type: str = reader_type
         self.reader_endpoint: str = reader_endpoint
         self.consul_service_id: str = consul_service_id
+        self.environment: str = environment
 
     def node_id(self):
         return '{}-{}-{}-{}'.format(
@@ -74,7 +76,8 @@ class HandlerConf(object):
             service_id={}, tags={}, return_to={}, port={}, 
             hostname={}, startup={}, traffic={}, retired={}, 
             reader_type={}, reader_endpoint={}, event_display_name={}, 
-            consul_service_id={}, group_id={}, failed_topic={}>
+            consul_service_id={}, group_id={}, failed_topic={}, 
+            environment={}>
         """
 
         return repr_string.format(
@@ -83,7 +86,7 @@ class HandlerConf(object):
             self.timeout, self.retries, self.service_id, self.tags, self.return_to,
             self.port, self.hostname, self.startup, self.traffic, self.retired,
             self.reader_type, self.reader_endpoint, self.event_display_name,
-            self.consul_service_id, self.group_id, self.failed_topic
+            self.consul_service_id, self.group_id, self.failed_topic, self.environment
         )
 
     def to_json(self):
@@ -115,7 +118,8 @@ class HandlerConf(object):
             'return_to': self.return_to or '',
             'failed_topic': self.failed_topic or '',
             'consul_service_id': self.consul_service_id or '',
-            'group_id': self.group_id
+            'group_id': self.group_id,
+            'environment': self.environment,
         }
 
         if self.startup is not None:

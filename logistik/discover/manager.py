@@ -218,6 +218,7 @@ class DiscoveryService(BaseDiscoveryService):
         handler.return_to = tags.get('returnto', None) or handler.return_to
         handler.reader_type = tags.get('readertype', handler.reader_type) or 'kafka'
         handler.reader_endpoint = tags.get('readerendpoint', None) or handler.reader_endpoint
+        handler.environment = tags.get('environment', None) or handler.environment
         handler.model_type = ModelTypes.MODEL
         handler.node = node
         handler.consul_service_id = c_id

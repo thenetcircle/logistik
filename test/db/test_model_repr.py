@@ -31,7 +31,8 @@ class ModelReprTest(TestCase):
             traffic='traffic',
             reader_type='reader_type',
             reader_endpoint='reader_endpoint',
-            consul_service_id='consul_service_id'
+            consul_service_id='consul_service_id',
+            environment='environment',
         )
 
     def test_entity_has_all_reprs(self):

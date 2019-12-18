@@ -68,7 +68,11 @@ class HandlersManager(IHandlersManager):
             self.handlers[node_id][handler_type.name] = handler
 
     def query_model_for_info(self, handler_conf: HandlerConf):
-        url = f'http://{handler_conf.endpoint}:{handler_conf.port}/info'
+        env_name = ''
+        if handler_conf.environment is not None:
+            env_name = handler_conf.environment
+
+        url = f'http://{handler_conf.endpoint}:{handler_conf.port}/info/{env_name}'
 
         try:
             response = self.requester.request(method='GET', url=url)
