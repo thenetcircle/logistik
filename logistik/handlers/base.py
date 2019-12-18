@@ -128,7 +128,8 @@ class BaseHandler(IHandler, IPlugin, ABC):
         if error_code in {
             ErrorCodes.OK,
             ErrorCodes.NO_CONTENT,
-            ErrorCodes.DUPLICATE_REQUEST
+            ErrorCodes.DUPLICATE_REQUEST,
+            ErrorCodes.NOT_FOUND
         }:
             return BaseHandler.OK, error_code, response
         else:
