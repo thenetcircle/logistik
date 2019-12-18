@@ -105,14 +105,4 @@ class HttpHandler(BaseHandler):
             json=data, headers=self.json_header
         )
 
-        if response.status_code == ErrorCodes.OK.value:
-            return ErrorCodes.OK, response
-
-        elif response.status_code == ErrorCodes.NO_CONTENT.value:
-            return ErrorCodes.NO_CONTENT, None
-
-        elif response.status_code == ErrorCodes.NOT_FOUND.value:
-            return ErrorCodes.NOT_FOUND, response
-
-        else:
-            return ErrorCodes.UNKNOWN_ERROR, response
+        return response.status_code, response

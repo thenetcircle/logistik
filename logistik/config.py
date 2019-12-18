@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ErrorCodes(Enum):
+class ErrorCodes:
     """
     It indicates that the REST API successfully carried out whatever action the client
     requested and that no more specific code in the 2xx series is appropriate.
