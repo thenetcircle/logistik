@@ -125,7 +125,11 @@ class BaseHandler(IHandler, IPlugin, ABC):
             self.env.capture_exception(sys.exc_info())
             return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)
 
-        if error_code in {ErrorCodes.OK, ErrorCodes.NO_CONTENT}:
+        if error_code in {
+            ErrorCodes.OK,
+            ErrorCodes.NO_CONTENT,
+            ErrorCodes.DUPLICATE_REQUEST
+        }:
             return BaseHandler.OK, error_code, response
         else:
             self.logger.error('handler {} failed with code: {}, response: {}'.format(

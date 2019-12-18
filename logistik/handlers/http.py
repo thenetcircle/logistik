@@ -112,8 +112,6 @@ class HttpHandler(BaseHandler):
             return ErrorCodes.NO_CONTENT, None
 
         elif response.status_code == ErrorCodes.NOT_FOUND.value:
-            self.logger.error('shutting down handler, received 404 for conf: {}'.format(self.conf))
-            self.stop()
             return ErrorCodes.NOT_FOUND, response
 
         else:
