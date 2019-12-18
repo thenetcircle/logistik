@@ -28,6 +28,11 @@ class ErrorCodes(Enum):
     """
     NOT_FOUND = 404
 
+    """
+    If a model returns a 422 code it means it has already processed this event.
+    """
+    DUPLICATE_REQUEST = 422
+
     MISSING_ACTOR_ID = 500
     MISSING_OBJECT_ID = 501
     MISSING_TARGET_ID = 502

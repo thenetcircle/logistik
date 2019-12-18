@@ -89,7 +89,12 @@ class BaseHandler(IHandler, IPlugin, ABC):
             self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.RETRIES_EXCEEDED, error_msg
 
+        # models can choose to ignore requests
         if error_code == ErrorCodes.NO_CONTENT:
+            return ErrorCodes.OK, None
+
+        # models can return this code if they've already processed this request
+        if error_code == ErrorCodes.DUPLICATE_REQUEST:
             return ErrorCodes.OK, None
 
         if response is None:
