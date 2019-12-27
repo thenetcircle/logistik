@@ -52,7 +52,7 @@ class HttpHandlerTest(TestCase):
         act = activitystreams.parse(data)
         response = self.handler.handle(data, act)
 
-        self.assertIsNone(response[1])
+        self.assertEqual(response[1].status_code, ErrorCodes.OK)
         self.assertEqual(response[0], ErrorCodes.OK)
 
     def test_handle_not_found(self):
@@ -62,8 +62,8 @@ class HttpHandlerTest(TestCase):
         act = activitystreams.parse(data)
         response = self.handler.handle(data, act)
 
-        self.assertEqual(response[1].status_code, ErrorCodes.NOT_FOUND.value)
-        self.assertEqual(response[0], ErrorCodes.HANDLER_ERROR)
+        self.assertEqual(response[1].status_code, ErrorCodes.NOT_FOUND)
+        self.assertEqual(response[0], ErrorCodes.OK)
 
     def test_handle_unknown(self):
         self.handler.requester = MockRequester(MockResponse(status_code=123))

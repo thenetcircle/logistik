@@ -117,7 +117,7 @@ class BaseHandler(IHandler, IPlugin, ABC):
 
         if status_code == BaseHandler.OK:
             self.env.kafka_writer.publish(self.conf, response)
-            return ErrorCodes.OK, None
+            return ErrorCodes.OK, response
 
         else:
             error_msg = f"not publishing response since request failed: {response}"
