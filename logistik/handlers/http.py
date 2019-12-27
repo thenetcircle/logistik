@@ -20,19 +20,19 @@ class HttpHandler(BaseHandler):
         self.handler_type: HandlerType = handler_type
         self.requester = Requester()
         self.method: str = None
-        self.json_header = {'Context-Type': 'application/json'}
-        self.schema = 'http://'
+        self.json_header = {"Context-Type": "application/json"}
+        self.schema = "http://"
         self.logger = logging.getLogger(__name__)
 
-        log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
-        if log_level == 'DEBUG':
+        log_level = os.environ.get("LOG_LEVEL", "DEBUG")
+        if log_level == "DEBUG":
             log_level = logging.DEBUG
         else:
             log_level = logging.INFO
 
         self.logger.setLevel(log_level)
         self.enabled = False
-        self.name = ''
+        self.name = ""
 
     def __str__(self):
         return HttpHandler.__class__.__name__
@@ -56,37 +56,35 @@ class HttpHandler(BaseHandler):
         self.conf = conf
 
         if self.method is None or len(self.method.strip()) == 0:
-            self.method = 'POST'
+            self.method = "POST"
 
-        separator = ''
-        if self.path is not None and self.path[0] != '/':
-            separator = '/'
+        separator = ""
+        if self.path is not None and self.path[0] != "/":
+            separator = "/"
 
-        self.url = '{}{}:{}/{}{}'.format(
-            self.schema,
-            self.endpoint,
-            self.port,
-            separator,
-            self.path
+        self.url = "{}{}:{}/{}{}".format(
+            self.schema, self.endpoint, self.port, separator, self.path
         )
-        self.logger.debug('configured {} for url {}'.format(str(self), self.url))
+        self.logger.debug(f"configured {str(self)} for url {self.url}")
 
     def setup(self, env) -> None:
         self.env = env
         self.logger = logging.getLogger(__name__)
         self.logger.info(self.conf)
 
-        if self.conf.reader_type == 'kafka':
+        reader_type = self.conf.reader_type
+
+        if reader_type == "kafka":
             self.reader = KafkaReader(env, self.conf, self, self.handler_type)
             self.reader_thread = eventlet.spawn(self.reader.run)
-        elif self.conf.reader_type == 'rest':
+        elif reader_type == "rest":
             self.reader = RestReader(env, self.conf, self)
             self.reader_thread = eventlet.spawn_after(func=self.reader.run, seconds=1)
-        elif self.conf.reader_type == 'mock':
+        elif reader_type == "mock":
             self.reader = MockReader(env, self.conf, self)
             self.reader_thread = eventlet.spawn_after(func=self.reader.run, seconds=1)
         else:
-            raise ValueError('unknown reader type {}'.format(self.conf.reader_type))
+            raise ValueError(f"unknown reader type {reader_type}")
 
         self.enabled = True
 
@@ -97,12 +95,13 @@ class HttpHandler(BaseHandler):
         self.reader.stop()
 
     def handle_once(self, data: dict, _: Activity, **kwargs) -> tuple:
-        self.logger.debug(f'data to send: {data}')
-        self.logger.debug(f'method={self.method}, url={self.url}, json=<data>, headers={self.json_header}')
+        self.logger.debug(f"data to send: {data}")
+        self.logger.debug(
+            f"method={self.method}, url={self.url}, json=<data>, headers={self.json_header}"
+        )
 
         response = self.requester.request(
-            method=self.method, url=self.url,
-            json=data, headers=self.json_header
+            method=self.method, url=self.url, json=data, headers=self.json_header
         )
 
         return response.status_code, response

@@ -21,23 +21,26 @@ class HandlersManager(IHandlersManager):
     def get_handlers(self) -> list:
         def format_config(_node_id, config):
             _conf = {
-                key: config.get(key, '') for key in [
-                    'bootstrap_servers',
-                    'group_id',
-                    'auto_offset_reset',
-                    'enable_auto_commit',
-                    'max_poll_records',
-                    'max_poll_interval_ms',
-                    'session_timeout_ms'
+                key: config.get(key, "")
+                for key in [
+                    "bootstrap_servers",
+                    "group_id",
+                    "auto_offset_reset",
+                    "enable_auto_commit",
+                    "max_poll_records",
+                    "max_poll_interval_ms",
+                    "session_timeout_ms",
                 ]
             }
-            _conf['node_id'] = _node_id
+            _conf["node_id"] = _node_id
             return _conf
 
         return [
             format_config(
                 node_id,
-                self.handlers[node_id][self.env.handler_types[0].name].reader.get_consumer_config()
+                self.handlers[node_id][
+                    self.env.handler_types[0].name
+                ].reader.get_consumer_config(),
             )
             for node_id in self.handlers
         ]
@@ -45,7 +48,7 @@ class HandlersManager(IHandlersManager):
     def add_handler(self, handler_conf: HandlerConf):
         node_id = handler_conf.node_id()
 
-        if handler_conf.event == 'UNMAPPED':
+        if handler_conf.event == "UNMAPPED":
             try:
                 self.query_model_for_info(handler_conf)
             except QueryException:
@@ -53,29 +56,33 @@ class HandlersManager(IHandlersManager):
                 return
 
         if handler_conf.model_type is None:
-            self.logger.info('not adding handler for empty model type with node id "{}"'.format(node_id))
+            self.logger.info(
+                f'not adding handler for empty model type with node id "{node_id}"'
+            )
             return
 
         if node_id in self.handlers:
             return
 
-        self.logger.info('adding handler for node id "{}"'.format(node_id))
+        self.logger.info(f'adding handler for node id "{node_id}"')
         from logistik.handlers.http import HttpHandler
 
         self.handlers[node_id] = dict()
         for handler_type in self.env.handler_types:
-            handler = HttpHandler.create(self.env, handler_conf, handler_type=handler_type)
+            handler = HttpHandler.create(
+                self.env, handler_conf, handler_type=handler_type
+            )
             self.handlers[node_id][handler_type.name] = handler
 
     def query_model_for_info(self, handler_conf: HandlerConf):
-        env_name = ''
+        env_name = ""
         if handler_conf.environment is not None:
             env_name = handler_conf.environment
 
-        url = f'http://{handler_conf.endpoint}:{handler_conf.port}/info/{env_name}'
+        url = f"http://{handler_conf.endpoint}:{handler_conf.port}/info/{env_name}"
 
         try:
-            response = self.requester.request(method='GET', url=url)
+            response = self.requester.request(method="GET", url=url)
         except Exception as e:
             # likely the model is offline
             raise QueryException(e)
@@ -84,42 +91,52 @@ class HandlersManager(IHandlersManager):
             # likely doesn't implement the query interface
             raise QueryException(response.status_code)
 
-        fields = ['return_to', 'event', 'method', 'retries', 'timeout', 'group_id', 'path', 'failed_topic']
+        fields = [
+            "return_to",
+            "event",
+            "method",
+            "retries",
+            "timeout",
+            "group_id",
+            "path",
+            "failed_topic",
+        ]
         json_response = response.json()
 
         try:
             for field in fields:
                 self.update_handler_value(handler_conf, json_response, field)
         except Exception as e:
-            self.logger.error(f'could not update fields on handler with node_id {handler_conf.node_id()}: {str(e)}')
+            self.logger.error(
+                f"could not update fields on handler with node_id {handler_conf.node_id()}: {str(e)}"
+            )
             raise QueryException(e)
 
         self.env.db.update_handler(handler_conf)
 
-    def update_handler_value(self, handler_conf: HandlerConf, json_response: dict, field: str):
+    def update_handler_value(
+        self, handler_conf: HandlerConf, json_response: dict, field: str
+    ):
         if field not in json_response:
             return
 
         original = handler_conf.__getattribute__(field)
         updated = json_response.get(field)
 
-        field_defaults = {
-            'retries': 1,
-            'timeout': 0
-        }
+        field_defaults = {"retries": 1, "timeout": 0}
 
         if field in field_defaults.keys():
             try:
                 updated = int(float(updated))
             except ValueError:
-                self.logger.warning('invalid value for "{}": "{}", will use default value of {}'.format(
-                    field, updated, field_defaults[field])
+                self.logger.warning(
+                    f'invalid value for "{field}": "{updated}", using default: {field_defaults[field]}'
                 )
                 updated = field_defaults[field]
         elif type(updated) != str:
-            self.logger.warning('invalid value for "{}": "{}", not of type str but of "{}"'.format(
-                field, updated, type(updated)
-            ))
+            self.logger.warning(
+                f'invalid value for "{field}": "{updated}", not of type str but of "{type(updated)}"'
+            )
             return
 
         self.logger.info(f'updating field "{field}" from "{original}" to "{updated}"')

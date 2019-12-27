@@ -40,7 +40,9 @@ class BaseHandler(IHandler, IPlugin, ABC):
         self.reader = None
         self.reader_thread: GreenThread = None
 
-    def try_to_handle(self, data: dict, activity: Activity) -> (ErrorCodes, Union[None, Response]):
+    def try_to_handle(
+        self, data: dict, activity: Activity
+    ) -> (ErrorCodes, Union[None, Response]):
         for i in range(self.n_retries):
             try:
                 before = time.perf_counter()
@@ -48,15 +50,17 @@ class BaseHandler(IHandler, IPlugin, ABC):
 
                 if error_code == ErrorCodes.OK:
                     after = time.perf_counter()
-                    diff = (after-before) * 1000
+                    diff = (after - before) * 1000
 
                     key = StatsKeys.handler_timing(self.conf.node_id())
                     self.env.stats.timing(key, diff)
 
                 return error_code, response
             except Exception as e:
-                self.logger.error('attempt {}/{} failed for endpoint {}, error was: {}'.format(
-                    str(i+1), self.n_retries, self.endpoint, str(e))
+                self.logger.error(
+                    "attempt {}/{} failed for endpoint {}, error was: {}".format(
+                        str(i + 1), self.n_retries, self.endpoint, str(e)
+                    )
                 )
                 self.env.capture_exception(sys.exc_info())
 
@@ -71,20 +75,26 @@ class BaseHandler(IHandler, IPlugin, ABC):
         traffic = int(self.conf.traffic * 100)
 
         if r > traffic:
-            self.logger.debug('dice shows {}, traffic is {}, skipping event'.format(r, traffic))
+            self.logger.debug(
+                "dice shows {}, traffic is {}, skipping event".format(r, traffic)
+            )
             return True
 
-        self.logger.debug('dice shows {}, traffic is {}, processing event'.format(r, traffic))
+        self.logger.debug(
+            "dice shows {}, traffic is {}, processing event".format(r, traffic)
+        )
         return False
 
     def handle(self, data: dict, activity: Activity):
         if self.is_canary_and_should_skip():
-            return ErrorCodes.OK, 'skipped, canary'
+            return ErrorCodes.OK, "skipped, canary"
 
-        status_code, error_code, response = self.handle_and_return_response(data, activity)
+        status_code, error_code, response = self.handle_and_return_response(
+            data, activity
+        )
 
         if error_code == ErrorCodes.RETRIES_EXCEEDED:
-            error_msg = 'exceeded max retries, disabling handler'
+            error_msg = "exceeded max retries, disabling handler"
             self.logger.info(error_msg)
             self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.RETRIES_EXCEEDED, error_msg
@@ -98,7 +108,9 @@ class BaseHandler(IHandler, IPlugin, ABC):
             return ErrorCodes.OK, None
 
         if response is None:
-            error_msg = 'empty response for handling event ID "{}": error_code={}'.format(activity.id, error_code)
+            error_msg = (
+                f'empty response event ID "{activity.id}": error_code={error_code}'
+            )
             self.logger.warning(error_msg)
             self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.HANDLER_ERROR, error_msg
@@ -108,33 +120,40 @@ class BaseHandler(IHandler, IPlugin, ABC):
             return ErrorCodes.OK, None
 
         else:
-            error_msg = 'not publishing response since request failed: {}'.format(response)
+            error_msg = f"not publishing response since request failed: {response}"
             self.logger.error(error_msg)
             self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.HANDLER_ERROR, response
 
-    def handle_and_return_response(self, data: dict, activity: Activity) -> (bool, str, Response):
+    def handle_and_return_response(
+        self, data: dict, activity: Activity
+    ) -> (bool, str, Response):
         if not self.enabled:
             return BaseHandler.FAIL, ErrorCodes.HANDLER_DISABLED, None
 
         try:
             error_code, response = self.try_to_handle(data, activity)
         except Exception as e:
-            self.logger.error('could not execute handler {}: {}'.format(self.name, str(e)))
+            self.logger.error(f"could not execute handler {self.name}: {str(e)}")
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
-            return BaseHandler.FAIL, ErrorCodes.HANDLER_ERROR, 'could not execute handler {}'.format(self.name)
+            return (
+                BaseHandler.FAIL,
+                ErrorCodes.HANDLER_ERROR,
+                f"could not execute handler {self.name}",
+            )
 
         if error_code in {
             ErrorCodes.OK,
             ErrorCodes.NO_CONTENT,
             ErrorCodes.DUPLICATE_REQUEST,
-            ErrorCodes.NOT_FOUND
+            ErrorCodes.NOT_FOUND,
         }:
             return BaseHandler.OK, error_code, response
         else:
-            self.logger.error('handler {} failed with code: {}, response: {}'.format(
-                str(self), str(error_code), str(response)))
+            self.logger.error(
+                f"handler {str(self)} failed with code: {error_code}, response: {str(response)}"
+            )
             return BaseHandler.FAIL, error_code, response
 
     @property
