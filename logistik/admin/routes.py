@@ -119,10 +119,9 @@ def format_handler(handler: HandlerConf) -> dict:
 
 @app.route('/api/v1/models')
 def list_models():
-    handlers = environ.env.db.get_all_enabled_handlers()
+    handlers = environ.env.db.get_all_activate_handlers()
     return api_response(200, [
         format_handler(handler) for handler in handlers
-        if handler.event != 'UNMAPPED'
     ])
 
 

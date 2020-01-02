@@ -11,6 +11,10 @@ class IDatabase(ABC):
         """pass"""
 
     @abstractmethod
+    def get_all_activate_handlers(self) -> List[HandlerConf]:
+        """pass"""
+
+    @abstractmethod
     def retire_model(self, node_id: str) -> None:
         """pass"""
 

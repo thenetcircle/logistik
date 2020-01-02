@@ -31,6 +31,16 @@ class DatabaseManager(IDatabase):
         return [handler.to_repr() for handler in handlers]
 
     @with_session
+    def get_all_activate_handlers(self) -> List[HandlerConf]:
+        handlers = HandlerConfEntity.query\
+            .filter(HandlerConfEntity.enabled.is_(True))\
+            .filter(HandlerConfEntity.retired.isnot(False))\
+            .filter(HandlerConfEntity.event != 'UNMAPPED')\
+            .all()
+
+        return [handler.to_repr() for handler in handlers]
+
+    @with_session
     def delete_handler(self, node_id: str) -> None:
         service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
 
