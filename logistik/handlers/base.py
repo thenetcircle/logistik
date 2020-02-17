@@ -115,6 +115,10 @@ class BaseHandler(IHandler, IPlugin, ABC):
             self.env.kafka_writer.fail(self.conf.failed_topic, data)
             return ErrorCodes.HANDLER_ERROR, error_msg
 
+        if type(response) == list:
+            # if rest api returns [response, error_code]
+            response = response[0]
+
         if status_code == BaseHandler.OK:
             self.env.kafka_writer.publish(self.conf, response)
             return ErrorCodes.OK, response
