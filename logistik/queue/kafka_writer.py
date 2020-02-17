@@ -59,6 +59,7 @@ class KafkaWriter(IKafkaWriter):
         self.logger.info(f"response json: {str_msg}")
 
         try:
+            # if rest api returns [response, error_code]
             if type(str_msg) == list:
                 str_msg = str_msg[0]
         except Exception as e:
