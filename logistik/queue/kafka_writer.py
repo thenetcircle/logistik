@@ -56,6 +56,15 @@ class KafkaWriter(IKafkaWriter):
             self.drop_msg(message.content)
             return
 
+        self.logger.info(f"response json: {str_msg}")
+
+        try:
+            if type(str_msg) == list:
+                str_msg = str_msg[0]
+        except Exception as e:
+            self.logger.warning(f"could not get response from list: {str(e)}")
+            self.logger.warning(f"response was: {str_msg}")
+
         try:
             if conf.return_to is None or len(conf.return_to.strip()) == 0:
                 return
