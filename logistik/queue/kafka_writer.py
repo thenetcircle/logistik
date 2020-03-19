@@ -56,9 +56,6 @@ class KafkaWriter(IKafkaWriter):
             self.drop_msg(message.content)
             return
 
-        self.logger.info(f"response json: {str_msg}")
-        self.logger.info(f"type of str_msg: {type(str_msg)}")
-
         try:
             # if rest api returns [response, error_code]
             if type(str_msg) == list:
@@ -66,8 +63,6 @@ class KafkaWriter(IKafkaWriter):
         except Exception as e:
             self.logger.warning(f"could not get response from list: {str(e)}")
             self.logger.warning(f"response was: {str_msg}")
-
-        self.logger.info(f"str_msg after: {str_msg}")
 
         try:
             if conf.return_to is None or len(conf.return_to.strip()) == 0:

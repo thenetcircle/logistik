@@ -74,6 +74,7 @@ class HttpHandler(BaseHandler):
 
         reader_type = self.conf.reader_type
 
+        # TODO: try to run as a separate process
         if reader_type == "kafka":
             self.reader = KafkaReader(env, self.conf, self, self.handler_type)
             self.reader_thread = eventlet.spawn(self.reader.run)
