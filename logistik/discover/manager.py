@@ -129,6 +129,10 @@ class DiscoveryService(BaseDiscoveryService):
             host, port, s_id, name, node, hostname, c_id, tags
         )
 
+        # retired/disabled model
+        if handler_conf is None:
+            return None
+
         self.env.db.register_handler(handler_conf)
         self.env.handlers_manager.start_handler(handler_conf.node_id())
         self.env.cache.reset_enabled_handlers_for(handler_conf.event)
@@ -154,6 +158,10 @@ class DiscoveryService(BaseDiscoveryService):
         handler = self.env.db.find_one_handler(service_id, hostname, node)
 
         if handler is not None:
+            if handler.retired:
+                self.logger.info(f"handler for {name} is retired, not adding")
+                return None
+
             return self._update_existing_handler(
                 handler, service_id, node, name, hostname, port, host, c_id, tags
             )
