@@ -65,7 +65,7 @@ class HttpHandler(BaseHandler):
         self.url = "{}{}:{}/{}{}".format(
             self.schema, self.endpoint, self.port, separator, self.path
         )
-        self.logger.debug(f"configured {str(self)} for url {self.url}")
+        self.logger.info(f"configured {str(self)} for url {self.url}")
 
     def setup(self, env) -> None:
         self.env = env
