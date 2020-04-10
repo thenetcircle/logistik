@@ -62,7 +62,7 @@ class HttpHandler(BaseHandler):
         if self.path is not None and self.path[0] != "/":
             separator = "/"
 
-        self.url = "{}{}:{}/{}{}".format(
+        self.url = "{}{}:{}{}{}".format(
             self.schema, self.endpoint, self.port, separator, self.path
         )
         self.logger.info(f"configured {str(self)} for url {self.url}")
