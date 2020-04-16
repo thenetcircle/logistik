@@ -159,7 +159,6 @@ class DiscoveryService(BaseDiscoveryService):
 
         if handler is not None:
             if handler.retired:
-                self.logger.debug(f"handler for {name} is retired, not adding")
                 return None
 
             return self._update_existing_handler(
