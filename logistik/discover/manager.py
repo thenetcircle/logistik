@@ -55,7 +55,6 @@ class DiscoveryService(BaseDiscoveryService):
 
         :return: nothing
         """
-        enabled_handlers_to_check = self.get_enabled_handlers()
         _, data = self.env.consul.get_services()
 
         for name, metadata in data.items():
@@ -71,10 +70,6 @@ class DiscoveryService(BaseDiscoveryService):
                 service_tags = service.get(DiscoveryService.SERVICE_TAGS)
                 service_tags = self.convert_to_dict(service_id, service_tags)
 
-                # assuming it's a model initially that might already exist,
-                # and if it doesn't the type will be set to canary when enabling it
-                model_type = ModelTypes.MODEL
-
                 node = service_tags.get(ServiceTags.NODE, "0")
                 hostname = service_tags.get(ServiceTags.HOSTNAME, None)
 
@@ -84,39 +79,9 @@ class DiscoveryService(BaseDiscoveryService):
                     )
                     continue
 
-                node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
-                if node_id in enabled_handlers_to_check:
-                    enabled_handlers_to_check.remove(node_id)
-
-                # might be an existing model, in which case the node id might change, so check again
-                handler_conf = self.enable_handler(
+                self.enable_handler(
                     service, name, node, hostname, consul_service_id, service_tags
                 )
-                if (
-                    handler_conf is not None
-                    and handler_conf.node_id() in enabled_handlers_to_check
-                ):
-                    enabled_handlers_to_check.remove(handler_conf.node_id())
-
-        self.disable_handlers_no_longer_in_discovery_service(enabled_handlers_to_check)
-
-    def disable_handlers_no_longer_in_discovery_service(self, enabled_handlers: set):
-        """
-        when a service stops reporting to the discovery service that it is running, we have to disable the reader in
-        logistik, so disable the handler.
-
-        :param enabled_handlers: a set of node IDs
-        :return: nothing
-        """
-        for node_id in enabled_handlers:
-            self.logger.info(
-                f"enabled node {node_id} no longer in discovery service, disabling"
-            )
-            self.disable_handler(node_id)
-
-    def disable_handler(self, node_id: str):
-        self.env.db.disable_handler(node_id)
-        self.env.handlers_manager.stop_handler(node_id)
 
     def enable_handler(
         self, service, name, node, hostname, c_id, tags: dict
