@@ -41,9 +41,6 @@ discovery:
 
 handler_types:
   - name: 'default'
-  - name: 'low_priority'
-    delay: 0.2
-    suffix: 'low'
 
 web:
   type: 'oauth'

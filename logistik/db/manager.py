@@ -261,9 +261,9 @@ class DatabaseManager(IDatabase):
             return handler_conf
 
         handler.consul_service_id = consul_service_id
-        handler.group_id = (
-            tags.get(ServiceTags.GROUP_ID, None) or handler.service_id.split("-")[0]
-        )
+        # handler.group_id = (
+        #     tags.get(ServiceTags.GROUP_ID, None) or handler.service_id.split("-")[0]
+        # )
 
         self.env.dbman.session.add(handler)
         self.env.dbman.session.commit()
