@@ -210,6 +210,7 @@ class DatabaseManager(IDatabase):
 
     @with_session
     def register_handler(self, handler_conf: HandlerConf) -> HandlerConf:
+        # TODO: remove
         handler = HandlerConfEntity.query.filter_by(
             service_id=handler_conf.service_id,
             hostname=handler_conf.hostname,

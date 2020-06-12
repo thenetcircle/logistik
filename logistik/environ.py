@@ -462,16 +462,6 @@ def init_enrichment_service(gn_env: GNEnvironment):
     ]
 
 
-@timeit(logger, 'init discovery service')
-def init_discovery_service(gn_env: GNEnvironment):
-    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
-        # assume we're testing
-        return
-
-    from logistik.discover.manager import DiscoveryService
-    gn_env.discovery = DiscoveryService(gn_env)
-
-
 @timeit(logger, 'init kafka writer service')
 def init_kafka_writer(gn_env: GNEnvironment):
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
@@ -483,16 +473,7 @@ def init_kafka_writer(gn_env: GNEnvironment):
     gn_env.kafka_writer.setup()
 
 
-@timeit(logger, 'init consul service')
-def init_consul(gn_env: GNEnvironment):
-    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
-        # assume we're testing
-        return
-
-    from logistik.discover.consul.consul import ConsulService
-    gn_env.consul = ConsulService(gn_env)
-
-
+@timeit(logger, 'init handler types')
 def init_handler_types(gn_env: GNEnvironment):
     configs = gn_env.config.get(ConfigKeys.HANDLER_TYPES, None)
     if configs is None:
@@ -509,6 +490,22 @@ def init_handler_types(gn_env: GNEnvironment):
     gn_env.handler_types = handler_types
 
 
+@timeit(logger, 'init handlers')
+def init_handlers(gn_env: GNEnvironment):
+    handlers = gn_env.db.get_all_handlers()
+    enabled_handlers_to_check = set()
+
+    for handler in handlers:
+        if handler.retired:
+            continue
+
+        enabled_handlers_to_check.add(handler.node_id())
+
+    for handler_conf in enabled_handlers_to_check:
+        gn_env.handlers_manager.start_handler(handler_conf.node_id())
+        gn_env.cache.reset_enabled_handlers_for(handler_conf.event)
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_db_service(lk_env)
@@ -516,11 +513,12 @@ def initialize_env(lk_env):
     init_handlers_manager(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
-    init_consul(lk_env)
     init_enrichment_service(lk_env)
-    init_discovery_service(lk_env)
     init_kafka_writer(lk_env)
     init_handler_types(lk_env)
+
+    init_handlers(lk_env)
+
     logger.info('startup done!')
 
 
