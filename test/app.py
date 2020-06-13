@@ -6,19 +6,30 @@ from server import app
 from functools import partial
 import random
 
-pool = eventlet.GreenPool(5)
+pool = eventlet.GreenPool(10)
 
 
 def call_handlers(data: dict, handlers):
     handler_func = partial(call_handler, data)
-    responses = list()
+    threads = list()
 
-    for response in pool.imap(handler_func, handlers):
-        print(f"response: {response}")
-        responses.append(response)
+    for handler in handlers:
+        p = eventlet.spawn(handler_func, handler)
+        threads.append(p)
+
+    for p in threads:
+        try:
+            response = p.wait()
+            print(f"response: {response}")
+        except Exception as e:
+            print(f"got exception: {str(e)}")
 
 
 def call_handler(data: dict, handler_conf):
+    import time
+
+    time.sleep(random.random())
+
     if random.randint(0, 2) == 1:
         raise TimeoutError()
 
