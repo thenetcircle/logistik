@@ -1,10 +1,11 @@
+import eventlet
+eventlet.monkey_patch()
+
 from functools import partial
 import random
 
-import eventlet
 from flask import Flask
 
-eventlet.monkey_patch()
 pool = eventlet.GreenPool(5)
 
 
