@@ -10,6 +10,8 @@ from werkzeug.contrib.fixers import ProxyFix
 from logistik import environ
 from logistik.config import ConfigKeys
 
+environ.initialize_env(environ.env, is_child_process=False)
+
 
 log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
 if log_level == 'DEBUG':

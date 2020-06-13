@@ -530,4 +530,3 @@ if 'LK_CONFIG' in os.environ:
     _config_paths = [os.environ['LK_CONFIG']]
 
 env = create_env(_config_paths)
-# initialize_env(env)
