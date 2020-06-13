@@ -1,7 +1,10 @@
 import logging
+from multiprocessing import Process
+from typing import List
 
 from logistik.db import HandlerConf
 from logistik.handlers import IHandlersManager
+from logistik.handlers.event import EventHandler
 from logistik.handlers.request import Requester
 from logistik.utils.exceptions import QueryException
 from logistik.utils.exceptions import HandlerNotFoundException
@@ -44,6 +47,46 @@ class HandlersManager(IHandlersManager):
             )
             for node_id in self.handlers
         ]
+
+    def start_event_handler(self, event: str, handlers: List[HandlerConf]):
+        self.logger.info(f"starting handler for {event}")
+        prepared_handlers = list()
+
+        for handler_to_check in handlers:
+            handler = self.prepare_handler(handler_to_check)
+
+            if handler is not None:
+                prepared_handlers.append(handler)
+
+        from logistik.handlers.http import HttpHandler
+
+        self.handlers[event] = dict()
+
+        event_handler = EventHandler(event, prepared_handlers.copy())
+
+        process = Process(target=event_handler.run, args=(event, prepared_handlers))
+        process.daemon = True
+
+        self.handlers[event] = process
+        process.start()
+
+    def prepare_handler(self, handler_conf: HandlerConf):
+        node_id = handler_conf.node_id()
+
+        if handler_conf.event == "UNMAPPED":
+            try:
+                self.query_model_for_info(handler_conf)
+            except QueryException:
+                # model is not online or doesn't implement query interface
+                return None
+
+        if handler_conf.model_type is None:
+            self.logger.info(
+                f'not adding handler for empty model type with node id "{node_id}"'
+            )
+            return None
+
+        return handler_conf
 
     def add_handler(self, handler_conf: HandlerConf):
         node_id = handler_conf.node_id()
@@ -143,6 +186,8 @@ class HandlersManager(IHandlersManager):
         handler_conf.__setattr__(field, updated)
 
     def start_handler(self, node_id: str):
+        # TODO: remove
+
         try:
             conf = self.env.db.get_handler_for(node_id)
         except HandlerNotFoundException:

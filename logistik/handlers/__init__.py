@@ -1,10 +1,11 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Union
+from typing import Union, List
 
 from activitystreams import Activity
 
 from logistik.config import ErrorCodes
+from logistik.db import HandlerConf
 
 
 class IRequester(ABC):
@@ -16,6 +17,10 @@ class IRequester(ABC):
 class IHandlersManager(ABC):
     @abstractmethod
     def setup(self):
+        """pass"""
+
+    @abstractmethod
+    def start_event_handler(self, event: str, handlers: List[HandlerConf]):
         """pass"""
 
     @abstractmethod

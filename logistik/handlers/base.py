@@ -5,7 +5,6 @@ import random
 
 from eventlet.greenthread import GreenThread
 from abc import ABC
-from yapsy.IPlugin import IPlugin
 from logging import Logger
 from activitystreams import Activity
 from typing import Union
@@ -17,7 +16,7 @@ from logistik.config import ModelTypes
 from logistik.handlers import IHandler
 
 
-class BaseHandler(IHandler, IPlugin, ABC):
+class BaseHandler(IHandler, ABC):
     OK = True
     FAIL = False
 

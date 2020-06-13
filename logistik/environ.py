@@ -237,7 +237,7 @@ def load_secrets_file(config_dict: dict) -> dict:
 
 
 @timeit(logger, 'creating base environment')
-def create_env(config_paths: list = None) -> GNEnvironment:
+def create_env(config_paths: list = None, is_child_process: bool = False) -> GNEnvironment:
     logging.basicConfig(level='DEBUG', format=ConfigKeys.DEFAULT_LOG_FORMAT)
 
     gn_environment = os.getenv(ENV_KEY_ENVIRONMENT)
@@ -492,32 +492,35 @@ def init_handler_types(gn_env: GNEnvironment):
 
 @timeit(logger, 'init handlers')
 def init_handlers(gn_env: GNEnvironment):
-    handlers = gn_env.db.get_all_handlers()
-    enabled_handlers_to_check = set()
+    all_handlers = gn_env.db.get_all_handlers()
+    event_handlers = dict()
 
-    for handler in handlers:
+    for handler in all_handlers:
         if handler.retired:
             continue
 
-        enabled_handlers_to_check.add(handler.node_id())
+        if handler.event not in event_handlers:
+            event_handlers[handler.event] = list()
 
-    for handler_conf in enabled_handlers_to_check:
-        gn_env.handlers_manager.start_handler(handler_conf.node_id())
-        gn_env.cache.reset_enabled_handlers_for(handler_conf.event)
+        event_handlers[handler.event].append(handler)
+
+    for event, handlers in event_handlers.items():
+        gn_env.handlers_manager.start_event_handler(event, handlers)
 
 
-def initialize_env(lk_env):
+def initialize_env(lk_env, is_child_process: bool = False):
     init_logging(lk_env)
-    init_db_service(lk_env)
-    init_web_auth(lk_env)
-    init_handlers_manager(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
     init_enrichment_service(lk_env)
     init_kafka_writer(lk_env)
-    init_handler_types(lk_env)
 
-    init_handlers(lk_env)
+    if not is_child_process:
+        init_web_auth(lk_env)
+        init_db_service(lk_env)
+        init_handler_types(lk_env)
+        init_handlers_manager(lk_env)
+        init_handlers(lk_env)
 
     logger.info('startup done!')
 
@@ -527,4 +530,4 @@ if 'LK_CONFIG' in os.environ:
     _config_paths = [os.environ['LK_CONFIG']]
 
 env = create_env(_config_paths)
-initialize_env(env)
+# initialize_env(env)
