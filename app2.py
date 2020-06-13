@@ -1,7 +1,7 @@
 import eventlet
 eventlet.monkey_patch()
 
-from server import app
+from second import app
 
 from functools import partial
 import random
