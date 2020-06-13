@@ -2,7 +2,7 @@ from functools import partial
 import random
 
 import eventlet
-import eventlet
+from flask import Flask
 
 eventlet.monkey_patch()
 pool = eventlet.GreenPool(5)
@@ -23,6 +23,10 @@ def call_handler(data: dict, handler_conf):
 
     return 200, handler_conf['name'], data
 
+
+app = Flask(
+    import_name=__name__
+)
 
 call_handlers(
     {1: 2}, [
