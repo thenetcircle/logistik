@@ -15,6 +15,7 @@ from activitystreams import parse as parse_as
 from logistik.config import ConfigKeys, ErrorCodes
 from logistik.db import HandlerConf
 from logistik import environ
+from logistik.handlers.request import Requester
 from logistik.utils.exceptions import ParseException
 
 ONE_MINUTE = 60_000
@@ -165,17 +166,39 @@ class EventHandler:
         handler_func = partial(EventHandler.call_handler, data)
         responses = list()
 
-        for response, error_code, error_msg in self.pool.imap(handler_func, handlers):
+        for response, response_code in self.pool.imap(handler_func, handlers):
             # TODO: handle errors
-            self.logger.info(f"code: {error_code}, message: {error_msg}, response: {response}")
+            self.logger.info(f"code: {response_code}, response: {response}")
             responses.append(response)
 
         return ErrorCodes.OK, "", responses
 
     @staticmethod
     def call_handler(data: dict, handler_conf: HandlerConf):
-        # TODO
-        return dict()
+        schema = "http://"
+        endpoint = handler_conf.endpoint
+        path = handler_conf.path
+        method = handler_conf.method
+        timeout = handler_conf.timeout
+        port = handler_conf.port
+        json_header = {"Context-Type": "application/json"}
+
+        if method is None or len(method.strip()) == 0:
+            method = "POST"
+
+        separator = ""
+        if path is not None and path[0] != "/":
+            separator = "/"
+
+        url = "{}{}:{}{}{}".format(
+            schema, endpoint, port, separator, path
+        )
+
+        response = Requester.request(
+            method=method, url=url, json=data, headers=json_header, timeout=timeout
+        )
+
+        return response.status_code, response
 
     def try_to_parse(self, data) -> (dict, Activity):
         try:

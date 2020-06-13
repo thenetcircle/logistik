@@ -8,5 +8,6 @@ class Requester(IRequester):
     for mocking purposes
     """
 
-    def request(self, method, url, json=None, headers=None):
-        return requests.request(method=method, url=url, json=json, headers=headers)
+    @staticmethod
+    def request(method, url, json=None, headers=None, timeout=10):
+        return requests.request(method=method, url=url, json=json, headers=headers, timeout=timeout)

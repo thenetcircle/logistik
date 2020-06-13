@@ -1,16 +1,15 @@
 from abc import ABC
 from abc import abstractmethod
-from typing import Union, List
+from typing import List
 
 from activitystreams import Activity
 
-from logistik.config import ErrorCodes
 from logistik.db import HandlerConf
 
 
 class IRequester(ABC):
-    @abstractmethod
-    def request(self, method, url, data, json_header):
+    @staticmethod
+    def request(method, url, json=None, headers=None):
         """pass"""
 
 
