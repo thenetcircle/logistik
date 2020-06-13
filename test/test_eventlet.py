@@ -2,7 +2,9 @@ from functools import partial
 import random
 
 import eventlet
+import eventlet
 
+eventlet.monkey_patch()
 pool = eventlet.GreenPool(5)
 
 
