@@ -26,6 +26,8 @@ class EventHandler:
     def __init__(self, event: str, handlers: List[HandlerConf]):
         environ.initialize_env(environ.env, is_child_process=True)
 
+        # TODO: use two gunicorn instances, one to read events from kafka, and other with workers=10 to handle events
+
         self.env = environ.env
         self.logger = logging.getLogger(__name__)
         self.event = event
