@@ -15,6 +15,7 @@ from activitystreams import parse as parse_as
 from logistik.config import ConfigKeys, ErrorCodes
 from logistik.db import HandlerConf
 from logistik import environ
+from logistik.handlers.http import HttpHandler
 from logistik.handlers.request import Requester
 from logistik.utils.exceptions import ParseException
 
@@ -163,7 +164,7 @@ class EventHandler:
         return responses
 
     def call_handlers(self, data: dict, handlers) -> (int, str, List[dict]):
-        handler_func = partial(EventHandler.call_handler, data)
+        handler_func = partial(HttpHandler.call_handler, data)
         responses = list()
 
         for response, response_code in self.pool.imap(handler_func, handlers):

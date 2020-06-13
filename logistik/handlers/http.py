@@ -4,7 +4,7 @@ import os
 import eventlet
 from activitystreams import Activity
 
-from logistik.config import ErrorCodes, HandlerType
+from logistik.config import HandlerType
 from logistik.db.reprs.handler import HandlerConf
 from logistik.handlers.base import BaseHandler
 from logistik.handlers.request import Requester
@@ -12,8 +12,41 @@ from logistik.queue.kafka_reader import KafkaReader
 from logistik.queue.mock_reader import MockReader
 from logistik.queue.rest_reader import RestReader
 
+logger = logging.getLogger(__name__)
+
 
 class HttpHandler(BaseHandler):
+    @staticmethod
+    def call_handler(data: dict, handler_conf: HandlerConf):
+        schema = "http://"
+        endpoint = handler_conf.endpoint
+        path = handler_conf.path
+        method = handler_conf.method
+        timeout = handler_conf.timeout
+        port = handler_conf.port
+        json_header = {"Context-Type": "application/json"}
+
+        if method is None or len(method.strip()) == 0:
+            method = "POST"
+
+        separator = ""
+        if path is not None and path[0] != "/":
+            separator = "/"
+
+        url = "{}{}:{}{}{}".format(
+            schema, endpoint, port, separator, path
+        )
+
+        response = Requester.request(
+            method=method, url=url, json=data, headers=json_header, timeout=timeout
+        )
+
+        return response.status_code, response
+
+
+
+
+
     def __init__(self, handler_type: HandlerType = None):
         super().__init__()
         self.env = None
