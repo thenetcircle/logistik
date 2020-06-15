@@ -103,10 +103,6 @@ def create_app():
         environ.env.dbman.init_app(_app)
         environ.env.dbman.create_all()
 
-    import eventlet
-    eventlet.spawn(environ.env.discovery.run)
-    environ.env.handlers_manager.setup()
-
     return _app, Api(_app)
 
 

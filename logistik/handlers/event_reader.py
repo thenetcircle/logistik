@@ -24,20 +24,18 @@ ONE_MINUTE = 60_000
 
 
 class EventReader:
-    def __init__(self, event: str, handlers: List[HandlerConf]):
+    def __init__(self, event: str):
         self.env = environ.env
         self.logger = logging.getLogger(__name__)
         self.event = event
-        self.handlers = handlers
         self.running = False
-        self.pool = eventlet.GreenPool(len(handlers))
 
         self.failed_msg_log = None
         self.dropped_msg_log = None
         self.consumer = None
 
         if self.event == 'UNMAPPED':
-            self.logger.info('not enabling reading for {}, no event mapped'.format(self.handlers[0].node_id()))
+            self.logger.warning('not enabling reading, event is UNMAPPED')
             return
 
         self.create_loggers()
@@ -68,10 +66,6 @@ class EventReader:
             time.sleep(sleep_time)
 
         while True:
-            if not self.running:
-                self.logger.info('reader for "{}" disabled, shutting down'.format(self.event))
-                break
-
             try:
                 self.try_to_read()
             except InterruptedError as e:
