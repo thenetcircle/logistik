@@ -4,7 +4,7 @@ import json
 import time
 import traceback
 import eventlet
-from typing import List, Union
+from typing import List, Union, Optional, Tuple
 from datetime import datetime
 import pytz
 from functools import partial
@@ -18,6 +18,7 @@ from logistik import environ
 from logistik.handlers.http import HttpHandler
 from logistik.handlers.request import Requester
 from logistik.utils.exceptions import ParseException
+from logistik.utils.exceptions import MaxRetryError
 
 ONE_MINUTE = 60_000
 
@@ -110,11 +111,14 @@ class EventHandler:
                 self.logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
                 self.fail_msg(message, original_topic=None, decoded_value=None)
+                # TODO: send to mattermost
+                responses = list()
                 time.sleep(1)
 
-            # TODO: send responses to queue
+            for handler_conf, response in responses:
+                self.env.kafka_writer.publish(handler_conf, response)
 
-    def handle_message(self, message) -> Union[None, List[dict]]:
+    def handle_message(self, message) -> Optional[List[Tuple[HandlerConf, dict]]]:
         self.logger.debug("%s:%d:%d: key=%s" % (
             message.topic, message.partition,
             message.offset, message.key)
@@ -145,36 +149,80 @@ class EventHandler:
         except Exception as e:
             return self.fail(e, message, message_value)
 
-        handlers = self.handlers
+        handlers = self.handlers.copy()
 
-        # TODO: only retry failed responses
-        try:
-            error_code, error_msg, responses = self.call_handlers(data, handlers)
-        except InterruptedError:
-            raise
-        except Exception as e:
-            return self.fail(e, message, message_value)
+        return self.handle_with_exponential_back_off(activity, data, message, message_value, handlers)
 
-        if error_code != ErrorCodes.OK:
-            # TODO: exponential back-off
-            # TODO: notify alert channel
-            pass
+    def handle_with_exponential_back_off(
+            self, activity, data, message,
+            message_value, handlers: List[HandlerConf]
+    ):
+        all_responses = list()
+        retry_idx = 0
+        delay = 2
+        event_id = activity.id[:8]
 
-        if error_code == ErrorCodes.RETRIES_EXCEEDED:
-            pass
+        while len(all_responses) < len(handlers):
+            try:
+                responses, failures = self.call_handlers(data, handlers)
+            except InterruptedError:
+                raise
+            except Exception as e:
+                self.logger.error(f"could not call handlers: {str(e)}")
+                self.logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+                return self.fail(e, message, message_value)
 
-        return responses
+            if len(responses):
+                all_responses.extend(responses)
+
+            if len(failures):
+                handlers.clear()
+                handlers.extend(failures)
+
+                failed_handler_names = ",".join([handler.name for handler in handlers])
+                self.logger.warning(f"[{event_id}] failed handlers: {failed_handler_names}")
+                self.logger.warning(f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s")
+
+                if retry_idx == 0:
+                    # TODO: send to mattermost
+                    pass
+
+                if delay > 500:
+                    # TODO: send to mattermost
+                    self.logger.error("delay is currently over 600s, not retrying again")
+                    return self.fail(MaxRetryError(), message, message_value)
+
+                retry_idx += 1
+                delay *= 1.2
+
+            elif retry_idx > 0:
+                self.logger.info(f"[{event_id}] all handlers succeeded at retry {retry_idx}")
+                break
+
+        return all_responses
 
     def call_handlers(self, data: dict, handlers) -> (int, str, List[dict]):
         handler_func = partial(HttpHandler.call_handler, data)
         responses = list()
+        failures = list()
+        threads = list()
 
-        for response, response_code in self.pool.imap(handler_func, handlers):
-            # TODO: handle errors
-            self.logger.info(f"code: {response_code}, response: {response}")
-            responses.append(response)
+        for handler in handlers:
+            p = eventlet.spawn(handler_func, handler)
+            threads.append((p, handler))
 
-        return ErrorCodes.OK, "", responses
+        for p, handler in threads:
+            try:
+                response = p.wait()
+                responses.append((handler, response))
+            except Exception as e:
+                self.logger.error(f"could not handle: {str(e)}")
+                self.logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+                failures.append(handler)
+
+        return responses, failures
 
     @staticmethod
     def call_handler(data: dict, handler_conf: HandlerConf):
