@@ -119,6 +119,9 @@ class ConfigKeys(object):
     EVENT_HANDLERS = 'handlers'
     MODEL_NAME = 'model_name'
     SECRET_KEY = 'secret'
+    WEBHOOK = 'webhook'
+    TIMEOUT = 'timeout'
+    CHANNEL_NAME = 'channel'
 
     DISCOVERY = 'discovery'
     INTERVAL = 'interval'

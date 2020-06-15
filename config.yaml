@@ -15,6 +15,9 @@ database:
 logging:
   dsn: '$LK_DSN'
 
+webhook:
+  host: '$LK_WEBHOOK_URL'
+
 cache:
   host: '$LK_CACHE_HOST'
   db: '$LK_CACHE_DB'

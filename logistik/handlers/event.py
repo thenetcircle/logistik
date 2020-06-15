@@ -162,6 +162,11 @@ class EventHandler:
         delay = 2
         event_id = activity.id[:8]
 
+        if len(handlers):
+            topic_name = handlers[0].event
+        else:
+            topic_name = '<unknown>'
+
         while len(all_responses) < len(handlers):
             try:
                 responses, failures = self.call_handlers(data, handlers)
@@ -185,11 +190,13 @@ class EventHandler:
                 self.logger.warning(f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s")
 
                 if retry_idx == 0:
-                    # TODO: send to mattermost
-                    pass
+                    warning_str = f"handlers failed: {failed_handler_names}"
+                    self.env.webhook.warning(warning_str, topic_name, event_id)
 
                 if delay > 500:
-                    # TODO: send to mattermost
+                    warning_str = f"handlers failed, not retrying after {retry_idx} retries: {failed_handler_names}"
+                    self.env.webhook.critical(warning_str, topic_name, event_id)
+
                     self.logger.error("delay is currently over 600s, not retrying again")
                     return self.fail(MaxRetryError(), message, message_value)
 
@@ -197,7 +204,9 @@ class EventHandler:
                 delay *= 1.2
 
             elif retry_idx > 0:
-                self.logger.info(f"[{event_id}] all handlers succeeded at retry {retry_idx}")
+                info_str = f"[{event_id}] all handlers succeeded at retry {retry_idx}"
+                self.env.webhook.ok(info_str, topic_name, event_id)
+                self.logger.info(info_str)
                 break
 
         return all_responses
