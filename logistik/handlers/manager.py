@@ -4,7 +4,7 @@ from typing import List
 
 from logistik.db import HandlerConf
 from logistik.handlers import IHandlersManager
-from logistik.handlers.event import EventHandler
+from logistik.handlers.event_handler import EventHandler
 from logistik.handlers.request import Requester
 from logistik.utils.exceptions import QueryException
 from logistik.utils.exceptions import HandlerNotFoundException
@@ -57,8 +57,6 @@ class HandlersManager(IHandlersManager):
 
             if handler is not None:
                 prepared_handlers.append(handler)
-
-        from logistik.handlers.http import HttpHandler
 
         self.handlers[event] = dict()
 

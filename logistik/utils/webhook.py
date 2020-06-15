@@ -18,15 +18,15 @@ class WebHookHandler(IWebHookHandler):
         self.timeout = int(float(env.conf.get(ConfigKeys.TIMEOUT, domain=ConfigKeys.WEBHOOK, default=10)))
         self.json_header = {"Context-Type": "application/json"}
 
-    def _send_warning(self, message, topic_name, event_id) -> None:
+    def _send_warning(self, message, topic_name=None, event_id=None) -> None:
         data = self._format("Warning", message, topic_name, event_id)
         self._send(data)
 
-    def _send_critical(self, message, topic_name, event_id) -> None:
+    def _send_critical(self, message, topic_name=None, event_id=None) -> None:
         data = self._format("Critical", message, topic_name, event_id)
         self._send(data)
 
-    def _send_ok(self, message, topic_name, event_id) -> None:
+    def _send_ok(self, message, topic_name=None, event_id=None) -> None:
         data = self._format("OK", message, topic_name, event_id)
         self._send(data)
 
@@ -37,7 +37,7 @@ class WebHookHandler(IWebHookHandler):
             "text": f"""#### {severity}: Logistik is retrying handlers.
                     | Topic | Event | Failed Handlers |
                     |:-----------|:-----------:|:-----------------------------|
-                    | {topic_name} | {event_id} | {message} | 
+                    | {topic_name or '<unknown>'} | {event_id or '<unknown>'} | {message} | 
                     """
         }
 

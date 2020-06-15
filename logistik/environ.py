@@ -473,23 +473,6 @@ def init_kafka_writer(gn_env: GNEnvironment):
     gn_env.kafka_writer.setup()
 
 
-@timeit(logger, 'init handler types')
-def init_handler_types(gn_env: GNEnvironment):
-    configs = gn_env.config.get(ConfigKeys.HANDLER_TYPES, None)
-    if configs is None:
-        configs = [{ConfigKeys.NAME: 'default', ConfigKeys.DELAY: 0.0, ConfigKeys.SUFFIX: ''}]
-
-    handler_types = list()
-    for conf in configs:
-        handler_types.append(HandlerType(
-            name=conf.get(ConfigKeys.NAME),
-            delay=conf.get(ConfigKeys.DELAY, 0.0),
-            suffix=conf.get(ConfigKeys.SUFFIX, '')
-        ))
-
-    gn_env.handler_types = handler_types
-
-
 @timeit(logger, 'init handlers')
 def init_handlers(gn_env: GNEnvironment):
     all_handlers = gn_env.db.get_all_handlers()
@@ -508,19 +491,25 @@ def init_handlers(gn_env: GNEnvironment):
         gn_env.handlers_manager.start_event_handler(event, handlers)
 
 
-def initialize_env(lk_env, is_child_process: bool = False):
+def initialize_env(lk_env):
+    node_type = os.getenv("LK_NODE")
+
     init_logging(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
     init_enrichment_service(lk_env)
-    init_kafka_writer(lk_env)
 
-    if not is_child_process:
+    if node_type == "reader":
         init_web_auth(lk_env)
         init_db_service(lk_env)
-        init_handler_types(lk_env)
+        init_kafka_writer(lk_env)
+
+    elif node_type == "worker":
         init_handlers_manager(lk_env)
         init_handlers(lk_env)
+
+    else:
+        raise RuntimeError(f"unknown node type '{node_type}'")
 
     logger.info('startup done!')
 
@@ -530,3 +519,4 @@ if 'LK_CONFIG' in os.environ:
     _config_paths = [os.environ['LK_CONFIG']]
 
 env = create_env(_config_paths)
+initialize_env(env)
