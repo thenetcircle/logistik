@@ -1,13 +1,11 @@
 import logging
-from multiprocessing import Process
-from typing import List
+from typing import List, Dict
 
 from logistik.db import HandlerConf
 from logistik.handlers import IHandlersManager
 from logistik.handlers.event_handler import EventHandler
 from logistik.handlers.request import Requester
 from logistik.utils.exceptions import QueryException
-from logistik.utils.exceptions import HandlerNotFoundException
 
 
 class HandlersManager(IHandlersManager):
@@ -15,38 +13,14 @@ class HandlersManager(IHandlersManager):
         self.env = env
         self.requester = Requester()
         self.logger = logging.getLogger(__name__)
-        self.handlers = dict()
+        self.handlers: Dict[str, EventHandler] = dict()
 
-    def setup(self):
-        for handler_conf in self.env.db.get_all_enabled_handlers():
-            self.add_handler(handler_conf)
+    def handle_event(self, topic, event) -> List[dict]:
+        if topic not in self.handlers.keys():
+            self.logger.error(f"no handlers configured for topic '{topic}'")
+            return list()
 
-    def get_handlers(self) -> list:
-        def format_config(_node_id, config):
-            _conf = {
-                key: config.get(key, "")
-                for key in [
-                    "bootstrap_servers",
-                    "group_id",
-                    "auto_offset_reset",
-                    "enable_auto_commit",
-                    "max_poll_records",
-                    "max_poll_interval_ms",
-                    "session_timeout_ms",
-                ]
-            }
-            _conf["node_id"] = _node_id
-            return _conf
-
-        return [
-            format_config(
-                node_id,
-                self.handlers[node_id][
-                    self.env.handler_types[0].name
-                ].reader.get_consumer_config(),
-            )
-            for node_id in self.handlers
-        ]
+        return self.handlers[topic].handle_event(event)
 
     def start_event_handler(self, event: str, handlers: List[HandlerConf]):
         self.logger.info(f"starting handler for {event}")
@@ -58,15 +32,7 @@ class HandlersManager(IHandlersManager):
             if handler is not None:
                 prepared_handlers.append(handler)
 
-        self.handlers[event] = dict()
-
-        event_handler = EventHandler(event, prepared_handlers.copy())
-
-        process = Process(target=event_handler.run, args=(event, prepared_handlers))
-        process.daemon = True
-
-        self.handlers[event] = process
-        process.start()
+        self.handlers[event] = EventHandler(event, prepared_handlers.copy())
 
     def prepare_handler(self, handler_conf: HandlerConf):
         node_id = handler_conf.node_id()
@@ -75,8 +41,7 @@ class HandlersManager(IHandlersManager):
             try:
                 self.query_model_for_info(handler_conf)
             except QueryException:
-                # model is not online or doesn't implement query interface
-                return None
+                pass
 
         if handler_conf.model_type is None:
             self.logger.info(
@@ -85,35 +50,6 @@ class HandlersManager(IHandlersManager):
             return None
 
         return handler_conf
-
-    def add_handler(self, handler_conf: HandlerConf):
-        node_id = handler_conf.node_id()
-
-        if handler_conf.event == "UNMAPPED":
-            try:
-                self.query_model_for_info(handler_conf)
-            except QueryException:
-                # model is not online or doesn't implement query interface
-                return
-
-        if handler_conf.model_type is None:
-            self.logger.info(
-                f'not adding handler for empty model type with node id "{node_id}"'
-            )
-            return
-
-        if node_id in self.handlers:
-            return
-
-        self.logger.info(f'adding handler for node id "{node_id}"')
-        from logistik.handlers.http import HttpHandler
-
-        self.handlers[node_id] = dict()
-        for handler_type in self.env.handler_types:
-            handler = HttpHandler.create(
-                self.env, handler_conf, handler_type=handler_type
-            )
-            self.handlers[node_id][handler_type.name] = handler
 
     def query_model_for_info(self, handler_conf: HandlerConf):
         env_name = ""
@@ -126,10 +62,12 @@ class HandlersManager(IHandlersManager):
             response = self.requester.request(method="GET", url=url)
         except Exception as e:
             # likely the model is offline
+            self.env.webhook.warning(f"could not query model /info: {str(e)}")
             raise QueryException(e)
 
         if response.status_code != 200:
             # likely doesn't implement the query interface
+            self.env.webhook.warning(f"got error code {response.status_code} when querying /info")
             raise QueryException(response.status_code)
 
         fields = [
@@ -182,23 +120,3 @@ class HandlersManager(IHandlersManager):
 
         self.logger.info(f'updating field "{field}" from "{original}" to "{updated}"')
         handler_conf.__setattr__(field, updated)
-
-    def start_handler(self, node_id: str):
-        # TODO: remove
-
-        try:
-            conf = self.env.db.get_handler_for(node_id)
-        except HandlerNotFoundException:
-            return
-
-        self.add_handler(conf)
-
-    def stop_handler(self, node_id: str):
-        handlers = self.handlers.get(node_id)
-        if handlers is None:
-            return
-
-        for handler in handlers.values():
-            handler.stop()
-
-        del self.handlers[node_id]

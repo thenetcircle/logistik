@@ -503,6 +503,7 @@ def initialize_env(lk_env):
         init_web_auth(lk_env)
         init_db_service(lk_env)
         init_kafka_writer(lk_env)
+        init_event_reader(lk_env)
 
     elif node_type == "worker":
         init_handlers_manager(lk_env)

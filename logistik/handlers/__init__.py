@@ -15,27 +15,15 @@ class IRequester(ABC):
 
 class IHandlersManager(ABC):
     @abstractmethod
-    def setup(self):
-        """pass"""
-
-    @abstractmethod
     def start_event_handler(self, event: str, handlers: List[HandlerConf]):
         """pass"""
 
     @abstractmethod
-    def start_handler(self, node_id: str) -> None:
-        """pass"""
-
-    @abstractmethod
-    def stop_handler(self, node_id: str) -> None:
-        """pass"""
-
-    @abstractmethod
-    def get_handlers(self) -> list:
-        """pass"""
-
-    @abstractmethod
     def query_model_for_info(self, handler_conf):
+        """pass"""
+
+    @abstractmethod
+    def handle_event(self, topic, event) -> List[dict]:
         """pass"""
 
 

@@ -33,7 +33,7 @@ class EventHandler:
         if self.event == 'UNMAPPED':
             self.logger.info('not enabling reading for {}, no event mapped'.format(self.handlers[0].node_id()))
 
-    def handle_message(self, data) -> Optional[List[Tuple[HandlerConf, dict]]]:
+    def handle_event(self, data) -> List[dict]:
         try:
             activity = self.try_to_parse(data)
         except InterruptedError:
@@ -45,12 +45,13 @@ class EventHandler:
             self.env.capture_exception(sys.exc_info())
             raise e
 
+        # TODO: capture exception
         handlers = self.handlers.copy()
         return self.handle_with_exponential_back_off(activity, data, handlers)
 
     def handle_with_exponential_back_off(
             self, activity, data, handlers: List[HandlerConf]
-    ):
+    ) -> List[dict]:
         all_responses = list()
         retry_idx = 0
         delay = 2
