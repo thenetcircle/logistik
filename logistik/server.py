@@ -110,6 +110,9 @@ def create_app():
 
     logger.info('configuring db: {}'.format(_app.config['SQLALCHEMY_DATABASE_URI']))
 
+    env.app = _app
+    environ.env.app = _app
+    
     with _app.app_context():
         env.dbman.init_app(_app)
         env.dbman.create_all()
