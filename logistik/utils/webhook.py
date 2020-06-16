@@ -8,14 +8,14 @@ from logistik.utils import IWebHookHandler
 
 class WebHookHandler(IWebHookHandler):
     def __init__(self, env):
-        endpoint = env.conf.get(ConfigKeys.HOST, domain=ConfigKeys.WEBHOOK, default=None)
-        channel_name = env.conf.get(ConfigKeys.CHANNEL_NAME, domain=ConfigKeys.WEBHOOK, default=None)
+        endpoint = env.config.get(ConfigKeys.HOST, domain=ConfigKeys.WEBHOOK, default=None)
+        channel_name = env.config.get(ConfigKeys.CHANNEL_NAME, domain=ConfigKeys.WEBHOOK, default=None)
 
         super().__init__(endpoint, channel_name)
 
         self.env = env
         self.logger = logging.getLogger(__name__)
-        self.timeout = int(float(env.conf.get(ConfigKeys.TIMEOUT, domain=ConfigKeys.WEBHOOK, default=10)))
+        self.timeout = int(float(env.config.get(ConfigKeys.TIMEOUT, domain=ConfigKeys.WEBHOOK, default=10)))
         self.json_header = {"Context-Type": "application/json"}
 
     def _send_warning(self, message, topic_name=None, event_id=None) -> None:
