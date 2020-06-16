@@ -124,7 +124,7 @@ class EventReader:
             config_paths = [os.environ['LK_CONFIG']]
 
         env = create_env(config_paths)
-        initialize_env(env)
+        initialize_env(env, is_child_process=True)
 
         self.env = env
 

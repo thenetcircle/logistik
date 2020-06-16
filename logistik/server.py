@@ -77,6 +77,7 @@ def create_app():
     initialize_env(env)
 
     environ.env = env
+    environ.env.dbman = env.dbman
 
     if len(env.config) == 0 or env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
