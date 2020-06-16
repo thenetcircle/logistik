@@ -6,10 +6,11 @@ import time
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Union, List
+from typing import Union
 
 import pytz
 from activitystreams import Activity
+from activitystreams import parse as parse_as
 
 from logistik.config import ConfigKeys
 from logistik.environ import create_env, initialize_env
@@ -146,13 +147,8 @@ class EventReader:
                 self.kafka_writer.publish(handler_conf, response)
 
     def try_to_parse(self, message) -> (dict, Activity):
-        self.logger.debug("%s:%d:%d: key=%s" % (
-            message.topic, message.partition,
-            message.offset, message.key)
-        )
-
         try:
-            message_value = json.loads(message.value.decode('ascii'))
+            data = json.loads(message.value.decode('ascii'))
         except Exception as e:
             self.logger.error('could not decode message from kafka, dropping: {}'.format(str(e)))
             self.logger.exception(e)
@@ -164,22 +160,9 @@ class EventReader:
             return
 
         try:
-            data, activity = self.try_to_parse(message_value)
-        except InterruptedError:
-            raise
-        except ParseException:
-            self.logger.error('could not enrich/parse data, original data was: {}'.format(str(message.value)))
-            self.logger.exception(traceback.format_exc())
-            self.env.capture_exception(sys.exc_info())
-            self.fail_msg(message, message.topic, message_value)
-            return
-        except Exception as e:
-            return self.fail(e, message, message_value)
-
-        try:
             return self.env.enrichment_manager.handle(data)
         except Exception as e:
-            return self.fail(e, message, message_value)
+            return self.fail(e, message, data)
 
     def group_id(self):
         dt = datetime.utcnow().replace(tzinfo=pytz.utc).strftime("%y%m%d")
