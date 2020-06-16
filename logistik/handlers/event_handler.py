@@ -37,7 +37,7 @@ class EventHandler:
         self.kafka_writer = KafkaWriter(self.env)
         self.kafka_writer.setup()
 
-    def handle_event(self, data) -> List[dict]:
+    def handle_event(self, data) -> List[Tuple[HandlerConf, dict]]:
         try:
             activity = self.try_to_parse(data)
         except InterruptedError:
@@ -54,12 +54,10 @@ class EventHandler:
         handlers = self.handlers.copy()
 
         try:
-            responses = self.handle_with_exponential_back_off(activity, data, handlers)
+            return self.handle_with_exponential_back_off(activity, data, handlers)
         except Exception as e:
             self.fail(f"could not handle event: {str(e)}", data)
-            raise e
-
-        return responses
+            raise e  # noqa: pycharm thiks this is unreachable
 
     def handle_with_exponential_back_off(
         self, activity, data, handlers: list
@@ -82,7 +80,7 @@ class EventHandler:
             except Exception as e:
                 message = f"could not call handlers: {str(e)}"
                 self.fail(message, data)
-                raise e
+                raise e  # noqa: pycharm thiks this is unreachable
 
             if len(responses):
                 all_responses.extend(responses)
@@ -91,6 +89,7 @@ class EventHandler:
                 for handler_conf, response in responses:
                     self.kafka_writer.publish(handler_conf, response)
 
+            # handle any potential failures
             if len(failures):
                 handlers.clear()
                 handlers.extend(failures)
@@ -103,10 +102,12 @@ class EventHandler:
                     f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s"
                 )
 
+                # only warn on the first retry
                 if retry_idx == 0:
                     warning_str = f"handlers failed: {failed_handler_names}"
                     self.env.webhook.warning(warning_str, topic_name, event_id)
 
+                # max delay is 10m, send critical alert
                 if delay >= 600:
                     warning_str = f"handlers still failing after {retry_idx} retries: {failed_handler_names}"
                     self.env.webhook.critical(warning_str, event_id=data.get("id")[:8])
@@ -116,12 +117,14 @@ class EventHandler:
 
                 retry_idx += 1
 
+            # if there were failures before, send an OK alert
             elif retry_idx > 0:
                 info_str = f"[{event_id}] all handlers succeeded at retry {retry_idx}"
                 self.env.webhook.ok(info_str, topic_name, event_id)
                 self.logger.info(info_str)
                 break
 
+            # exponential back-off
             if retry_idx > 0:
                 self.logger.info(f"sleeping for {delay:.2f}s before next retry")
                 time.sleep(delay)
@@ -139,13 +142,16 @@ class EventHandler:
         manager = Manager()
         return_dict = manager.dict()
 
+        # create one process for each http request
         for handler in handlers:
             p = Process(target=handler_func, args=(handler, return_dict))
             threads.append((p, handler))
 
+        # start all http requests at the same time
         for p, _ in threads:
             p.start()
 
+        # wait for all models to return responses
         for p, handler in threads:
             try:
                 p.join()
@@ -155,6 +161,7 @@ class EventHandler:
                 self.env.capture_exception(sys.exc_info())
                 failures.append(handler)
 
+        # deal with failures and successes
         for handler, (status_code, response) in return_dict.items():
             # 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
             if status_code not in {200, 422, 404, 400}:
