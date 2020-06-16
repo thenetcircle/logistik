@@ -24,22 +24,4 @@ class IHandlersManager(ABC):
 
 
 class IHandler(ABC):
-    @abstractmethod
-    def configure(self, conf):
-        """pass"""
-
-    @abstractmethod
-    def setup(self, env):
-        """pass"""
-
-    @abstractmethod
-    def handle_once(self, data: dict, _: Activity, **kwargs) -> tuple:
-        """pass"""
-
-    @abstractmethod
-    def handle(self, data: dict, activity: Activity) -> (bool, str):
-        """pass"""
-
-    @abstractmethod
-    def stop(self):
-        """pass"""
+    pass
