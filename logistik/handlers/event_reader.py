@@ -52,12 +52,13 @@ class EventReader:
         self.kafka_writer: IKafkaWriter = None
 
     def run(self, sleep_time=3, exit_on_failure=False):
+        self.create_env()
+        self.create_loggers()
+
         if self.topic == 'UNMAPPED':
             self.logger.warning('not enabling reading, topic is UNMAPPED')
             return
 
-        self.create_env()
-        self.create_loggers()
         self.create_consumer()
         self.create_event_manager()
         self.create_kafka_writer()
