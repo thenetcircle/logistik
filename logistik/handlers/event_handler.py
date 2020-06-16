@@ -23,7 +23,6 @@ class EventHandler:
         self.topic = topic
         self.handlers = handlers
         self.running = False
-        self.pool = Pool(processes=len(handlers))
 
         self.failed_msg_log = None
         self.dropped_msg_log = None
