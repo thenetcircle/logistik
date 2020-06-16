@@ -17,7 +17,7 @@ Flask-Testing==0.7.1
 gitdb2==2.0.3
 GitPython==2.1.9
 greenlet==0.4.13
-gunicorn==19.8.1
+gunicorn==20.0.4
 hashin==0.13.0
 idna==2.6
 itsdangerous==0.24
@@ -57,7 +57,7 @@ ttldict==0.3.0
 typed-ast==1.4.0
 typing==3.6.4
 Unidecode==1.0.22
-urllib3==1.25.7
+urllib3==1.25.9
 vine==1.1.4
 Werkzeug==0.16.0
 Yapsy==1.11.223
