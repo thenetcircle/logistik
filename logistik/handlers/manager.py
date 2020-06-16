@@ -1,7 +1,6 @@
 import logging
 from typing import List
 
-from logistik.db import HandlerConf
 from logistik.handlers import IHandlersManager
 from logistik.handlers.event_handler import EventHandler
 from logistik.handlers.request import Requester
@@ -21,6 +20,6 @@ class HandlersManager(IHandlersManager):
 
         return self.handler.handle_event(event)
 
-    def start_event_handler(self, topic: str, handlers: List[HandlerConf]):
+    def start_event_handler(self, topic: str, handlers: list):
         self.logger.info(f"starting handler for {topic}")
         self.handler = EventHandler(self.env, topic, handlers.copy())

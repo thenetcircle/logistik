@@ -12,7 +12,6 @@ import pytz
 from activitystreams import Activity
 
 from logistik.config import ConfigKeys
-from logistik.db import HandlerConf
 from logistik.environ import create_env, initialize_env
 from logistik.handlers.manager import HandlersManager
 from logistik.queue import IKafkaWriter
@@ -38,14 +37,14 @@ class KafkaReaderFactory(IKafkaReaderFactory):
 
 
 class EventReader:
-    def __init__(self, topic: str, all_handlers: List[HandlerConf]):
+    def __init__(self, topic: str, all_handlers: list):
         self.logger = logging.getLogger(__name__)
         self.topic = topic
-        self.reader_factory = KafkaReaderFactory()
 
         self.all_handlers = all_handlers
         self.failed_msg_log = None
         self.dropped_msg_log = None
+        self.reader_factory = None
         self.consumer = None
         self.env = None
         self.handler_manager = None
@@ -85,6 +84,8 @@ class EventReader:
                 time.sleep(1)
 
     def create_consumer(self):
+        self.reader_factory = KafkaReaderFactory()
+
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
 
         self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))

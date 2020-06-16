@@ -8,8 +8,6 @@ import eventlet
 from activitystreams import Activity
 from activitystreams import parse as parse_as
 
-from logistik import environ
-from logistik.db import HandlerConf
 from logistik.handlers.http import HttpHandler
 from logistik.handlers.request import Requester
 from logistik.utils.exceptions import ParseException
@@ -18,7 +16,7 @@ ONE_MINUTE = 60_000
 
 
 class EventHandler:
-    def __init__(self, env, topic: str, handlers: List[HandlerConf]):
+    def __init__(self, env, topic: str, handlers: list):
         self.env = env
         self.logger = logging.getLogger(__name__)
         self.topic = topic
@@ -56,7 +54,7 @@ class EventHandler:
         return responses
 
     def handle_with_exponential_back_off(
-            self, activity, data, handlers: List[HandlerConf]
+            self, activity, data, handlers: list
     ) -> List[dict]:
         all_responses = list()
         retry_idx = 0
@@ -110,10 +108,10 @@ class EventHandler:
 
         return all_responses
 
-    def call_handlers(self, data: dict, handlers) -> (List[dict], List[HandlerConf]):
+    def call_handlers(self, data: dict, handlers) -> (List[dict], list):
         handler_func = partial(HttpHandler.call_handler, data)
         responses: List[dict] = list()
-        failures: List[HandlerConf] = list()
+        failures = list()
         threads = list()
 
         for handler in handlers:
@@ -133,7 +131,7 @@ class EventHandler:
         return responses, failures
 
     @staticmethod
-    def call_handler(data: dict, handler_conf: HandlerConf):
+    def call_handler(data: dict, handler_conf):
         schema = "http://"
         endpoint = handler_conf.endpoint
         path = handler_conf.path
