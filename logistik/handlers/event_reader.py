@@ -200,7 +200,7 @@ class EventReader:
             # odd happened, so just log to the failed message log...
             if decoded_value is not None:
                 fail_topic = f'{original_topic}-failed'
-                self.env.kafka_writer.fail(fail_topic, decoded_value)
+                self.kafka_writer.fail(fail_topic, decoded_value)
         except Exception as e:
             self.logger.error('could not log failed message: {}'.format(str(e)))
             self.logger.exception(e)
@@ -212,7 +212,7 @@ class EventReader:
 
             if decoded_value is not None:
                 fail_topic = f'{original_topic}-failed'
-                self.env.kafka_writer.fail(fail_topic, decoded_value)
+                self.kafka_writer.fail(fail_topic, decoded_value)
         except Exception as e:
             self.logger.error('could not log dropped message: {}'.format(str(e)))
             self.logger.exception(e)
