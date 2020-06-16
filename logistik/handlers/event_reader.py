@@ -3,6 +3,8 @@ import sys
 import json
 import time
 import traceback
+from abc import ABC, abstractmethod
+
 import eventlet
 from typing import List, Union, Optional, Tuple
 from datetime import datetime
@@ -23,19 +25,35 @@ from logistik.utils.exceptions import MaxRetryError
 ONE_MINUTE = 60_000
 
 
+class IKafkaReaderFactory(ABC):
+    @abstractmethod
+    def create_consumer(self, *args, **kwargs):
+        """pass"""
+
+
+class KafkaReaderFactory(IKafkaReaderFactory):
+    """
+    for mocking purposes
+    """
+    def create_consumer(self, *args, **kwargs):
+        from kafka import KafkaConsumer
+        return KafkaConsumer(*args, **kwargs)
+
+
 class EventReader:
-    def __init__(self, event: str):
+    def __init__(self, topic: str):
         self.env = environ.env
         self.logger = logging.getLogger(__name__)
-        self.event = event
+        self.topic = topic
         self.running = False
+        self.reader_factory = KafkaReaderFactory()
 
         self.failed_msg_log = None
         self.dropped_msg_log = None
         self.consumer = None
 
-        if self.event == 'UNMAPPED':
-            self.logger.warning('not enabling reading, event is UNMAPPED')
+        if self.topic == 'UNMAPPED':
+            self.logger.warning('not enabling reading, topic is UNMAPPED')
             return
 
         self.create_loggers()
@@ -43,13 +61,12 @@ class EventReader:
 
     def create_consumer(self):
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
-        topic_name = self.event
 
         self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
-        self.logger.info('consuming from topic {}'.format(topic_name))
+        self.logger.info('consuming from topic {}'.format(self.topic))
 
         self.consumer = self.reader_factory.create_consumer(
-            topic_name,
+            self.topic,
             group_id=self.group_id(),
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
@@ -86,7 +103,7 @@ class EventReader:
     def try_to_read(self):
         for message in self.consumer:
             if not self.running:
-                self.logger.info(f'stopping consumption of {self.event}')
+                self.logger.info(f'stopping consumption of {self.topic}')
                 time.sleep(0.1)
                 break
 
@@ -134,7 +151,7 @@ class EventReader:
 
     def group_id(self):
         dt = datetime.utcnow().replace(tzinfo=pytz.utc).strftime("%y%m%d")
-        return f"{self.event}-{dt}"
+        return f"{self.topic}-{dt}"
 
     def stop(self):
         self.running = False
