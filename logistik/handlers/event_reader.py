@@ -45,7 +45,6 @@ class EventReader:
         self.env = environ.env
         self.logger = logging.getLogger(__name__)
         self.topic = topic
-        self.running = False
         self.reader_factory = KafkaReaderFactory()
 
         self.failed_msg_log = None
@@ -102,13 +101,16 @@ class EventReader:
 
     def try_to_read(self):
         for message in self.consumer:
-            if not self.running:
-                self.logger.info(f'stopping consumption of {self.topic}')
-                time.sleep(0.1)
-                break
-
             data = self.try_to_parse(message)
-            responses = self.env.handlers_manager.handle_event(message.topic, data)
+            if data is None:
+                continue
+
+            try:
+                responses = self.env.handlers_manager.handle_event(message.topic, data)
+            except Exception as e:
+                event_id = data.get("id")[:8]
+                self.logger.error(f"[{event_id}] dropping event, could not handle: {str(e)}")
+                continue
 
             for handler_conf, response in responses:
                 self.env.kafka_writer.publish(handler_conf, response)
@@ -152,9 +154,6 @@ class EventReader:
     def group_id(self):
         dt = datetime.utcnow().replace(tzinfo=pytz.utc).strftime("%y%m%d")
         return f"{self.topic}-{dt}"
-
-    def stop(self):
-        self.running = False
 
     def fail(self, e, message, message_value):
         self.logger.error('got uncaught exception: {}'.format(str(e)))

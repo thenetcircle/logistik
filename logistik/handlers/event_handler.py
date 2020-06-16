@@ -2,7 +2,7 @@ import logging
 import sys
 import traceback
 from functools import partial
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import eventlet
 from activitystreams import Activity
@@ -45,9 +45,15 @@ class EventHandler:
             self.env.capture_exception(sys.exc_info())
             raise e
 
-        # TODO: capture exception
         handlers = self.handlers.copy()
-        return self.handle_with_exponential_back_off(activity, data, handlers)
+
+        try:
+            responses = self.handle_with_exponential_back_off(activity, data, handlers)
+        except Exception as e:
+            self.fail(f"could not handle event: {str(e)}", data)
+            raise e
+
+        return responses
 
     def handle_with_exponential_back_off(
             self, activity, data, handlers: List[HandlerConf]
@@ -69,7 +75,8 @@ class EventHandler:
                 raise
             except Exception as e:
                 message = f"could not call handlers: {str(e)}"
-                return self.fail(message, data)
+                self.fail(message, data)
+                raise e
 
             if len(responses):
                 all_responses.extend(responses)
@@ -86,12 +93,14 @@ class EventHandler:
                     warning_str = f"handlers failed: {failed_handler_names}"
                     self.env.webhook.warning(warning_str, topic_name, event_id)
 
-                if delay > 500:
-                    warning_str = f"handlers failed, not retrying after {retry_idx} retries: {failed_handler_names}"
-                    return self.fail(warning_str, data)
+                if delay >= 600:
+                    warning_str = f"handlers still failing after {retry_idx} retries: {failed_handler_names}"
+                    self.env.webhook.critical(warning_str, event_id=data.get("id")[:8])
+                    delay = 600
+                else:
+                    delay *= 1.2
 
                 retry_idx += 1
-                delay *= 1.2
 
             elif retry_idx > 0:
                 info_str = f"[{event_id}] all handlers succeeded at retry {retry_idx}"
@@ -101,10 +110,10 @@ class EventHandler:
 
         return all_responses
 
-    def call_handlers(self, data: dict, handlers) -> (int, str, List[dict]):
+    def call_handlers(self, data: dict, handlers) -> (List[dict], List[HandlerConf]):
         handler_func = partial(HttpHandler.call_handler, data)
-        responses = list()
-        failures = list()
+        responses: List[dict] = list()
+        failures: List[HandlerConf] = list()
         threads = list()
 
         for handler in handlers:
@@ -114,7 +123,7 @@ class EventHandler:
         for p, handler in threads:
             try:
                 response = p.wait()
-                responses.append((handler, response))
+                responses.append(response)
             except Exception as e:
                 self.logger.error(f"could not handle: {str(e)}")
                 self.logger.exception(e)
@@ -156,9 +165,13 @@ class EventHandler:
         except Exception as e:
             raise ParseException(e)
 
-    def fail(self, message, data):
-        self.logger.error(message)
-        self.logger.error(f"request was: {str(data)}")
-        self.logger.exception(traceback.format_exc())
-        self.env.capture_exception(sys.exc_info())
-        self.env.webhook.critical(message, event_id=data.get("id")[:8])
+    def fail(self, message, data) -> None:
+        try:
+            self.logger.error(message)
+            self.logger.error(f"request was: {str(data)}")
+            self.logger.exception(traceback.format_exc())
+            self.env.capture_exception(sys.exc_info())
+            self.env.webhook.critical(message, event_id=data.get("id")[:8])
+        except Exception as e:
+            self.logger.error(f"exception in fail(): {str(e)}")
+            self.logger.exception(e)
