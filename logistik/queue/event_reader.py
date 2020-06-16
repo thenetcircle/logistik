@@ -32,8 +32,10 @@ class KafkaReaderFactory(IKafkaReaderFactory):
     """
     for mocking purposes
     """
+
     def create_consumer(self, *args, **kwargs):
         from kafka import KafkaConsumer
+
         return KafkaConsumer(*args, **kwargs)
 
 
@@ -55,27 +57,29 @@ class EventReader:
         self.create_env()
         self.create_loggers()
 
-        if self.topic == 'UNMAPPED':
-            self.logger.warning('not enabling reading, topic is UNMAPPED')
+        if self.topic == "UNMAPPED":
+            self.logger.warning("not enabling reading, topic is UNMAPPED")
             return
 
         self.create_consumer()
         self.create_event_manager()
 
         if sleep_time > 0:
-            self.logger.info('sleeping for {} second before consuming'.format(sleep_time))
+            self.logger.info(
+                "sleeping for {} second before consuming".format(sleep_time)
+            )
             time.sleep(sleep_time)
 
         while True:
             try:
                 self.try_to_read()
             except InterruptedError as e:
-                self.logger.info('got interrupted, shutting down...')
+                self.logger.info("got interrupted, shutting down...")
                 self.logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
                 break
             except Exception as e:
-                self.logger.error('could not read from kafka: {}'.format(str(e)))
+                self.logger.error("could not read from kafka: {}".format(str(e)))
                 self.logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
 
@@ -87,21 +91,23 @@ class EventReader:
     def create_consumer(self):
         self.reader_factory = KafkaReaderFactory()
 
-        bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
+        bootstrap_servers = self.env.config.get(
+            ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA
+        )
 
-        self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
-        self.logger.info('consuming from topic {}'.format(self.topic))
+        self.logger.info("bootstrapping from servers: %s" % (str(bootstrap_servers)))
+        self.logger.info("consuming from topic {}".format(self.topic))
 
         self.consumer = self.reader_factory.create_consumer(
             self.topic,
             group_id=self.group_id(),
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
-            auto_offset_reset='latest',
+            auto_offset_reset="latest",
             connections_max_idle_ms=9 * ONE_MINUTE,  # default: 9min
             max_poll_interval_ms=10 * ONE_MINUTE,  # default: 5min
             session_timeout_ms=ONE_MINUTE,  # default: 10s
-            max_poll_records=50  # default: 500
+            max_poll_records=50,  # default: 500
         )
 
     def create_event_manager(self):
@@ -118,8 +124,8 @@ class EventReader:
 
     def create_env(self):
         config_paths = None
-        if 'LK_CONFIG' in os.environ:
-            config_paths = [os.environ['LK_CONFIG']]
+        if "LK_CONFIG" in os.environ:
+            config_paths = [os.environ["LK_CONFIG"]]
 
         env = create_env(config_paths)
         initialize_env(env, is_child_process=True)
@@ -137,19 +143,28 @@ class EventReader:
                 self.handler_manager.handle_event(message.topic, data)
             except Exception as e:
                 event_id = data.get("id")[:8]
-                self.logger.error(f"[{event_id}] dropping event, could not handle: {str(e)}")
+                self.logger.error(
+                    f"[{event_id}] dropping event, could not handle: {str(e)}"
+                )
                 self.logger.exception(e)
 
     def try_to_parse(self, message) -> (dict, Activity):
         try:
-            data = json.loads(message.value.decode('ascii'))
+            data = json.loads(message.value.decode("ascii"))
         except Exception as e:
-            self.logger.error('could not decode message from kafka, dropping: {}'.format(str(e)))
+            self.logger.error(
+                "could not decode message from kafka, dropping: {}".format(str(e))
+            )
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
-            self.dropped_msg_log.info("[{}:{}:{}:key={}] {}".format(
-                message.topic, message.partition,
-                message.offset, message.key, str(message.value))
+            self.dropped_msg_log.info(
+                "[{}:{}:{}:key={}] {}".format(
+                    message.topic,
+                    message.partition,
+                    message.offset,
+                    message.key,
+                    str(message.value),
+                )
             )
             return
 
@@ -163,23 +178,28 @@ class EventReader:
         return f"{self.topic}-{dt}"
 
     def fail(self, e, message, message_value):
-        self.logger.error('got uncaught exception: {}'.format(str(e)))
-        self.logger.error('event was: {}'.format(str(message)))
+        self.logger.error("got uncaught exception: {}".format(str(e)))
+        self.logger.error("event was: {}".format(str(message)))
         self.logger.exception(traceback.format_exc())
         self.env.capture_exception(sys.exc_info())
         self.fail_msg(message, message.topic, message_value)
 
-    def fail_msg(self, message, original_topic: Union[str, None], decoded_value: Union[dict, None]):
+    def fail_msg(
+        self,
+        message,
+        original_topic: Union[str, None],
+        decoded_value: Union[dict, None],
+    ):
         try:
             self.failed_msg_log.info(str(message))
 
             # in case even decoding failed, we can't publish back to kafka, something
             # odd happened, so just log to the failed message log...
             if decoded_value is not None:
-                fail_topic = f'{original_topic}-failed'
+                fail_topic = f"{original_topic}-failed"
                 self.kafka_writer.fail(fail_topic, decoded_value)
         except Exception as e:
-            self.logger.error('could not log failed message: {}'.format(str(e)))
+            self.logger.error("could not log failed message: {}".format(str(e)))
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
 
@@ -188,10 +208,10 @@ class EventReader:
             self.dropped_msg_log.info(str(message))
 
             if decoded_value is not None:
-                fail_topic = f'{original_topic}-failed'
+                fail_topic = f"{original_topic}-failed"
                 self.kafka_writer.fail(fail_topic, decoded_value)
         except Exception as e:
-            self.logger.error('could not log dropped message: {}'.format(str(e)))
+            self.logger.error("could not log dropped message: {}".format(str(e)))
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
 
@@ -199,20 +219,18 @@ class EventReader:
         self.logger = logging.getLogger(__name__)
 
         f_msg_path = self.env.config.get(
-            ConfigKeys.FAILED_MESSAGE_LOG,
-            default='/tmp/logistik-failed-msgs.log'
+            ConfigKeys.FAILED_MESSAGE_LOG, default="/tmp/logistik-failed-msgs.log"
         )
         d_msg_path = self.env.config.get(
-            ConfigKeys.DROPPED_MESSAGE_LOG,
-            default='/tmp/logistik-dropped-msgs.log'
+            ConfigKeys.DROPPED_MESSAGE_LOG, default="/tmp/logistik-dropped-msgs.log"
         )
 
-        self.failed_msg_log = EventReader.create_logger(f_msg_path, 'FailedMessages')
-        self.dropped_msg_log = EventReader.create_logger(d_msg_path, 'DroppedMessages')
+        self.failed_msg_log = EventReader.create_logger(f_msg_path, "FailedMessages")
+        self.dropped_msg_log = EventReader.create_logger(d_msg_path, "DroppedMessages")
 
     @staticmethod
     def create_logger(_path: str, _name: str) -> logging.Logger:
-        msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
+        msg_formatter = logging.Formatter("%(asctime)s: %(message)s")
         msg_handler = logging.FileHandler(_path)
         msg_handler.setFormatter(msg_formatter)
         msg_logger = logging.getLogger(_name)

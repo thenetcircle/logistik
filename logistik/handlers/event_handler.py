@@ -43,7 +43,9 @@ class EventHandler:
         except InterruptedError:
             raise
         except Exception as e:
-            self.logger.error('could not parse data, original data was: {}'.format(str(data)))
+            self.logger.error(
+                "could not parse data, original data was: {}".format(str(data))
+            )
             self.logger.exception(e)
             self.logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
@@ -60,7 +62,7 @@ class EventHandler:
         return responses
 
     def handle_with_exponential_back_off(
-            self, activity, data, handlers: list
+        self, activity, data, handlers: list
     ) -> List[Tuple[HandlerConf, dict]]:
         all_responses: List[Tuple[HandlerConf, dict]] = list()
         retry_idx = 0
@@ -70,7 +72,7 @@ class EventHandler:
         if len(handlers):
             topic_name = handlers[0].event
         else:
-            topic_name = '<unknown>'
+            topic_name = "<unknown>"
 
         while len(all_responses) < len(handlers):
             try:
@@ -94,8 +96,12 @@ class EventHandler:
                 handlers.extend(failures)
 
                 failed_handler_names = ",".join([handler.name for handler in handlers])
-                self.logger.warning(f"[{event_id}] failed handlers: {failed_handler_names}")
-                self.logger.warning(f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s")
+                self.logger.warning(
+                    f"[{event_id}] failed handlers: {failed_handler_names}"
+                )
+                self.logger.warning(
+                    f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s"
+                )
 
                 if retry_idx == 0:
                     warning_str = f"handlers failed: {failed_handler_names}"
@@ -122,7 +128,9 @@ class EventHandler:
 
         return all_responses
 
-    def call_handlers(self, data: dict, handlers) -> (List[Tuple[HandlerConf, dict]], list):
+    def call_handlers(
+        self, data: dict, handlers
+    ) -> (List[Tuple[HandlerConf, dict]], list):
         handler_func = partial(HttpHandler.call_handler, data)
         responses = list()
         failures = list()
@@ -148,8 +156,11 @@ class EventHandler:
                 failures.append(handler)
 
         for handler, (status_code, response) in return_dict.items():
-            if status_code not in {200, 422, 404, 400}:  # 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
-                self.logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
+            # 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
+            if status_code not in {200, 422, 404, 400}:
+                self.logger.warning(
+                    f"got status code {status_code} for handler {handler.node_id()}"
+                )
                 failures.append(handler)
             else:
                 responses.append((handler, response))
@@ -173,9 +184,7 @@ class EventHandler:
         if path is not None and path[0] != "/":
             separator = "/"
 
-        url = "{}{}:{}{}{}".format(
-            schema, endpoint, port, separator, path
-        )
+        url = "{}{}:{}{}{}".format(schema, endpoint, port, separator, path)
 
         response = Requester.request(
             method=method, url=url, json=data, headers=json_header, timeout=timeout

@@ -11,9 +11,9 @@ from logistik.config import ConfigKeys
 environ.initialize_env(environ.env, is_child_process=False)
 
 logger = logging.getLogger(__name__)
-logging.getLogger('kafka.conn').setLevel(logging.INFO)
-logging.getLogger('kafka.client').setLevel(logging.INFO)
-logging.getLogger('kafka.metrics').setLevel(logging.INFO)
+logging.getLogger("kafka.conn").setLevel(logging.INFO)
+logging.getLogger("kafka.client").setLevel(logging.INFO)
+logging.getLogger("kafka.metrics").setLevel(logging.INFO)
 
 
 class ReverseProxied(object):
@@ -34,28 +34,29 @@ class ReverseProxied(object):
 
     :param app: the WSGI application
     """
+
     def __init__(self, _app):
         self.app = _app
 
     def __call__(self, env, start_response):
-        script_name = env.get('HTTP_X_SCRIPT_NAME', '')
+        script_name = env.get("HTTP_X_SCRIPT_NAME", "")
         if script_name:
-            env['SCRIPT_NAME'] = script_name
-            path_info = env['PATH_INFO']
+            env["SCRIPT_NAME"] = script_name
+            path_info = env["PATH_INFO"]
             if path_info.startswith(script_name):
-                env['PATH_INFO'] = path_info[len(script_name):]
+                env["PATH_INFO"] = path_info[len(script_name) :]
 
-        scheme = env.get('HTTP_X_SCHEME', '')
+        scheme = env.get("HTTP_X_SCHEME", "")
         if scheme:
-            env['wsgi.url_scheme'] = scheme
+            env["wsgi.url_scheme"] = scheme
         return self.app(env, start_response)
 
 
 def create_app():
     _app = Flask(
         import_name=__name__,
-        template_folder='admin/templates/',
-        static_folder='admin/static/'
+        template_folder="admin/templates/",
+        static_folder="admin/static/",
     )
 
     db_host = environ.env.config.get(ConfigKeys.HOST, domain=ConfigKeys.DATABASE)
@@ -64,15 +65,19 @@ def create_app():
     db_user = environ.env.config.get(ConfigKeys.USER, domain=ConfigKeys.DATABASE)
     db_pass = environ.env.config.get(ConfigKeys.PASS, domain=ConfigKeys.DATABASE)
     db_name = environ.env.config.get(ConfigKeys.NAME, domain=ConfigKeys.DATABASE)
-    db_pool = int(environ.env.config.get(ConfigKeys.POOL_SIZE, domain=ConfigKeys.DATABASE))
+    db_pool = int(
+        environ.env.config.get(ConfigKeys.POOL_SIZE, domain=ConfigKeys.DATABASE)
+    )
     secret = environ.env.config.get(ConfigKeys.SECRET_KEY, default=str(uuid()))
-    root_url = environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB, default='/')
+    root_url = environ.env.config.get(
+        ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB, default="/"
+    )
 
-    _app.config['SECRET_KEY'] = secret
-    _app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    _app.config['SQLALCHEMY_POOL_SIZE'] = db_pool
-    _app.config['ROOT_URL'] = root_url
-    _app.config['SQLALCHEMY_DATABASE_URI'] = '{}://{}:{}@{}:{}/{}'.format(
+    _app.config["SECRET_KEY"] = secret
+    _app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    _app.config["SQLALCHEMY_POOL_SIZE"] = db_pool
+    _app.config["ROOT_URL"] = root_url
+    _app.config["SQLALCHEMY_DATABASE_URI"] = "{}://{}:{}@{}:{}/{}".format(
         db_drvr, db_user, db_pass, db_host, db_port, db_name
     )
 
@@ -82,7 +87,7 @@ def create_app():
 
 
 app, socketio = create_app()
-#environ.init_web_auth(environ.env)
+# environ.init_web_auth(environ.env)
 
 # keep this, otherwise flask won't find any routes
 import logistik.admin.routes

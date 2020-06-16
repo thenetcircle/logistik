@@ -32,11 +32,11 @@ class DatabaseManager(IDatabase):
 
     @with_session
     def get_all_active_handlers(self) -> List[HandlerConf]:
-        handlers = HandlerConfEntity.query\
-            .filter_by(retired=False)\
-            .all()
+        handlers = HandlerConfEntity.query.filter_by(retired=False).all()
 
-        return [handler.to_repr() for handler in handlers if handler.event != 'UNMAPPED']
+        return [
+            handler.to_repr() for handler in handlers if handler.event != "UNMAPPED"
+        ]
 
     @with_session
     def update_handler(self, handler_conf: HandlerConf):

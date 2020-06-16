@@ -12,24 +12,24 @@ from logistik.config import ConfigKeys
 from logistik.environ import create_env, initialize_env
 from logistik.utils.exceptions import QueryException
 
-log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
-if log_level == 'DEBUG':
+log_level = os.environ.get("LOG_LEVEL", "DEBUG")
+if log_level == "DEBUG":
     log_level = logging.DEBUG
-elif log_level == 'INFO':
+elif log_level == "INFO":
     log_level = logging.INFO
-elif log_level in {'WARNING', 'WARN'}:
+elif log_level in {"WARNING", "WARN"}:
     log_level = logging.WARNING
 else:
     log_level = logging.INFO
 
 logging.basicConfig(
-    level=log_level,
-    format='%(asctime)s - %(name)-18s - %(levelname)-7s - %(message)s')
+    level=log_level, format="%(asctime)s - %(name)-18s - %(levelname)-7s - %(message)s"
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(log_level)
-logging.getLogger('kafka').setLevel(logging.WARNING)
-logging.getLogger('kafka.conn').setLevel(logging.WARNING)
+logging.getLogger("kafka").setLevel(logging.WARNING)
+logging.getLogger("kafka.conn").setLevel(logging.WARNING)
 
 
 class ReverseProxied(object):
@@ -50,27 +50,28 @@ class ReverseProxied(object):
 
     :param app: the WSGI application
     """
+
     def __init__(self, _app):
         self.app = _app
 
     def __call__(self, env, start_response):
-        script_name = env.get('HTTP_X_SCRIPT_NAME', '')
+        script_name = env.get("HTTP_X_SCRIPT_NAME", "")
         if script_name:
-            env['SCRIPT_NAME'] = script_name
-            path_info = env['PATH_INFO']
+            env["SCRIPT_NAME"] = script_name
+            path_info = env["PATH_INFO"]
             if path_info.startswith(script_name):
-                env['PATH_INFO'] = path_info[len(script_name):]
+                env["PATH_INFO"] = path_info[len(script_name) :]
 
-        scheme = env.get('HTTP_X_SCHEME', '')
+        scheme = env.get("HTTP_X_SCHEME", "")
         if scheme:
-            env['wsgi.url_scheme'] = scheme
+            env["wsgi.url_scheme"] = scheme
         return self.app(env, start_response)
 
 
 def create_app():
     config_paths = None
-    if 'LK_CONFIG' in os.environ:
-        config_paths = [os.environ['LK_CONFIG']]
+    if "LK_CONFIG" in os.environ:
+        config_paths = [os.environ["LK_CONFIG"]]
 
     env = create_env(config_paths)
     initialize_env(env)
@@ -93,22 +94,24 @@ def create_app():
 
     _app = Flask(
         import_name=__name__,
-        template_folder='admin/templates/',
-        static_folder='admin/static/'
+        template_folder="admin/templates/",
+        static_folder="admin/static/",
     )
     env.cors = CORS(_app, resources={r"/api/*": {"origins": "*"}})
 
     _app.wsgi_app = ReverseProxied(ProxyFix(_app.wsgi_app))
 
-    _app.config['ROOT_URL'] = env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB, default='/')
-    _app.config['SECRET_KEY'] = secret
-    _app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    _app.config['SQLALCHEMY_POOL_SIZE'] = db_pool
-    _app.config['SQLALCHEMY_DATABASE_URI'] = '{}://{}:{}@{}:{}/{}'.format(
+    _app.config["ROOT_URL"] = env.config.get(
+        ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB, default="/"
+    )
+    _app.config["SECRET_KEY"] = secret
+    _app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    _app.config["SQLALCHEMY_POOL_SIZE"] = db_pool
+    _app.config["SQLALCHEMY_DATABASE_URI"] = "{}://{}:{}@{}:{}/{}".format(
         db_drvr, db_user, db_pass, db_host, db_port, db_name
     )
 
-    logger.info('configuring db: {}'.format(_app.config['SQLALCHEMY_DATABASE_URI']))
+    logger.info("configuring db: {}".format(_app.config["SQLALCHEMY_DATABASE_URI"]))
 
     env.app = _app
     environ.env.app = _app
@@ -132,9 +135,7 @@ def prepare_handler(env, handler_conf):
             pass
 
     if handler_conf.model_type is None:
-        logger.info(
-            f'not adding handler for empty model type with node id "{node_id}"'
-        )
+        logger.info(f'not adding handler for empty model type with node id "{node_id}"')
         return None
 
     return handler_conf
@@ -156,7 +157,9 @@ def query_model_for_info(env, handler_conf):
 
     if response.status_code != 200:
         # likely doesn't implement the query interface
-        env.webhook.warning(f"got error code {response.status_code} when querying /info")
+        env.webhook.warning(
+            f"got error code {response.status_code} when querying /info"
+        )
         raise QueryException(response.status_code)
 
     fields = [
@@ -186,9 +189,7 @@ def query_model_for_info(env, handler_conf):
     env.db.update_handler(handler_conf)
 
 
-def update_handler_value(
-    handler_conf, json_response: dict, field: str
-):
+def update_handler_value(handler_conf, json_response: dict, field: str):
     original = handler_conf.__getattribute__(field)
     updated = json_response.get(field)
 

@@ -10,4 +10,6 @@ class Requester(IRequester):
 
     @staticmethod
     def request(method, url, json=None, headers=None, timeout=10):
-        return requests.request(method=method, url=url, json=json, headers=headers, timeout=timeout)
+        return requests.request(
+            method=method, url=url, json=json, headers=headers, timeout=timeout
+        )

@@ -2,6 +2,7 @@
 from logistik.server import app, api
 
 from logistik import environ
-environ.env.node = 'app'
+
+environ.env.node = "app"
 environ.env.api = api
 environ.env.app = app

@@ -24,9 +24,7 @@ class HttpHandler(BaseHandler):
         if path is not None and path[0] != "/":
             separator = "/"
 
-        url = "{}{}:{}{}{}".format(
-            schema, endpoint, port, separator, path
-        )
+        url = "{}{}:{}{}{}".format(schema, endpoint, port, separator, path)
 
         response = Requester.request(
             method=method, url=url, json=data, headers=json_header, timeout=timeout
