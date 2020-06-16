@@ -137,10 +137,11 @@ class EventReader:
                 continue
 
             try:
-                responses = self.env.handlers_manager.handle_event(message.topic, data)
+                responses = self.handler_manager.handle_event(message.topic, data)
             except Exception as e:
                 event_id = data.get("id")[:8]
                 self.logger.error(f"[{event_id}] dropping event, could not handle: {str(e)}")
+                self.logger.exception(e)
                 continue
 
             for handler_conf, response in responses:
