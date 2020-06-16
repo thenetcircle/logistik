@@ -151,7 +151,7 @@ class EventHandler:
                 failures.append(handler)
 
         for handler, (status_code, response) in return_dict.items():
-            if status_code not in {200, 422}:  # 'OK' and 'Duplicate Request'
+            if status_code not in {200, 422, 404}:  # 'OK', 'Duplicate Request' and 'Not Found'
                 self.logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
                 failures.append(handler)
             else:
