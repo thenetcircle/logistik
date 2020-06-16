@@ -4,6 +4,7 @@ import os
 from typing import Union
 from typing import List
 from typing import Tuple
+from multiprocessing import Process
 
 import eventlet
 import pkg_resources
@@ -508,7 +509,8 @@ def init_event_reader(gn_env: GNEnvironment):
 
     for event in events:
         reader = EventReader(event)
-        process = eventlet.spawn(reader.run)
+        process = Process(target=reader.run)
+        process.start()
         gn_env.event_readers[event] = process
 
 
