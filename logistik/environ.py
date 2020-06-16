@@ -18,6 +18,7 @@ from logistik.stats import IStats
 from logistik.cache import ICache
 from logistik.queue import IKafkaWriter
 from logistik.db import IDatabase
+from logistik.utils import IWebHookHandler
 from logistik.utils.decorators import timeit
 
 ENV_KEY_ENVIRONMENT = 'LK_ENVIRONMENT'
@@ -159,6 +160,7 @@ class GNEnvironment(object):
         self.cache: ICache = None
         self.db: IDatabase = None
         self.stats: IStats = None
+        self.webhook: IWebHookHandler = None
         self.sql_alchemy_db = None
         self.failed_msg_log: logging.Logger = None
         self.dropped_msg_log: logging.Logger = None
@@ -510,6 +512,13 @@ def init_event_reader(gn_env: GNEnvironment):
         gn_env.event_readers[event] = process
 
 
+@timeit(logger, 'init webhook')
+def init_webhook(gn_env: GNEnvironment):
+    from logistik.utils.webhook import WebHookHandler
+
+    gn_env.webhook = WebHookHandler(gn_env)
+
+
 def initialize_env(lk_env):
     init_logging(lk_env)
     init_cache_service(lk_env)
@@ -519,10 +528,8 @@ def initialize_env(lk_env):
     init_web_auth(lk_env)
     init_db_service(lk_env)
     init_kafka_writer(lk_env)
-    # init_event_reader(lk_env)
-
     init_handlers_manager(lk_env)
-    # init_event_handlers(lk_env)
+    init_webhook(lk_env)
 
     logger.info('startup done!')
 
