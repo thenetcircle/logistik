@@ -449,30 +449,22 @@ def init_enrichment_service(gn_env: GNEnvironment):
     ]
 
 
-def init_kafka_writer(gn_env: GNEnvironment):
-    if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
-        # assume we're testing
-        return
-
-    from logistik.queue.kafka_writer import KafkaWriter
-    gn_env.kafka_writer = KafkaWriter(gn_env)
-    gn_env.kafka_writer.setup()
-
-
-def init_event_reader(gn_env: GNEnvironment, handlers: List[HandlerConf]):
-    all_handlers = gn_env.db.get_all_handlers()
+def init_event_reader(gn_env: GNEnvironment, all_handlers: List[HandlerConf]):
     gn_env.event_readers = dict()
-    topics = set()
+    topic_to_handlers = dict()
 
-    from logistik.handlers.event_reader import EventReader
+    from logistik.queue.event_reader import EventReader
 
     for handler in all_handlers:
-        if handler.retired:
+        if handler.retired or handler.event == 'UNMAPPED':
             continue
 
-        topics.add(handler.event)
+        if handler.event not in topic_to_handlers.keys():
+            topic_to_handlers[handler.event] = list()
 
-    for topic in topics:
+        topic_to_handlers[handler.event].append(handler)
+
+    for topic, handlers in topic_to_handlers.items():
         reader = EventReader(topic, handlers)
         process = Process(target=reader.run)
         process.start()

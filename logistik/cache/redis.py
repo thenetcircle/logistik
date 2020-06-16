@@ -22,18 +22,3 @@ class CacheRedis(ICache):
         else:
             from redis import Redis
             self.redis = Redis(host=host, port=port, db=db)
-
-    def get_enabled_handlers_for(self, event_name: str) -> Union[None, List[HandlerConf]]:
-        return self.ttl_dict.get('handlers-{}'.format(event_name))
-
-    def reset_enabled_handlers_for(self, event_name: str) -> None:
-        handler_name = 'handlers-{}'.format(event_name)
-        if handler_name in self.ttl_dict:
-            try:
-                del self.ttl_dict[handler_name]
-            except KeyError as e:
-                self.logger.warning('could not delete key {} from cache, might be a race condition'.format(str(e)))
-                self.env.capture_exception(sys.exc_info())
-
-    def set_enabled_handlers_for(self, event_name: str, handlers: List[HandlerConf]):
-        self.ttl_dict['handlers-{}'.format(event_name)] = handlers

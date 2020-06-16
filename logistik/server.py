@@ -116,10 +116,8 @@ def create_app():
     with _app.app_context():
         env.dbman.init_app(_app)
         env.dbman.create_all()
-        handlers = env.db.get_all_handlers()
+        handlers = env.db.get_all_activate_handlers()
         environ.init_event_reader(env, handlers)
-
-    # environ.init_web_auth(env)
 
     return _app, Api(_app)
 
