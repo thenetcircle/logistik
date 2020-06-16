@@ -38,10 +38,10 @@ class KafkaReaderFactory(IKafkaReaderFactory):
 
 class EventReader:
     def __init__(self, topic: str, all_handlers: list):
-        self.logger = logging.getLogger(__name__)
         self.topic = topic
 
         self.all_handlers = all_handlers
+        self.logger = None
         self.failed_msg_log = None
         self.dropped_msg_log = None
         self.reader_factory = None
@@ -219,6 +219,8 @@ class EventReader:
             self.env.capture_exception(sys.exc_info())
 
     def create_loggers(self):
+        self.logger = logging.getLogger(__name__)
+
         f_msg_path = self.env.config.get(
             ConfigKeys.FAILED_MESSAGE_LOG,
             default='/tmp/logistik-failed-msgs.log'
