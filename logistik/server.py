@@ -102,6 +102,8 @@ def create_app():
     with _app.app_context():
         environ.env.dbman.init_app(_app)
         environ.env.dbman.create_all()
+        environ.init_event_reader(environ.env)
+        environ.init_event_handlers(environ.env)
 
     return _app, Api(_app)
 

@@ -519,10 +519,10 @@ def initialize_env(lk_env):
     init_web_auth(lk_env)
     init_db_service(lk_env)
     init_kafka_writer(lk_env)
-    init_event_reader(lk_env)
+    # init_event_reader(lk_env)
 
     init_handlers_manager(lk_env)
-    init_event_handlers(lk_env)
+    # init_event_handlers(lk_env)
 
     logger.info('startup done!')
 
