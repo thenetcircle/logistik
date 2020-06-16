@@ -76,6 +76,8 @@ def create_app():
     env = create_env(config_paths)
     initialize_env(env)
 
+    environ.env = env
+
     if len(env.config) == 0 or env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
         return None, None, None

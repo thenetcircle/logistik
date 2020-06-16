@@ -509,3 +509,5 @@ def initialize_env(lk_env):
     init_webhook(lk_env)
 
     logger.info('startup done!')
+
+env = None
