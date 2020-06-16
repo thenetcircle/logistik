@@ -96,11 +96,41 @@ class EventReader:
             for handler_conf, response in responses:
                 self.env.kafka_writer.publish(handler_conf, response)
 
-    def try_to_parse(self, data) -> (dict, Activity):
+    def try_to_parse(self, message) -> (dict, Activity):
+        self.logger.debug("%s:%d:%d: key=%s" % (
+            message.topic, message.partition,
+            message.offset, message.key)
+        )
+
+        try:
+            message_value = json.loads(message.value.decode('ascii'))
+        except Exception as e:
+            self.logger.error('could not decode message from kafka, dropping: {}'.format(str(e)))
+            self.logger.exception(e)
+            self.env.capture_exception(sys.exc_info())
+            self.dropped_msg_log.info("[{}:{}:{}:key={}] {}".format(
+                message.topic, message.partition,
+                message.offset, message.key, str(message.value))
+            )
+            return
+
+        try:
+            data, activity = self.try_to_parse(message_value)
+        except InterruptedError:
+            raise
+        except ParseException:
+            self.logger.error('could not enrich/parse data, original data was: {}'.format(str(message.value)))
+            self.logger.exception(traceback.format_exc())
+            self.env.capture_exception(sys.exc_info())
+            self.fail_msg(message, message.topic, message_value)
+            return
+        except Exception as e:
+            return self.fail(e, message, message_value)
+
         try:
             return self.env.enrichment_manager.handle(data)
         except Exception as e:
-            raise ParseException(e)
+            return self.fail(e, message, message_value)
 
     def group_id(self):
         dt = datetime.utcnow().replace(tzinfo=pytz.utc).strftime("%y%m%d")
