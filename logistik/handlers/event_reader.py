@@ -51,13 +51,6 @@ class EventReader:
         self.dropped_msg_log = None
         self.consumer = None
 
-        if self.topic == 'UNMAPPED':
-            self.logger.warning('not enabling reading, topic is UNMAPPED')
-            return
-
-        self.create_loggers()
-        self.create_consumer()
-
     def create_consumer(self):
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
 
@@ -77,6 +70,13 @@ class EventReader:
         )
 
     def run(self, sleep_time=3, exit_on_failure=False):
+        if self.topic == 'UNMAPPED':
+            self.logger.warning('not enabling reading, topic is UNMAPPED')
+            return
+
+        self.create_loggers()
+        self.create_consumer()
+
         if sleep_time > 0:
             self.logger.info('sleeping for {} second before consuming'.format(sleep_time))
             time.sleep(sleep_time)
