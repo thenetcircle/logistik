@@ -11,7 +11,6 @@ import yaml
 
 from logistik.config import ConfigKeys
 from logistik.config import HandlerType
-from logistik.discover.consul import IConsulService
 from logistik.handlers import IHandlersManager
 from logistik.enrich import IEnrichmentManager
 from logistik.enrich import IEnricher
@@ -174,7 +173,6 @@ class GNEnvironment(object):
         self.kafka_writer: IKafkaWriter = None
         self.event_handler_map = dict()
         self.event_handlers = dict()
-        self.consul: IConsulService = None
 
 
 def find_config(config_paths: list) -> tuple:
@@ -513,25 +511,18 @@ def init_event_reader(gn_env: GNEnvironment):
 
 
 def initialize_env(lk_env):
-    node_type = os.getenv("LK_NODE")
-
     init_logging(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
     init_enrichment_service(lk_env)
 
-    if node_type == "reader":
-        init_web_auth(lk_env)
-        init_db_service(lk_env)
-        init_kafka_writer(lk_env)
-        init_event_reader(lk_env)
+    init_web_auth(lk_env)
+    init_db_service(lk_env)
+    init_kafka_writer(lk_env)
+    init_event_reader(lk_env)
 
-    elif node_type == "worker":
-        init_handlers_manager(lk_env)
-        init_event_handlers(lk_env)
-
-    else:
-        raise RuntimeError(f"unknown node type '{node_type}'")
+    init_handlers_manager(lk_env)
+    init_event_handlers(lk_env)
 
     logger.info('startup done!')
 
