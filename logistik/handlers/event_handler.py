@@ -66,6 +66,8 @@ class EventHandler:
         else:
             topic_name = '<unknown>'
 
+        self.logger.info("==================== NEW EVENT ====================")
+
         while len(all_responses) < len(handlers):
             self.logger.info(f"all_responses: {len(all_responses)}, handlers: {len(handlers)}")
             try:
@@ -134,10 +136,15 @@ class EventHandler:
                 self.env.capture_exception(sys.exc_info())
                 failures.append(handler)
 
-        for handler, response in return_dict.items():
-            responses.append(response)
+        for handler, (status_code, response) in return_dict.items():
+            if status_code != 200:
+                self.logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
+                failures.append(handler)
+            else:
+                responses.append(response)
 
         self.logger.info(f"responses: {responses}")
+        self.logger.info(f"return_dict: {responses}")
 
         return responses, failures
 
