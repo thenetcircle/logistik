@@ -4,6 +4,7 @@ import traceback
 from functools import partial
 from multiprocessing import Process
 from multiprocessing import Manager
+import time
 from typing import List, Tuple, Any
 
 from activitystreams import Activity
@@ -12,6 +13,7 @@ from activitystreams import parse as parse_as
 from logistik.db.reprs.handler import HandlerConf
 from logistik.handlers.http import HttpHandler
 from logistik.handlers.request import Requester
+from logistik.queue.kafka_writer import KafkaWriter
 from logistik.utils.exceptions import ParseException
 
 ONE_MINUTE = 60_000
@@ -23,14 +25,17 @@ class EventHandler:
         self.logger = logging.getLogger(__name__)
         self.topic = topic
         self.handlers = handlers
-        self.running = False
 
         self.failed_msg_log = None
         self.dropped_msg_log = None
         self.consumer = None
+        self.kafka_writer = None
 
-        if self.topic == 'UNMAPPED':
-            self.logger.info('not enabling reading for {}, no topic mapped'.format(self.handlers[0].node_id()))
+        self.create_kafka_writer()
+
+    def create_kafka_writer(self):
+        self.kafka_writer = KafkaWriter(self.env)
+        self.kafka_writer.setup()
 
     def handle_event(self, data) -> List[dict]:
         try:
@@ -83,6 +88,10 @@ class EventHandler:
             if len(responses):
                 all_responses.extend(responses)
 
+                # send successful responses right away, then retry failed ones
+                for handler_conf, response in responses:
+                    self.kafka_writer.publish(handler_conf, response)
+
             if len(failures):
                 handlers.clear()
                 handlers.extend(failures)
@@ -109,6 +118,10 @@ class EventHandler:
                 self.env.webhook.ok(info_str, topic_name, event_id)
                 self.logger.info(info_str)
                 break
+
+            if retry_idx > 0:
+                self.logger.info(f"sleeping for {delay:.2f}s before next retry")
+                time.sleep(delay)
 
         return all_responses
 
@@ -138,7 +151,7 @@ class EventHandler:
                 failures.append(handler)
 
         for handler, (status_code, response) in return_dict.items():
-            if status_code != 200:
+            if status_code not in {200, 422}:  # 'OK' and 'Duplicate Request'
                 self.logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
                 failures.append(handler)
             else:

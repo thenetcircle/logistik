@@ -61,7 +61,6 @@ class EventReader:
 
         self.create_consumer()
         self.create_event_manager()
-        self.create_kafka_writer()
 
         if sleep_time > 0:
             self.logger.info('sleeping for {} second before consuming'.format(sleep_time))
@@ -117,10 +116,6 @@ class EventReader:
         self.handler_manager = HandlersManager(self.env)
         self.handler_manager.start_event_handler(self.topic, event_handlers)
 
-    def create_kafka_writer(self):
-        self.kafka_writer = KafkaWriter(self.env)
-        self.kafka_writer.setup()
-
     def create_env(self):
         config_paths = None
         if 'LK_CONFIG' in os.environ:
@@ -138,15 +133,11 @@ class EventReader:
                 continue
 
             try:
-                responses = self.handler_manager.handle_event(message.topic, data)
+                self.handler_manager.handle_event(message.topic, data)
             except Exception as e:
                 event_id = data.get("id")[:8]
                 self.logger.error(f"[{event_id}] dropping event, could not handle: {str(e)}")
                 self.logger.exception(e)
-                continue
-
-            for handler_conf, response in responses:
-                self.kafka_writer.publish(handler_conf, response)
 
     def try_to_parse(self, message) -> (dict, Activity):
         try:
