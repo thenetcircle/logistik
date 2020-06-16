@@ -133,6 +133,7 @@ class EventReader:
                 continue
 
             try:
+                self.logger.info(f"request: {data}")
                 self.handler_manager.handle_event(message.topic, data)
             except Exception as e:
                 event_id = data.get("id")[:8]
