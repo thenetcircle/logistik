@@ -6,7 +6,6 @@ from typing import List
 from typing import Tuple
 from multiprocessing import Process
 
-import eventlet
 import pkg_resources
 import yaml
 
@@ -20,7 +19,6 @@ from logistik.cache import ICache
 from logistik.queue import IKafkaWriter
 from logistik.db import IDatabase, HandlerConf
 from logistik.utils import IWebHookHandler
-from logistik.utils.decorators import timeit
 
 ENV_KEY_ENVIRONMENT = 'LK_ENVIRONMENT'
 ENV_KEY_SECRETS = 'LK_SECRETS'
@@ -238,7 +236,6 @@ def load_secrets_file(config_dict: dict) -> dict:
     return ast.literal_eval(template)
 
 
-@timeit(logger, 'creating base environment')
 def create_env(config_paths: list = None, is_child_process: bool = False) -> GNEnvironment:
     logging.basicConfig(level='DEBUG', format=ConfigKeys.DEFAULT_LOG_FORMAT)
 
@@ -291,7 +288,6 @@ def create_env(config_paths: list = None, is_child_process: bool = False) -> GNE
     return gn_env
 
 
-@timeit(logger, 'init cache service')
 def init_cache_service(gn_env: GNEnvironment):
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
@@ -322,7 +318,6 @@ def init_cache_service(gn_env: GNEnvironment):
         raise RuntimeError('unknown cache type %s, use one of [redis, mock]' % cache_type)
 
 
-@timeit(logger, 'init stats service')
 def init_stats_service(gn_env: GNEnvironment) -> None:
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
@@ -342,7 +337,6 @@ def init_stats_service(gn_env: GNEnvironment) -> None:
         gn_env.stats = StatsDService(gn_env)
 
 
-@timeit(logger, 'init logging service')
 def init_logging(gn_env: GNEnvironment) -> None:
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
@@ -402,7 +396,6 @@ def init_logging(gn_env: GNEnvironment) -> None:
     gn_env.capture_exception = capture_exception
 
 
-@timeit(logger, 'init web auth service')
 def init_web_auth(gn_env: GNEnvironment) -> None:
     """
     manually invoked after app initialized
@@ -424,7 +417,6 @@ def init_web_auth(gn_env: GNEnvironment) -> None:
     logger.info('initialized OAuthService')
 
 
-@timeit(logger, 'init db service')
 def init_db_service(gn_env: GNEnvironment) -> None:
     from flask_sqlalchemy import SQLAlchemy
     gn_env.dbman = SQLAlchemy()
@@ -438,7 +430,6 @@ def init_db_service(gn_env: GNEnvironment) -> None:
     gn_env.db = DatabaseManager(gn_env)
 
 
-@timeit(logger, 'init enrichment service')
 def init_enrichment_service(gn_env: GNEnvironment):
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
@@ -458,7 +449,6 @@ def init_enrichment_service(gn_env: GNEnvironment):
     ]
 
 
-@timeit(logger, 'init kafka writer service')
 def init_kafka_writer(gn_env: GNEnvironment):
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
@@ -469,7 +459,6 @@ def init_kafka_writer(gn_env: GNEnvironment):
     gn_env.kafka_writer.setup()
 
 
-@timeit(logger, 'init event reader')
 def init_event_reader(gn_env: GNEnvironment, handlers: List[HandlerConf]):
     all_handlers = gn_env.db.get_all_handlers()
     gn_env.event_readers = dict()
@@ -490,7 +479,6 @@ def init_event_reader(gn_env: GNEnvironment, handlers: List[HandlerConf]):
         gn_env.event_readers[topic] = process
 
 
-@timeit(logger, 'init webhook')
 def init_webhook(gn_env: GNEnvironment):
     from logistik.utils.webhook import WebHookHandler
 
@@ -498,6 +486,9 @@ def init_webhook(gn_env: GNEnvironment):
 
 
 def initialize_env(lk_env, is_child_process=False):
+    global env
+    env = lk_env
+
     init_logging(lk_env)
     init_cache_service(lk_env)
     init_stats_service(lk_env)
