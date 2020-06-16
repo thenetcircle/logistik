@@ -90,24 +90,15 @@ class EventReader:
                 time.sleep(0.1)
                 break
 
-            responses = self.call_worker_api(message)
+            data = self.try_to_parse(message)
+            responses = self.env.handlers_manager.handle_event(message.topic, data)
 
             for handler_conf, response in responses:
                 self.env.kafka_writer.publish(handler_conf, response)
 
-    def call_worker_api(self, message):
-        # TODO: call worker api
-        return list()
-
     def try_to_parse(self, data) -> (dict, Activity):
         try:
-            enriched_data = self.env.enrichment_manager.handle(data)
-        except Exception as e:
-            raise ParseException(e)
-
-        try:
-            activity = parse_as(enriched_data)
-            return enriched_data, activity
+            return self.env.enrichment_manager.handle(data)
         except Exception as e:
             raise ParseException(e)
 
