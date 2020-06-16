@@ -112,7 +112,7 @@ def create_app():
 
     env.app = _app
     environ.env.app = _app
-    
+
     with _app.app_context():
         env.dbman.init_app(_app)
         env.dbman.create_all()

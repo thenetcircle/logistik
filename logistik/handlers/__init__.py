@@ -19,10 +19,6 @@ class IHandlersManager(ABC):
         """pass"""
 
     @abstractmethod
-    def query_model_for_info(self, handler_conf):
-        """pass"""
-
-    @abstractmethod
     def handle_event(self, topic, event) -> List[dict]:
         """pass"""
 
