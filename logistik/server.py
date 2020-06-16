@@ -9,7 +9,6 @@ from werkzeug.contrib.fixers import ProxyFix
 
 from logistik import environ
 from logistik.config import ConfigKeys
-from logistik.db import HandlerConf
 from logistik.environ import create_env, initialize_env
 from logistik.utils.exceptions import QueryException
 
@@ -122,7 +121,7 @@ def create_app():
     return _app, Api(_app)
 
 
-def prepare_handler(env, handler_conf: HandlerConf):
+def prepare_handler(env, handler_conf):
     node_id = handler_conf.node_id()
 
     if handler_conf.event == "UNMAPPED":
@@ -140,7 +139,7 @@ def prepare_handler(env, handler_conf: HandlerConf):
     return handler_conf
 
 
-def query_model_for_info(env, handler_conf: HandlerConf):
+def query_model_for_info(env, handler_conf):
     env_name = ""
     if handler_conf.environment is not None:
         env_name = handler_conf.environment
@@ -187,7 +186,7 @@ def query_model_for_info(env, handler_conf: HandlerConf):
 
 
 def update_handler_value(
-    handler_conf: HandlerConf, json_response: dict, field: str
+    handler_conf, json_response: dict, field: str
 ):
     original = handler_conf.__getattribute__(field)
     updated = json_response.get(field)
