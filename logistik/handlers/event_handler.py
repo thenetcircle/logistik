@@ -4,11 +4,12 @@ import traceback
 from functools import partial
 from multiprocessing import Process
 from multiprocessing import Manager
-from typing import List
+from typing import List, Tuple, Any
 
 from activitystreams import Activity
 from activitystreams import parse as parse_as
 
+from logistik.db.reprs.handler import HandlerConf
 from logistik.handlers.http import HttpHandler
 from logistik.handlers.request import Requester
 from logistik.utils.exceptions import ParseException
@@ -55,8 +56,8 @@ class EventHandler:
 
     def handle_with_exponential_back_off(
             self, activity, data, handlers: list
-    ) -> List[dict]:
-        all_responses = list()
+    ) -> List[Tuple[HandlerConf, dict]]:
+        all_responses: List[Tuple[HandlerConf, dict]] = list()
         retry_idx = 0
         delay = 2
         event_id = activity.id[:8]
@@ -111,7 +112,7 @@ class EventHandler:
 
         return all_responses
 
-    def call_handlers(self, data: dict, handlers) -> (List[dict], list):
+    def call_handlers(self, data: dict, handlers) -> (List[Tuple[HandlerConf, dict]], list):
         handler_func = partial(HttpHandler.call_handler, data)
         responses = list()
         failures = list()
@@ -141,7 +142,7 @@ class EventHandler:
                 self.logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
                 failures.append(handler)
             else:
-                responses.append(response)
+                responses.append((handler, response))
 
         self.logger.info(f"responses: {responses}")
         self.logger.info(f"return_dict: {responses}")
