@@ -18,8 +18,8 @@ ONE_MINUTE = 60_000
 
 
 class EventHandler:
-    def __init__(self, topic: str, handlers: List[HandlerConf]):
-        self.env = environ.env
+    def __init__(self, env, topic: str, handlers: List[HandlerConf]):
+        self.env = env
         self.logger = logging.getLogger(__name__)
         self.topic = topic
         self.handlers = handlers

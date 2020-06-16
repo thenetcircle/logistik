@@ -1,29 +1,23 @@
-import logging
-import sys
 import json
+import logging
+import os
+import sys
 import time
 import traceback
 from abc import ABC, abstractmethod
-
-import eventlet
-from typing import List, Union, Optional, Tuple
 from datetime import datetime
-import pytz
-from functools import partial
+from typing import Union, List
 
+import pytz
 from activitystreams import Activity
-from activitystreams import parse as parse_as
 
 from logistik.config import ConfigKeys
 from logistik.db import HandlerConf
-from logistik import environ
-from logistik.handlers.http import HttpHandler
+from logistik.environ import create_env, initialize_env
 from logistik.handlers.manager import HandlersManager
-from logistik.handlers.request import Requester
 from logistik.queue import IKafkaWriter
 from logistik.queue.kafka_writer import KafkaWriter
 from logistik.utils.exceptions import ParseException
-from logistik.utils.exceptions import MaxRetryError
 
 ONE_MINUTE = 60_000
 
@@ -44,58 +38,25 @@ class KafkaReaderFactory(IKafkaReaderFactory):
 
 
 class EventReader:
-    def __init__(self, topic: str):
-        self.env = environ.env
+    def __init__(self, topic: str, all_handlers: List[HandlerConf]):
         self.logger = logging.getLogger(__name__)
         self.topic = topic
         self.reader_factory = KafkaReaderFactory()
 
+        self.all_handlers = all_handlers
         self.failed_msg_log = None
         self.dropped_msg_log = None
         self.consumer = None
+        self.env = None
         self.handler_manager = None
         self.kafka_writer: IKafkaWriter = None
-
-    def create_consumer(self):
-        bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
-
-        self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
-        self.logger.info('consuming from topic {}'.format(self.topic))
-
-        self.consumer = self.reader_factory.create_consumer(
-            self.topic,
-            group_id=self.group_id(),
-            bootstrap_servers=bootstrap_servers,
-            enable_auto_commit=True,
-            auto_offset_reset='latest',
-            connections_max_idle_ms=9 * ONE_MINUTE,  # default: 9min
-            max_poll_interval_ms=10 * ONE_MINUTE,  # default: 5min
-            session_timeout_ms=ONE_MINUTE,  # default: 10s
-            max_poll_records=50  # default: 500
-        )
-
-    def create_event_manager(self):
-        all_handlers = self.env.db.get_all_handlers()
-        event_handlers = list()
-
-        for handler in all_handlers:
-            if handler.retired or handler.event != self.topic:
-                continue
-
-            event_handlers.append(handler)
-
-        self.handler_manager = HandlersManager(self.env)
-        self.handler_manager.start_event_handler(self.topic, event_handlers)
-
-    def create_kafka_writer(self):
-        self.kafka_writer = KafkaWriter(self.env)
-        self.kafka_writer.setup()
 
     def run(self, sleep_time=3, exit_on_failure=False):
         if self.topic == 'UNMAPPED':
             self.logger.warning('not enabling reading, topic is UNMAPPED')
             return
 
+        self.create_env()
         self.create_loggers()
         self.create_consumer()
         self.create_event_manager()
@@ -122,6 +83,50 @@ class EventReader:
                     break
 
                 time.sleep(1)
+
+    def create_consumer(self):
+        bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
+
+        self.logger.info('bootstrapping from servers: %s' % (str(bootstrap_servers)))
+        self.logger.info('consuming from topic {}'.format(self.topic))
+
+        self.consumer = self.reader_factory.create_consumer(
+            self.topic,
+            group_id=self.group_id(),
+            bootstrap_servers=bootstrap_servers,
+            enable_auto_commit=True,
+            auto_offset_reset='latest',
+            connections_max_idle_ms=9 * ONE_MINUTE,  # default: 9min
+            max_poll_interval_ms=10 * ONE_MINUTE,  # default: 5min
+            session_timeout_ms=ONE_MINUTE,  # default: 10s
+            max_poll_records=50  # default: 500
+        )
+
+    def create_event_manager(self):
+        event_handlers = list()
+
+        for handler in self.all_handlers:
+            if handler.retired or handler.event != self.topic:
+                continue
+
+            event_handlers.append(handler)
+
+        self.handler_manager = HandlersManager(self.env)
+        self.handler_manager.start_event_handler(self.topic, event_handlers)
+
+    def create_kafka_writer(self):
+        self.kafka_writer = KafkaWriter(self.env)
+        self.kafka_writer.setup()
+
+    def create_env(self):
+        config_paths = None
+        if 'LK_CONFIG' in os.environ:
+            config_paths = [os.environ['LK_CONFIG']]
+
+        env = create_env(config_paths)
+        initialize_env(env)
+
+        self.env = env
 
     def try_to_read(self):
         for message in self.consumer:

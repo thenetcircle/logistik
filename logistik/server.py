@@ -9,7 +9,9 @@ from werkzeug.contrib.fixers import ProxyFix
 
 from logistik import environ
 from logistik.config import ConfigKeys
-
+from logistik.db import HandlerConf
+from logistik.environ import create_env, initialize_env
+from logistik.utils.exceptions import QueryException
 
 log_level = os.environ.get('LOG_LEVEL', 'DEBUG')
 if log_level == 'DEBUG':
@@ -67,29 +69,36 @@ class ReverseProxied(object):
 
 
 def create_app():
-    if len(environ.env.config) == 0 or environ.env.config.get(ConfigKeys.TESTING, False):
+    config_paths = None
+    if 'LK_CONFIG' in os.environ:
+        config_paths = [os.environ['LK_CONFIG']]
+
+    env = create_env(config_paths)
+    initialize_env(env)
+
+    if len(env.config) == 0 or env.config.get(ConfigKeys.TESTING, False):
         # assume we're testing
         return None, None, None
 
-    db_host = environ.env.config.get(ConfigKeys.HOST, domain=ConfigKeys.DATABASE)
-    db_port = int(environ.env.config.get(ConfigKeys.PORT, domain=ConfigKeys.DATABASE))
-    db_drvr = environ.env.config.get(ConfigKeys.DRIVER, domain=ConfigKeys.DATABASE)
-    db_user = environ.env.config.get(ConfigKeys.USER, domain=ConfigKeys.DATABASE)
-    db_pass = environ.env.config.get(ConfigKeys.PASS, domain=ConfigKeys.DATABASE)
-    db_name = environ.env.config.get(ConfigKeys.NAME, domain=ConfigKeys.DATABASE)
-    db_pool = int(environ.env.config.get(ConfigKeys.POOL_SIZE, domain=ConfigKeys.DATABASE))
-    secret = environ.env.config.get(ConfigKeys.SECRET_KEY, default=str(uuid()))
+    db_host = env.config.get(ConfigKeys.HOST, domain=ConfigKeys.DATABASE)
+    db_port = int(env.config.get(ConfigKeys.PORT, domain=ConfigKeys.DATABASE))
+    db_drvr = env.config.get(ConfigKeys.DRIVER, domain=ConfigKeys.DATABASE)
+    db_user = env.config.get(ConfigKeys.USER, domain=ConfigKeys.DATABASE)
+    db_pass = env.config.get(ConfigKeys.PASS, domain=ConfigKeys.DATABASE)
+    db_name = env.config.get(ConfigKeys.NAME, domain=ConfigKeys.DATABASE)
+    db_pool = int(env.config.get(ConfigKeys.POOL_SIZE, domain=ConfigKeys.DATABASE))
+    secret = env.config.get(ConfigKeys.SECRET_KEY, default=str(uuid()))
 
     _app = Flask(
         import_name=__name__,
         template_folder='admin/templates/',
         static_folder='admin/static/'
     )
-    environ.env.cors = CORS(_app, resources={r"/api/*": {"origins": "*"}})
+    env.cors = CORS(_app, resources={r"/api/*": {"origins": "*"}})
 
     _app.wsgi_app = ReverseProxied(ProxyFix(_app.wsgi_app))
 
-    _app.config['ROOT_URL'] = environ.env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB, default='/')
+    _app.config['ROOT_URL'] = env.config.get(ConfigKeys.ROOT_URL, domain=ConfigKeys.WEB, default='/')
     _app.config['SECRET_KEY'] = secret
     _app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     _app.config['SQLALCHEMY_POOL_SIZE'] = db_pool
@@ -98,18 +107,109 @@ def create_app():
     )
 
     logger.info('configuring db: {}'.format(_app.config['SQLALCHEMY_DATABASE_URI']))
-    environ.env.app = _app
+
     with _app.app_context():
-        environ.env.dbman.init_app(_app)
-        environ.env.dbman.create_all()
-        environ.init_event_reader(environ.env)
-        environ.init_event_handlers(environ.env)
+        env.dbman.init_app(_app)
+        env.dbman.create_all()
+        handlers = env.db.get_all_handlers()
+        environ.init_event_reader(env, handlers)
+
+    # environ.init_web_auth(env)
 
     return _app, Api(_app)
 
 
+def prepare_handler(env, handler_conf: HandlerConf):
+    node_id = handler_conf.node_id()
+
+    if handler_conf.event == "UNMAPPED":
+        try:
+            query_model_for_info(env, handler_conf)
+        except QueryException:
+            pass
+
+    if handler_conf.model_type is None:
+        logger.info(
+            f'not adding handler for empty model type with node id "{node_id}"'
+        )
+        return None
+
+    return handler_conf
+
+
+def query_model_for_info(env, handler_conf: HandlerConf):
+    env_name = ""
+    if handler_conf.environment is not None:
+        env_name = handler_conf.environment
+
+    url = f"http://{handler_conf.endpoint}:{handler_conf.port}/info/{env_name}"
+
+    try:
+        response = env.requester.request(method="GET", url=url)
+    except Exception as e:
+        # likely the model is offline
+        env.webhook.warning(f"could not query model /info: {str(e)}")
+        raise QueryException(e)
+
+    if response.status_code != 200:
+        # likely doesn't implement the query interface
+        env.webhook.warning(f"got error code {response.status_code} when querying /info")
+        raise QueryException(response.status_code)
+
+    fields = [
+        "return_to",
+        "event",
+        "method",
+        "retries",
+        "timeout",
+        "group_id",
+        "path",
+        "failed_topic",
+    ]
+    json_response = response.json()
+
+    try:
+        for field in fields:
+            if field not in json_response:
+                continue
+            update_handler_value(handler_conf, json_response, field)
+
+    except Exception as e:
+        logger.error(
+            f"could not update fields on handler with node_id {handler_conf.node_id()}: {str(e)}"
+        )
+        raise QueryException(e)
+
+    env.db.update_handler(handler_conf)
+
+
+def update_handler_value(
+    handler_conf: HandlerConf, json_response: dict, field: str
+):
+    original = handler_conf.__getattribute__(field)
+    updated = json_response.get(field)
+
+    field_defaults = {"retries": 1, "timeout": 0}
+
+    if field in field_defaults.keys():
+        try:
+            updated = int(float(updated))
+        except ValueError:
+            logger.warning(
+                f'invalid value for "{field}": "{updated}", using default: {field_defaults[field]}'
+            )
+            updated = field_defaults[field]
+    elif type(updated) != str:
+        logger.warning(
+            f'invalid value for "{field}": "{updated}", not of type str but of "{type(updated)}"'
+        )
+        return
+
+    logger.info(f'updating field "{field}" from "{original}" to "{updated}"')
+    handler_conf.__setattr__(field, updated)
+
+
 app, api = create_app()
-environ.init_web_auth(environ.env)
 
 # keep this, otherwise flask won't find any routes
-import logistik.admin.routes
+# import logistik.admin.routes

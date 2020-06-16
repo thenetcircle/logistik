@@ -18,7 +18,7 @@ from logistik.enrich import IEnricher
 from logistik.stats import IStats
 from logistik.cache import ICache
 from logistik.queue import IKafkaWriter
-from logistik.db import IDatabase
+from logistik.db import IDatabase, HandlerConf
 from logistik.utils import IWebHookHandler
 from logistik.utils.decorators import timeit
 
@@ -470,10 +470,10 @@ def init_kafka_writer(gn_env: GNEnvironment):
 
 
 @timeit(logger, 'init event reader')
-def init_event_reader(gn_env: GNEnvironment):
+def init_event_reader(gn_env: GNEnvironment, handlers: List[HandlerConf]):
     all_handlers = gn_env.db.get_all_handlers()
     gn_env.event_readers = dict()
-    events = set()
+    topics = set()
 
     from logistik.handlers.event_reader import EventReader
 
@@ -481,10 +481,10 @@ def init_event_reader(gn_env: GNEnvironment):
         if handler.retired:
             continue
 
-        events.add(handler.event)
+        topics.add(handler.event)
 
-    for event in events:
-        reader = EventReader(event)
+    for topic in topics:
+        reader = EventReader(topic, handlers)
         process = Process(target=reader.run)
         process.start()
         gn_env.event_readers[event] = process
@@ -509,11 +509,3 @@ def initialize_env(lk_env):
     init_webhook(lk_env)
 
     logger.info('startup done!')
-
-
-_config_paths = None
-if 'LK_CONFIG' in os.environ:
-    _config_paths = [os.environ['LK_CONFIG']]
-
-env = create_env(_config_paths)
-initialize_env(env)
