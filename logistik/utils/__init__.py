@@ -6,18 +6,22 @@ class IWebHookHandler(ABC):
         self.channel_name = channel_name
         self.endpoint = endpoint
 
+        self.enabled = False
+        if endpoint is not None and endpoint != '':
+            self.enabled = True
+
     def warning(self, message, topic_name=None, event_id=None) -> None:
-        if self.endpoint is None or self.channel_name is None:
+        if not self.enabled:
             return
         return self._send_warning(message, topic_name, event_id)
 
     def critical(self, message, topic_name=None, event_id=None) -> None:
-        if self.endpoint is None or self.channel_name is None:
+        if not self.enabled:
             return
         return self._send_critical(message, topic_name, event_id)
 
     def ok(self, message, topic_name=None, event_id=None) -> None:
-        if self.endpoint is None or self.channel_name is None:
+        if not self.enabled:
             return
         return self._send_ok(message, topic_name, event_id)
 

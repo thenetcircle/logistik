@@ -17,6 +17,7 @@ logging:
 
 webhook:
   host: '$LK_WEBHOOK_URL'
+  channel: '$LK_WEBHOOK_CHANNEL'
 
 cache:
   host: '$LK_CACHE_HOST'
