@@ -67,6 +67,7 @@ class EventHandler:
             topic_name = '<unknown>'
 
         while len(all_responses) < len(handlers):
+            self.logger.info(f"all_responses: {len(all_responses)}, handlers: {len(handlers)}")
             try:
                 responses, failures = self.call_handlers(data, handlers)
             except InterruptedError:
@@ -135,6 +136,8 @@ class EventHandler:
 
         for handler, response in return_dict.items():
             responses.append(response)
+
+        self.logger.info(f"responses: {responses}")
 
         return responses, failures
 
