@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class HttpHandler(BaseHandler):
     @staticmethod
-    def call_handler(data: dict, handler_conf: HandlerConf):
+    def call_handler(data: dict, handler_conf: HandlerConf, return_dict: dict):
         schema = "http://"
         endpoint = handler_conf.endpoint
         path = handler_conf.path

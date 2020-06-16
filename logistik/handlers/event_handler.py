@@ -2,9 +2,10 @@ import logging
 import sys
 import traceback
 from functools import partial
-from typing import List, Optional, Tuple, Union
+from multiprocessing import Process
+from multiprocessing import Manager
+from typing import List
 
-import eventlet
 from activitystreams import Activity
 from activitystreams import parse as parse_as
 
@@ -22,7 +23,7 @@ class EventHandler:
         self.topic = topic
         self.handlers = handlers
         self.running = False
-        self.pool = eventlet.GreenPool(len(handlers))
+        self.pool = Pool(processes=len(handlers))
 
         self.failed_msg_log = None
         self.dropped_msg_log = None
@@ -110,23 +111,31 @@ class EventHandler:
 
     def call_handlers(self, data: dict, handlers) -> (List[dict], list):
         handler_func = partial(HttpHandler.call_handler, data)
-        responses: List[dict] = list()
+        responses = list()
         failures = list()
         threads = list()
 
+        manager = Manager()
+        return_dict = manager.dict()
+
         for handler in handlers:
-            p = eventlet.spawn(handler_func, handler)
+            p = Process(target=handler_func, args=(handler, return_dict))
             threads.append((p, handler))
+
+        for p, _ in threads:
+            p.start()
 
         for p, handler in threads:
             try:
-                response = p.wait()
-                responses.append(response)
+                p.join()
             except Exception as e:
                 self.logger.error(f"could not handle: {str(e)}")
                 self.logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
                 failures.append(handler)
+
+        for handler, response in return_dict.items():
+            responses.append(response)
 
         return responses, failures
 
