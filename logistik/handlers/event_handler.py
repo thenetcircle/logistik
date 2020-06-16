@@ -18,10 +18,10 @@ ONE_MINUTE = 60_000
 
 
 class EventHandler:
-    def __init__(self, event: str, handlers: List[HandlerConf]):
+    def __init__(self, topic: str, handlers: List[HandlerConf]):
         self.env = environ.env
         self.logger = logging.getLogger(__name__)
-        self.event = event
+        self.topic = topic
         self.handlers = handlers
         self.running = False
         self.pool = eventlet.GreenPool(len(handlers))
@@ -30,8 +30,8 @@ class EventHandler:
         self.dropped_msg_log = None
         self.consumer = None
 
-        if self.event == 'UNMAPPED':
-            self.logger.info('not enabling reading for {}, no event mapped'.format(self.handlers[0].node_id()))
+        if self.topic == 'UNMAPPED':
+            self.logger.info('not enabling reading for {}, no topic mapped'.format(self.handlers[0].node_id()))
 
     def handle_event(self, data) -> List[dict]:
         try:

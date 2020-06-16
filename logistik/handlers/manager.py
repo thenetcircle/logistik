@@ -13,14 +13,14 @@ class HandlersManager(IHandlersManager):
         self.env = env
         self.requester = Requester()
         self.logger = logging.getLogger(__name__)
-        self.handlers: Dict[str, EventHandler] = dict()
+        self.handler: EventHandler = None
 
     def handle_event(self, topic, event) -> List[dict]:
-        if topic not in self.handlers.keys():
-            self.logger.error(f"no handlers configured for topic '{topic}'")
+        if topic != self.handler.topic:
+            self.logger.error(f"no handler configured for topic '{topic}'")
             return list()
 
-        return self.handlers[topic].handle_event(event)
+        return self.handler.handle_event(event)
 
     def start_event_handler(self, event: str, handlers: List[HandlerConf]):
         self.logger.info(f"starting handler for {event}")
@@ -32,7 +32,7 @@ class HandlersManager(IHandlersManager):
             if handler is not None:
                 prepared_handlers.append(handler)
 
-        self.handlers[event] = EventHandler(event, prepared_handlers.copy())
+        self.handler = EventHandler(event, prepared_handlers.copy())
 
     def prepare_handler(self, handler_conf: HandlerConf):
         node_id = handler_conf.node_id()

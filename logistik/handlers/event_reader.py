@@ -18,7 +18,10 @@ from logistik.config import ConfigKeys
 from logistik.db import HandlerConf
 from logistik import environ
 from logistik.handlers.http import HttpHandler
+from logistik.handlers.manager import HandlersManager
 from logistik.handlers.request import Requester
+from logistik.queue import IKafkaWriter
+from logistik.queue.kafka_writer import KafkaWriter
 from logistik.utils.exceptions import ParseException
 from logistik.utils.exceptions import MaxRetryError
 
@@ -50,6 +53,8 @@ class EventReader:
         self.failed_msg_log = None
         self.dropped_msg_log = None
         self.consumer = None
+        self.handler_manager = None
+        self.kafka_writer: IKafkaWriter = None
 
     def create_consumer(self):
         bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
@@ -69,6 +74,23 @@ class EventReader:
             max_poll_records=50  # default: 500
         )
 
+    def create_event_manager(self):
+        all_handlers = self.env.db.get_all_handlers()
+        event_handlers = list()
+
+        for handler in all_handlers:
+            if handler.retired or handler.event != self.topic:
+                continue
+
+            event_handlers.append(handler)
+
+        self.handler_manager = HandlersManager(self.env)
+        self.handler_manager.start_event_handler(self.topic, event_handlers)
+
+    def create_kafka_writer(self):
+        self.kafka_writer = KafkaWriter(self.env)
+        self.kafka_writer.setup()
+
     def run(self, sleep_time=3, exit_on_failure=False):
         if self.topic == 'UNMAPPED':
             self.logger.warning('not enabling reading, topic is UNMAPPED')
@@ -76,6 +98,8 @@ class EventReader:
 
         self.create_loggers()
         self.create_consumer()
+        self.create_event_manager()
+        self.create_kafka_writer()
 
         if sleep_time > 0:
             self.logger.info('sleeping for {} second before consuming'.format(sleep_time))
@@ -113,7 +137,7 @@ class EventReader:
                 continue
 
             for handler_conf, response in responses:
-                self.env.kafka_writer.publish(handler_conf, response)
+                self.kafka_writer.publish(handler_conf, response)
 
     def try_to_parse(self, message) -> (dict, Activity):
         self.logger.debug("%s:%d:%d: key=%s" % (

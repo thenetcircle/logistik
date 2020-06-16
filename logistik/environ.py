@@ -469,30 +469,6 @@ def init_kafka_writer(gn_env: GNEnvironment):
     gn_env.kafka_writer.setup()
 
 
-@timeit(logger, 'init handlers manager')
-def init_handlers_manager(gn_env: GNEnvironment) -> None:
-    from logistik.handlers.manager import HandlersManager
-    gn_env.handlers_manager = HandlersManager(gn_env)
-
-
-@timeit(logger, 'init event handlers')
-def init_event_handlers(gn_env: GNEnvironment):
-    all_handlers = gn_env.db.get_all_handlers()
-    event_handlers = dict()
-
-    for handler in all_handlers:
-        if handler.retired:
-            continue
-
-        if handler.event not in event_handlers:
-            event_handlers[handler.event] = list()
-
-        event_handlers[handler.event].append(handler)
-
-    for event, handlers in event_handlers.items():
-        gn_env.handlers_manager.start_event_handler(event, handlers)
-
-
 @timeit(logger, 'init event reader')
 def init_event_reader(gn_env: GNEnvironment):
     all_handlers = gn_env.db.get_all_handlers()
@@ -529,8 +505,7 @@ def initialize_env(lk_env):
 
     init_web_auth(lk_env)
     init_db_service(lk_env)
-    init_kafka_writer(lk_env)
-    init_handlers_manager(lk_env)
+    init_kafka_writer(lk_env)  # TODO: init in each event reader
     init_webhook(lk_env)
 
     logger.info('startup done!')
