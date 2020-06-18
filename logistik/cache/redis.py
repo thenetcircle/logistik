@@ -32,15 +32,12 @@ class CacheRedis(ICache):
     def get_response_for(self, handler: HandlerConf, request: dict) -> Optional[dict]:
         try:
             key = self.get_response_key_from_request(handler, request)
-            self.logger.info(f"checking cached value for key {key}")
             response = self.redis.get(key)
 
             if response is None:
-                self.logger.info(f"response is None for key {key}")
                 return None
 
             response = str(response, "utf-8")
-            self.logger.info(f"response is: {response}")
             return ast.literal_eval(response)
 
         except Exception as e:
