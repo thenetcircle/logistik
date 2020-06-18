@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(log_level)
 logging.getLogger("kafka").setLevel(logging.WARNING)
 logging.getLogger("kafka.conn").setLevel(logging.WARNING)
+logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 
 
 class ReverseProxied(object):
