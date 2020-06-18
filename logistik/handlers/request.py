@@ -16,7 +16,7 @@ class Requester(IRequester):
         provider = "unknown provider"
         image_id = "unknown image_id"
 
-        if timeout is None:
+        if timeout is None or int(float(timeout)) <= 0:
             timeout = 10
 
         if model is None:
