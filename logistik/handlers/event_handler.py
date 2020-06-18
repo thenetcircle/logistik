@@ -181,8 +181,11 @@ class EventHandler:
                     f"got status code {status_code} for handler {handler.node_id()}"
                 )
                 failures.append(handler)
+
             else:
-                self.env.cache.set_response_for(handler, data, response)
+                # only cache successful responses
+                if status_code == 200:
+                    self.env.cache.set_response_for(handler, data, response)
                 responses.append((handler, response))
 
         # clean-up

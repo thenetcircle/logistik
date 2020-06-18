@@ -49,6 +49,10 @@ class CacheRedis(ICache):
 
     def set_response_for(self, handler: HandlerConf, request: dict, response: dict) -> None:
         try:
+            # if rest api returns [response, error_code]
+            if type(response) == list:
+                response = response[0]
+
             key = self.get_response_key_from_request(handler, request)
             self.redis.set(key, str(response))
             self.redis.expire(key, 2 * ONE_HOUR)
