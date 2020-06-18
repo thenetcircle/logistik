@@ -148,7 +148,7 @@ class EventHandler:
                 handlers.append(handler)
             else:
                 key = self.env.cache.get_response_key_from_request(handler, data)
-                self.logger.info(f"found cached response for {key}")
+                self.logger.info(f"found cached response for {key}: {type(cached_response)} - {cached_response}")
                 responses.append((handler, cached_response))
 
         manager = Manager()
@@ -186,6 +186,9 @@ class EventHandler:
                 # only cache successful responses
                 if status_code == 200:
                     self.env.cache.set_response_for(handler, data, response)
+
+                key = self.env.cache.get_response_key_from_request(handler, data)
+                self.logger.info(f"fesponse for {key}: {type(response)} - {response}")
                 responses.append((handler, response))
 
         # clean-up
