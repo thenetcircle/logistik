@@ -161,9 +161,18 @@ class EventHandler:
                 self.env.capture_exception(sys.exc_info())
                 failures.append(handler)
 
+        # clean-up
+        for p, _ in threads:
+            try:
+                p.close()
+            except Exception as e:
+                self.logger.error(f"could not close process: {str(e)}")
+                self.logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+
         # deal with failures and successes
         for handler, (status_code, response) in return_dict.items():
-            # 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
+            # don't retry on: 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
             if status_code not in {200, 422, 404, 400}:
                 self.logger.warning(
                     f"got status code {status_code} for handler {handler.node_id()}"
