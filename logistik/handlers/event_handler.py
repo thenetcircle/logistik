@@ -164,7 +164,7 @@ class EventHandler:
         # clean-up
         for p, _ in threads:
             try:
-                p.close()
+                p.terminate()
             except Exception as e:
                 self.logger.error(f"could not close process: {str(e)}")
                 self.logger.exception(e)
