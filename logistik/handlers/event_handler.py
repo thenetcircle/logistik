@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import sys
 import traceback
@@ -140,15 +141,14 @@ class EventHandler:
         threads = list()
         handlers = list()
 
-        import hashlib
         for handler in all_handlers:
-            handler_hash = hashlib.md5(handler.to_json().encode('utf-8')).hexdigest()
-
-            cached_response = self.env.cache.get_response_for(handler_hash, data)
+            cached_response = self.env.cache.get_response_for(handler, data)
 
             if cached_response is None:
                 handlers.append(handler)
             else:
+                key = self.env.cache.get_response_key_from_request(handler, data)
+                self.logger.info(f"found cached response for {key}")
                 responses.append(cached_response)
 
         manager = Manager()
@@ -182,6 +182,7 @@ class EventHandler:
                 )
                 failures.append(handler)
             else:
+                self.env.cache.set_response_for(handler, response)
                 responses.append((handler, response))
 
         # clean-up

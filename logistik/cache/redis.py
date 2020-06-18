@@ -1,8 +1,8 @@
 import logging
 import sys
 import ast
-from typing import List
-from typing import Union
+
+from typing import Optional
 
 from logistik.config import RedisKeys
 from ttldict import TTLOrderedDict
@@ -29,10 +29,9 @@ class CacheRedis(ICache):
 
             self.redis = Redis(host=host, port=port, db=db)
 
-    def get_response_for(self, handler_hash, data):
+    def get_response_for(self, handler: HandlerConf, request: dict) -> Optional[dict]:
         try:
-            key = self._get_response_key_from_data(handler_hash, data)
-
+            key = self.get_response_key_from_request(handler, request)
             response = self.redis.get(key)
 
             if response is None:
@@ -42,26 +41,30 @@ class CacheRedis(ICache):
             return ast.literal_eval(response)
 
         except Exception as e:
-            self.logger.error("could not get response from redis: {str(e)}")
+            self.logger.error(f"could not get response from redis: {str(e)}")
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
 
             return None
 
-    def set_response_for(self, handler_hash: str, data: dict) -> None:
+    def set_response_for(self, handler: HandlerConf, request: dict, response: dict) -> None:
         try:
-            key = self._get_response_key_from_data(handler_hash, data)
-            self.redis.set(key, str(data))
+            key = self.get_response_key_from_request(handler, request)
+            self.redis.set(key, str(response))
             self.redis.expire(key, 2 * ONE_HOUR)
         except Exception as e:
-            self.logger.error("could not set response from redis: {str(e)}")
+            self.logger.error(f"could not set response from redis: {str(e)}")
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
 
-    def _get_response_key_from_data(self, handler_hash: str, data: dict):
-        provider_id = data.get("provider", dict()).get("id", "-1")
-        user_id = data.get("actor", dict()).get("id", "-1")
-        image_id = data.get("object", dict()).get("id", "-1")
+    def _hash_for(self, handler_conf: HandlerConf):
+        return handler_conf.node_id()
+
+    def get_response_key_from_request(self, handler: HandlerConf, request: dict):
+        handler_hash = self._hash_for(handler)
+        provider_id = request.get("provider", dict()).get("id", "-1")
+        user_id = request.get("actor", dict()).get("id", "-1")
+        image_id = request.get("object", dict()).get("id", "-1")
 
         return RedisKeys.response_for(
             provider_id=provider_id,
