@@ -53,6 +53,7 @@ class CacheRedis(ICache):
     def set_response_for(self, handler: HandlerConf, request: dict, response: dict) -> None:
         try:
             # if rest api returns [response, error_code]
+            print(response)
             if type(response) == list:
                 response = response[0]
 
