@@ -74,7 +74,7 @@ def create_app():
         config_paths = [os.environ["LK_CONFIG"]]
 
     env = create_env(config_paths)
-    initialize_env(env)
+    initialize_env(env, is_parent_process=True)
 
     environ.env = env
     environ.env.dbman = env.dbman

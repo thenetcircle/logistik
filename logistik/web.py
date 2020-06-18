@@ -8,7 +8,7 @@ from werkzeug.contrib.fixers import ProxyFix
 from logistik import environ
 from logistik.config import ConfigKeys
 
-environ.initialize_env(environ.env, is_child_process=False)
+environ.initialize_env(environ.env, is_parent_process=True)
 
 logger = logging.getLogger(__name__)
 logging.getLogger("kafka.conn").setLevel(logging.INFO)

@@ -530,7 +530,7 @@ def init_webhook(gn_env: GNEnvironment):
     gn_env.webhook = WebHookHandler(gn_env)
 
 
-def initialize_env(lk_env, is_child_process=False):
+def initialize_env(lk_env, is_parent_process=True):
     global env
     env = lk_env
 
@@ -540,7 +540,7 @@ def initialize_env(lk_env, is_child_process=False):
     init_enrichment_service(lk_env)
     init_webhook(lk_env)
 
-    if not is_child_process:
+    if is_parent_process:
         init_db_service(lk_env)
 
     logger.info("startup done!")
