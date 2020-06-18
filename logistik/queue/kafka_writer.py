@@ -50,17 +50,7 @@ class KafkaWriter(IKafkaWriter):
             bootstrap_servers=bootstrap_servers,
         )
 
-    def publish(self, conf: HandlerConf, message: Response) -> None:
-        try:
-            str_msg = message.json()
-        except Exception as e:
-            self.logger.error("could not decode response: {}".format(str(e)))
-            self.logger.error(f"message: {type(message)} - {message}")
-            self.logger.exception(e)
-            self.env.capture_exception(sys.exc_info())
-            self.drop_msg(message.content)
-            return
-
+    def publish(self, conf: HandlerConf, str_msg: dict) -> None:
         try:
             # if rest api returns [response, error_code]
             if type(str_msg) == list:

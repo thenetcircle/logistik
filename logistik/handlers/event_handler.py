@@ -175,6 +175,14 @@ class EventHandler:
 
         # deal with failures and successes
         for handler, (status_code, response) in return_dict.items():
+            try:
+                dict_response = response.json()
+            except Exception as e:
+                self.logger.error("could not decode response: {}".format(str(e)))
+                self.logger.exception(e)
+                failures.append(handler)
+                continue
+
             # don't retry on: 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
             if status_code not in {200, 422, 404, 400}:
                 self.logger.warning(
@@ -185,11 +193,9 @@ class EventHandler:
             else:
                 # only cache successful responses
                 if status_code == 200:
-                    self.env.cache.set_response_for(handler, data, response)
+                    self.env.cache.set_response_for(handler, data, dict_response)
 
-                key = self.env.cache.get_response_key_from_request(handler, data)
-                self.logger.info(f"response for {key}: {type(response)} - {response}")
-                responses.append((handler, response))
+                responses.append((handler, dict_response))
 
         # clean-up
         for p, _ in threads:
