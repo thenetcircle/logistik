@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class IWebHookHandler(ABC):
-    def __init__(self, endpoint, channel_name):
-        self.channel_name = channel_name
+    def __init__(self, endpoint):
         self.endpoint = endpoint
 
         self.enabled = False

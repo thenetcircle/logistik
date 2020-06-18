@@ -11,11 +11,8 @@ class WebHookHandler(IWebHookHandler):
         endpoint = env.config.get(
             ConfigKeys.HOST, domain=ConfigKeys.WEBHOOK, default=None
         )
-        channel_name = env.config.get(
-            ConfigKeys.CHANNEL_NAME, domain=ConfigKeys.WEBHOOK, default=None
-        )
 
-        super().__init__(endpoint, channel_name)
+        super().__init__(endpoint)
 
         self.env = env
         self.logger = logging.getLogger(__name__)
@@ -42,9 +39,8 @@ class WebHookHandler(IWebHookHandler):
 
     def _format(self, severity, message, topic_name, event_id):
         return {
-            "channel": f"{self.channel_name}",
             "username": "Logistik",
-            "text": f"""#### {severity}: Logistik is retrying handlers.
+            "text": f"""#### {severity}: Logistik has issues.
                     | Topic | Event | Failed Handlers |
                     |:-----------|:-----------:|:-----------------------------|
                     | {topic_name or '<unknown>'} | {event_id or '<unknown>'} | {message} | 
