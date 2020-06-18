@@ -190,7 +190,7 @@ class EventHandler:
         url = "{}{}:{}{}{}".format(schema, conf.endpoint, conf.port, separator, conf.path)
 
         response = Requester.request(
-            method=method, url=url, json=data, headers=json_header, timeout=conf.timeout, model=conf.group_id
+            method=method, url=url, json=data, headers=json_header, timeout=conf.timeout, model=conf.service_id
         )
 
         return response.status_code, response
