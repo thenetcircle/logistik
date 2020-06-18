@@ -1,5 +1,6 @@
 import logging
 
+from logistik.db import HandlerConf
 from logistik.handlers.base import BaseHandler
 from logistik.handlers.request import Requester
 
@@ -8,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class HttpHandler(BaseHandler):
     @staticmethod
-    def call_handler(data: dict, handler_conf, return_dict: dict):
+    def call_handler(data: dict, handler_conf: HandlerConf, return_dict: dict):
         schema = "http://"
         endpoint = handler_conf.endpoint
         path = handler_conf.path
@@ -27,7 +28,8 @@ class HttpHandler(BaseHandler):
         url = "{}{}:{}{}{}".format(schema, endpoint, port, separator, path)
 
         response = Requester.request(
-            method=method, url=url, json=data, headers=json_header, timeout=timeout
+            method=method, url=url, json=data, headers=json_header,
+            timeout=timeout, model=handler_conf.service_id
         )
 
         return_dict[handler_conf] = (response.status_code, response)
