@@ -30,4 +30,4 @@ class HttpHandler(BaseHandler):
             method=method, url=url, json=data, headers=json_header, timeout=timeout
         )
 
-        return_dict[handler_conf] = response.status_code, response
+        return_dict[handler_conf] = (response.status_code, response.content)
