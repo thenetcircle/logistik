@@ -149,7 +149,7 @@ class EventHandler:
             else:
                 key = self.env.cache.get_response_key_from_request(handler, data)
                 self.logger.info(f"found cached response for {key}")
-                responses.append(cached_response)
+                responses.append((handler, cached_response))
 
         manager = Manager()
         return_dict = manager.dict()
