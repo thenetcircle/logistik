@@ -55,6 +55,7 @@ class WebHookHandler(IWebHookHandler):
                 json=data,
                 headers=self.json_header,
                 timeout=self.timeout,
+                verbose=False
             )
         except Exception as e:
             self.logger.error(f"could not post to webhook '{self.endpoint}': {str(e)}")

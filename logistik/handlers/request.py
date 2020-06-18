@@ -12,7 +12,7 @@ class Requester(IRequester):
     """
 
     @staticmethod
-    def request(method, url, json=None, headers=None, model=None, timeout=10):
+    def request(method, url, json=None, headers=None, model=None, timeout=10, verbose=True):
         provider = "unknown provider"
         image_id = "unknown image_id"
 
@@ -31,8 +31,9 @@ class Requester(IRequester):
                 method=method, url=url, json=json, headers=headers, timeout=timeout
             )
 
-            response_code = response.status_code
-            logger.info(f"[{provider}] [{image_id}]: {response_code} - {url} ({model})")
+            if verbose:
+                response_code = response.status_code
+                logger.info(f"[{provider}] [{image_id}]: {response_code} - {url} ({model})")
 
         except Exception as e:
             response_code = str(e)
