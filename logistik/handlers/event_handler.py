@@ -175,26 +175,22 @@ class EventHandler:
         return responses, failures
 
     @staticmethod
-    def call_handler(data: dict, handler_conf: HandlerConf):
+    def call_handler(data: dict, conf: HandlerConf):
         schema = "http://"
-        endpoint = handler_conf.endpoint
-        path = handler_conf.path
-        method = handler_conf.method
-        timeout = handler_conf.timeout
-        port = handler_conf.port
         json_header = {"Context-Type": "application/json"}
 
-        if method is None or len(method.strip()) == 0:
-            method = "POST"
+        method = "POST"
+        if conf.method is not None and len(conf.method.strip()) > 0:
+            method = conf.method
 
         separator = ""
-        if path is not None and path[0] != "/":
+        if conf.path is not None and conf.path[0] != "/":
             separator = "/"
 
-        url = "{}{}:{}{}{}".format(schema, endpoint, port, separator, path)
+        url = "{}{}:{}{}{}".format(schema, conf.endpoint, conf.port, separator, conf.path)
 
         response = Requester.request(
-            method=method, url=url, json=data, headers=json_header, timeout=timeout, model=handler_conf.group_id
+            method=method, url=url, json=data, headers=json_header, timeout=conf.timeout, model=conf.group_id
         )
 
         return response.status_code, response

@@ -9,7 +9,7 @@ from logistik.db import HandlerConf
 
 class IRequester(ABC):
     @staticmethod
-    def request(method, url, json=None, headers=None):
+    def request(method, url, json=None, headers=None, model=None, timeout=10):
         """pass"""
 
 
