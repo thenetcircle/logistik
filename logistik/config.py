@@ -157,8 +157,8 @@ class ConfigKeys(object):
 
 
 class RedisKeys(object):
-    RKEY_AUTH = "user:auth:%s"  # user:auth:user_id
+    RKEY_RESPONSE = "response:{}:{}:{}:{}"  # response:provider_id:user_id:image_id:handler_hash
 
     @staticmethod
-    def auth_key(user_id: str) -> str:
-        return RedisKeys.RKEY_AUTH % user_id
+    def response_for(provider_id: str, user_id: str, image_id: str, handler_hash: str) -> str:
+        return RedisKeys.RKEY_RESPONSE.format(provider_id, user_id, image_id, handler_hash)

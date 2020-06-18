@@ -132,12 +132,24 @@ class EventHandler:
         return all_responses
 
     def call_handlers(
-        self, data: dict, handlers
+        self, data: dict, all_handlers: List[HandlerConf]
     ) -> (List[Tuple[HandlerConf, dict]], list):
         handler_func = partial(HttpHandler.call_handler, data)
         responses = list()
         failures = list()
         threads = list()
+        handlers = list()
+
+        import hashlib
+        for handler in all_handlers:
+            handler_hash = hashlib.md5(handler.to_json().encode('utf-8')).hexdigest()
+
+            cached_response = self.env.cache.get_response_for(handler_hash, data)
+
+            if cached_response is None:
+                handlers.append(handler)
+            else:
+                responses.append(cached_response)
 
         manager = Manager()
         return_dict = manager.dict()
