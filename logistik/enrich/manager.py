@@ -8,9 +8,9 @@ class EnrichmentManager(IEnrichmentManager):
         self.env: GNEnvironment = env
 
     def handle(self, data: dict) -> dict:
-        event_name = data.get('verb', None)
+        event_name = data.get("verb", None)
         if event_name is None:
-            raise ParseException('no verb in event: {}'.format(str(data)))
+            raise ParseException("no verb in event: {}".format(str(data)))
 
         enriched = data.copy()
         for _, enrich in self.env.enrichers:

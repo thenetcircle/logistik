@@ -20,8 +20,8 @@ from logistik.queue import IKafkaWriter
 from logistik.db import IDatabase, HandlerConf
 from logistik.utils import IWebHookHandler
 
-ENV_KEY_ENVIRONMENT = 'LK_ENVIRONMENT'
-ENV_KEY_SECRETS = 'LK_SECRETS'
+ENV_KEY_ENVIRONMENT = "LK_ENVIRONMENT"
+ENV_KEY_SECRETS = "LK_SECRETS"
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class ConfigDict:
             p.update(self.override)
         return ConfigDict(p, self.override)
 
-    def set(self, key, val, domain: str=None):
+    def set(self, key, val, domain: str = None):
         if domain is None:
             self.params[key] = val
         else:
@@ -66,7 +66,9 @@ class ConfigDict:
     def keys(self):
         return self.params.keys()
 
-    def get(self, key, default: Union[None, object]=DefaultValue, params=None, domain=None):
+    def get(
+        self, key, default: Union[None, object] = DefaultValue, params=None, domain=None
+    ):
         def config_format(s, _params):
             if s is None:
                 return s
@@ -83,12 +85,13 @@ class ConfigDict:
             if not isinstance(s, str):
                 return s
 
-            if s.lower() == 'null' or s.lower() == 'none':
-                return ''
+            if s.lower() == "null" or s.lower() == "none":
+                return ""
 
             try:
                 import re
-                keydb = set('{' + key + '}')
+
+                keydb = set("{" + key + "}")
 
                 while True:
                     sres = re.search("{.*?}", s)
@@ -98,8 +101,10 @@ class ConfigDict:
                     # avoid using the same reference twice
                     if sres.group() in keydb:
                         raise RuntimeError(
-                                "found circular dependency in config value '{0}' using reference '{1}'".format(
-                                        s, sres.group()))
+                            "found circular dependency in config value '{0}' using reference '{1}'".format(
+                                s, sres.group()
+                            )
+                        )
                     keydb.add(sres.group())
                     s = s.format(**_params)
 
@@ -116,7 +121,7 @@ class ConfigDict:
                 value = self.params.get(domain).get(key)
                 if value is None:
                     if default is None:
-                        return ''
+                        return ""
                     return default
 
                 return config_format(value, params)
@@ -143,7 +148,9 @@ class ConfigDict:
 
 
 class GNEnvironment(object):
-    def __init__(self, root_path: Union[str, None], config: ConfigDict, skip_init=False):
+    def __init__(
+        self, root_path: Union[str, None], config: ConfigDict, skip_init=False
+    ):
         """
         Initialize the environment
         """
@@ -199,13 +206,17 @@ def find_config(config_paths: list) -> tuple:
                 raise RuntimeError("Unsupported file extension: {0}".format(conf))
 
         except Exception as e:
-            raise RuntimeError("Failed to open configuration {0}: {1}".format(conf, str(e)))
+            raise RuntimeError(
+                "Failed to open configuration {0}: {1}".format(conf, str(e))
+            )
 
         config_path = path
         break
 
     if not config_dict:
-        raise RuntimeError('No configuration found: {0}\n'.format(', '.join(config_paths)))
+        raise RuntimeError(
+            "No configuration found: {0}\n".format(", ".join(config_paths))
+        )
 
     return config_dict, config_path
 
@@ -217,7 +228,7 @@ def load_secrets_file(config_dict: dict) -> dict:
     gn_env = os.getenv(ENV_KEY_ENVIRONMENT)
     secrets_path = os.getenv(ENV_KEY_SECRETS)
     if secrets_path is None:
-        secrets_path = 'secrets/%s.yaml' % gn_env
+        secrets_path = "secrets/%s.yaml" % gn_env
 
     logger.debug('loading secrets file "%s"' % secrets_path)
 
@@ -229,29 +240,35 @@ def load_secrets_file(config_dict: dict) -> dict:
         try:
             secrets = yaml.safe_load(open(secrets_path))
         except Exception as e:
-            raise RuntimeError("Failed to open secrets configuration {0}: {1}".format(secrets_path, str(e)))
+            raise RuntimeError(
+                "Failed to open secrets configuration {0}: {1}".format(
+                    secrets_path, str(e)
+                )
+            )
         template = Template(template)
         template = template.safe_substitute(secrets)
 
     return ast.literal_eval(template)
 
 
-def create_env(config_paths: list = None, is_child_process: bool = False) -> GNEnvironment:
-    logging.basicConfig(level='DEBUG', format=ConfigKeys.DEFAULT_LOG_FORMAT)
+def create_env(
+    config_paths: list = None, is_child_process: bool = False
+) -> GNEnvironment:
+    logging.basicConfig(level="DEBUG", format=ConfigKeys.DEFAULT_LOG_FORMAT)
 
     gn_environment = os.getenv(ENV_KEY_ENVIRONMENT)
-    logger.info('using environment %s' % gn_environment)
+    logger.info("using environment %s" % gn_environment)
 
     # assuming tests are running
     if gn_environment is None:
-        logger.debug('no environment found, assuming tests are running')
+        logger.debug("no environment found, assuming tests are running")
         return GNEnvironment(None, ConfigDict(dict()))
 
     config_dict, config_path = find_config(config_paths)
     config_dict = load_secrets_file(config_dict)
 
     try:
-        config_dict[ConfigKeys.VERSION] = pkg_resources.require('logistik')[0].version
+        config_dict[ConfigKeys.VERSION] = pkg_resources.require("logistik")[0].version
     except Exception:
         # ignore, it will fail when running tests on CI because we don't include all requirements; no need
         pass
@@ -260,19 +277,23 @@ def create_env(config_paths: list = None, is_child_process: bool = False) -> GNE
     log_level = config_dict.get(ConfigKeys.LOG_LEVEL, ConfigKeys.DEFAULT_LOG_LEVEL)
 
     logging.basicConfig(
-            level=getattr(logging, log_level),
-            format=config_dict.get(ConfigKeys.LOG_FORMAT, ConfigKeys.DEFAULT_LOG_FORMAT))
+        level=getattr(logging, log_level),
+        format=config_dict.get(ConfigKeys.LOG_FORMAT, ConfigKeys.DEFAULT_LOG_FORMAT),
+    )
 
     if ConfigKeys.DATE_FORMAT not in config_dict:
         date_format = ConfigKeys.DEFAULT_DATE_FORMAT
         config_dict[ConfigKeys.DATE_FORMAT] = date_format
     else:
         from datetime import datetime
+
         date_format = config_dict[ConfigKeys.DATE_FORMAT]
         try:
             datetime.utcnow().strftime(date_format)
         except Exception as e:
-            raise RuntimeError('invalid date format "{}": {}'.format(date_format, str(e)))
+            raise RuntimeError(
+                'invalid date format "{}": {}'.format(date_format, str(e))
+            )
 
     if ConfigKeys.LOG_FORMAT not in config_dict:
         log_format = ConfigKeys.DEFAULT_LOG_FORMAT
@@ -284,7 +305,7 @@ def create_env(config_paths: list = None, is_child_process: bool = False) -> GNE
     root_path = os.path.dirname(config_path)
     gn_env = GNEnvironment(root_path, ConfigDict(config_dict))
 
-    logger.info('read config and created environment')
+    logger.info("read config and created environment")
     return gn_env
 
 
@@ -296,26 +317,29 @@ def init_cache_service(gn_env: GNEnvironment):
     cache_engine = gn_env.config.get(ConfigKeys.CACHE_SERVICE, None)
 
     if cache_engine is None:
-        raise RuntimeError('no cache service specified')
+        raise RuntimeError("no cache service specified")
 
     cache_type = cache_engine.get(ConfigKeys.TYPE, None)
     if cache_type is None:
-        raise RuntimeError('no cache type specified, use one of [redis, mock]')
+        raise RuntimeError("no cache type specified, use one of [redis, mock]")
 
-    if cache_type == 'redis':
+    if cache_type == "redis":
         from logistik.cache.redis import CacheRedis
 
         cache_host, cache_port = cache_engine.get(ConfigKeys.HOST), None
-        if ':' in cache_host:
-            cache_host, cache_port = cache_host.split(':', 1)
+        if ":" in cache_host:
+            cache_host, cache_port = cache_host.split(":", 1)
 
         cache_db = cache_engine.get(ConfigKeys.DB, 0)
         gn_env.cache = CacheRedis(gn_env, host=cache_host, port=cache_port, db=cache_db)
-    elif cache_type == 'memory':
+    elif cache_type == "memory":
         from logistik.cache.redis import CacheRedis
-        gn_env.cache = CacheRedis(gn_env, host='mock')
+
+        gn_env.cache = CacheRedis(gn_env, host="mock")
     else:
-        raise RuntimeError('unknown cache type %s, use one of [redis, mock]' % cache_type)
+        raise RuntimeError(
+            "unknown cache type %s, use one of [redis, mock]" % cache_type
+        )
 
 
 def init_stats_service(gn_env: GNEnvironment) -> None:
@@ -326,14 +350,17 @@ def init_stats_service(gn_env: GNEnvironment) -> None:
     stats_engine = gn_env.config.get(ConfigKeys.STATS_SERVICE, None)
 
     if stats_engine is None:
-        raise RuntimeError('no stats service specified')
+        raise RuntimeError("no stats service specified")
 
     stats_type = stats_engine.get(ConfigKeys.TYPE, None)
     if stats_type is None:
-        raise RuntimeError('no stats type specified, use one of [statsd] (set host to mock if no stats service wanted)')
+        raise RuntimeError(
+            "no stats type specified, use one of [statsd] (set host to mock if no stats service wanted)"
+        )
 
-    if stats_type == 'statsd':
+    if stats_type == "statsd":
         from logistik.stats.statsd import StatsDService
+
         gn_env.stats = StatsDService(gn_env)
 
 
@@ -342,14 +369,20 @@ def init_logging(gn_env: GNEnvironment) -> None:
         # assume we're testing
         return
 
-    logging_type = gn_env.config.get(ConfigKeys.TYPE, domain=ConfigKeys.LOGGING, default='logger')
-    if logging_type is None or len(logging_type.strip()) == 0 or logging_type in ['logger', 'default', 'mock']:
+    logging_type = gn_env.config.get(
+        ConfigKeys.TYPE, domain=ConfigKeys.LOGGING, default="logger"
+    )
+    if (
+        logging_type is None
+        or len(logging_type.strip()) == 0
+        or logging_type in ["logger", "default", "mock"]
+    ):
         return
-    if logging_type != 'sentry':
-        raise RuntimeError('unknown logging type %s' % logging_type)
+    if logging_type != "sentry":
+        raise RuntimeError("unknown logging type %s" % logging_type)
 
     def _create_logger(_path: str, _name: str) -> logging.Logger:
-        msg_formatter = logging.Formatter('%(asctime)s: %(message)s')
+        msg_formatter = logging.Formatter("%(asctime)s: %(message)s")
         msg_handler = logging.FileHandler(_path)
         msg_handler.setFormatter(msg_formatter)
         msg_logger = logging.getLogger(_name)
@@ -357,33 +390,41 @@ def init_logging(gn_env: GNEnvironment) -> None:
         msg_logger.addHandler(msg_handler)
         return msg_logger
 
-    f_msg_path = gn_env.config.get(ConfigKeys.FAILED_MESSAGE_LOG, default='/tmp/logistik-failed-msgs.log')
-    d_msg_path = gn_env.config.get(ConfigKeys.DROPPED_MESSAGE_LOG, default='/tmp/logistik-dropped-msgs.log')
-    d_response_path = gn_env.config.get(ConfigKeys.DROPPED_RESPONSE_LOG, default='/tmp/logistik-dropped-responses.log')
+    f_msg_path = gn_env.config.get(
+        ConfigKeys.FAILED_MESSAGE_LOG, default="/tmp/logistik-failed-msgs.log"
+    )
+    d_msg_path = gn_env.config.get(
+        ConfigKeys.DROPPED_MESSAGE_LOG, default="/tmp/logistik-dropped-msgs.log"
+    )
+    d_response_path = gn_env.config.get(
+        ConfigKeys.DROPPED_RESPONSE_LOG, default="/tmp/logistik-dropped-responses.log"
+    )
 
-    gn_env.failed_msg_log = _create_logger(f_msg_path, 'FailedMessages')
-    gn_env.dropped_msg_log = _create_logger(d_msg_path, 'DroppedMessages')
-    gn_env.dropped_response_log = _create_logger(d_response_path, 'DroppedResponses')
+    gn_env.failed_msg_log = _create_logger(f_msg_path, "FailedMessages")
+    gn_env.dropped_msg_log = _create_logger(d_msg_path, "DroppedMessages")
+    gn_env.dropped_response_log = _create_logger(d_response_path, "DroppedResponses")
 
-    dsn = gn_env.config.get(ConfigKeys.DSN, domain=ConfigKeys.LOGGING, default='')
+    dsn = gn_env.config.get(ConfigKeys.DSN, domain=ConfigKeys.LOGGING, default="")
     if dsn is None or len(dsn.strip()) == 0:
-        logger.warning('sentry logging selected but no DSN supplied, not configuring sentry')
+        logger.warning(
+            "sentry logging selected but no DSN supplied, not configuring sentry"
+        )
         return
 
     import raven
     import socket
     from git.cmd import Git
 
-    home_dir = os.environ.get('LK_HOME', default=None)
+    home_dir = os.environ.get("LK_HOME", default=None)
     if home_dir is None:
-        home_dir = '.'
+        home_dir = "."
     tag_name = Git(home_dir).describe()
 
     gn_env.sentry = raven.Client(
         dsn=dsn,
         environment=os.getenv(ENV_KEY_ENVIRONMENT),
         name=socket.gethostname(),
-        release=tag_name
+        release=tag_name,
     )
 
     def capture_exception(e_info) -> None:
@@ -391,7 +432,7 @@ def init_logging(gn_env: GNEnvironment) -> None:
             gn_env.sentry.captureException(e_info)
         except Exception as e2:
             logger.exception(e_info)
-            logger.error('could not capture exception with sentry: %s' % str(e2))
+            logger.error("could not capture exception with sentry: %s" % str(e2))
 
     gn_env.capture_exception = capture_exception
 
@@ -404,21 +445,31 @@ def init_web_auth(gn_env: GNEnvironment) -> None:
         # assume we're testing
         return
 
-    web_auth_type = gn_env.config.get(ConfigKeys.TYPE, domain=ConfigKeys.WEB, default=None)
-    if not web_auth_type or str(web_auth_type).strip().lower() in ['false', 'none', '']:
-        logger.info('auth type was "{}", not initializing web auth'.format(web_auth_type))
+    web_auth_type = gn_env.config.get(
+        ConfigKeys.TYPE, domain=ConfigKeys.WEB, default=None
+    )
+    if not web_auth_type or str(web_auth_type).strip().lower() in ["false", "none", ""]:
+        logger.info(
+            'auth type was "{}", not initializing web auth'.format(web_auth_type)
+        )
         return
 
-    if web_auth_type not in {'oauth'}:
-        raise RuntimeError('unknown web auth type "{}", only "oauth" is available'.format(str(web_auth_type)))
+    if web_auth_type not in {"oauth"}:
+        raise RuntimeError(
+            'unknown web auth type "{}", only "oauth" is available'.format(
+                str(web_auth_type)
+            )
+        )
 
     from logistik.admin.auth.oauth import OAuthService
+
     gn_env.web_auth = OAuthService(gn_env)
-    logger.info('initialized OAuthService')
+    logger.info("initialized OAuthService")
 
 
 def init_db_service(gn_env: GNEnvironment) -> None:
     from flask_sqlalchemy import SQLAlchemy
+
     gn_env.dbman = SQLAlchemy()
 
     if len(gn_env.config) == 0 or gn_env.config.get(ConfigKeys.TESTING, False):
@@ -427,6 +478,7 @@ def init_db_service(gn_env: GNEnvironment) -> None:
         return
 
     from logistik.db.manager import DatabaseManager
+
     gn_env.db = DatabaseManager(gn_env)
 
 
@@ -436,6 +488,7 @@ def init_enrichment_service(gn_env: GNEnvironment):
         return
 
     from logistik.enrich.manager import EnrichmentManager
+
     gn_env.enrichment_manager = EnrichmentManager(gn_env)
 
     # TODO: make enrichers configurable
@@ -444,8 +497,8 @@ def init_enrichment_service(gn_env: GNEnvironment):
     from logistik.enrich.identity import IdentityEnrichment
 
     gn_env.enrichers = [
-        ('published', PublishedEnrichment()),
-        ('id', IdentityEnrichment()),
+        ("published", PublishedEnrichment()),
+        ("id", IdentityEnrichment()),
     ]
 
 
@@ -456,7 +509,7 @@ def init_event_reader(gn_env: GNEnvironment, all_handlers: List[HandlerConf]):
     from logistik.queue.event_reader import EventReader
 
     for handler in all_handlers:
-        if handler.retired or handler.event == 'UNMAPPED':
+        if handler.retired or handler.event == "UNMAPPED":
             continue
 
         if handler.event not in topic_to_handlers.keys():
@@ -490,7 +543,7 @@ def initialize_env(lk_env, is_child_process=False):
     if not is_child_process:
         init_db_service(lk_env)
 
-    logger.info('startup done!')
+    logger.info("startup done!")
 
 
 env = None

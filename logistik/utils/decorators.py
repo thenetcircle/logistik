@@ -11,4 +11,5 @@ def with_session(view_func):
     def wrapped(*args, **kwargs):
         with environ.env.app.app_context():
             return view_func(*args, **kwargs)
+
     return wrapped

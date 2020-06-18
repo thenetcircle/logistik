@@ -7,7 +7,7 @@ class IWebHookHandler(ABC):
         self.endpoint = endpoint
 
         self.enabled = False
-        if endpoint is not None and endpoint != '':
+        if endpoint is not None and endpoint != "":
             self.enabled = True
 
     def warning(self, message, topic_name=None, event_id=None) -> None:
