@@ -66,7 +66,7 @@ class EventReader:
 
         if sleep_time > 0:
             self.logger.info(
-                "sleeping for {} second before consuming".format(sleep_time)
+                "sleeping for {} second(s) before consuming".format(sleep_time)
             )
             time.sleep(sleep_time)
 
