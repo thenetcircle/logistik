@@ -182,7 +182,7 @@ class EventHandler:
                 )
                 failures.append(handler)
             else:
-                self.env.cache.set_response_for(handler, response)
+                self.env.cache.set_response_for(handler, data, response)
                 responses.append((handler, response))
 
         # clean-up
