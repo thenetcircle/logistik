@@ -55,6 +55,7 @@ class KafkaWriter(IKafkaWriter):
             str_msg = message.json()
         except Exception as e:
             self.logger.error("could not decode response: {}".format(str(e)))
+            self.logger.error(f"message: {type(message)} - {message}")
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
             self.drop_msg(message.content)
