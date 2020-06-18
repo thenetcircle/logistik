@@ -175,7 +175,7 @@ class EventHandler:
         return responses, failures
 
     @staticmethod
-    def call_handler(data: dict, handler_conf):
+    def call_handler(data: dict, handler_conf: HandlerConf):
         schema = "http://"
         endpoint = handler_conf.endpoint
         path = handler_conf.path
@@ -194,7 +194,7 @@ class EventHandler:
         url = "{}{}:{}{}{}".format(schema, endpoint, port, separator, path)
 
         response = Requester.request(
-            method=method, url=url, json=data, headers=json_header, timeout=timeout
+            method=method, url=url, json=data, headers=json_header, timeout=timeout, model=handler_conf.group_id
         )
 
         return response.status_code, response
