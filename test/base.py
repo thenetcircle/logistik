@@ -185,11 +185,6 @@ class MockDb(object):
     def setup(self, env):
         self.env = env
 
-    def get_handler_for(self, node_id):
-        if node_id not in self.handlers:
-            raise HandlerNotFoundException(node_id)
-        return self.handlers[node_id][self.env.handler_types[0].name]
-
     def get_all_enabled_handlers(self):
         handlers = list()
 
@@ -202,30 +197,6 @@ class MockDb(object):
     def get_all_handlers(self) -> list:
         return [handlers[self.env.handler_types[0].name] for handlers in self.handlers.values()]
 
-    def register_handler(self, handler_conf):
-        self.handlers[handler_conf.node_id()] = dict()
-        for handler_type in self.env.handler_types:
-            self.handlers[handler_conf.node_id()][handler_type.name] = handler_conf
-        return handler_conf
-
-    def disable_handler(self, node_id):
-        if node_id not in self.handlers:
-            return
-
-        for handler_type in self.env.handler_types:
-            self.handlers[node_id][handler_type.name].enabled = False
-
-    def promote_canary(self, node_id: str):
-        if node_id not in self.handlers:
-            return
-
-        for handler_type in self.env.handler_types:
-            self.handlers[node_id][handler_type.name].model_type = ModelTypes.MODEL
-
-        new_node_id = node_id.replace(ModelTypes.CANARY, ModelTypes.MODEL)
-        self.handlers[new_node_id] = self.handlers[node_id]
-        del self.handlers[node_id]
-
     def update_handler(self, handler_conf: HandlerConf):
         if handler_conf.node_id() not in self.handlers:
             return
@@ -236,52 +207,9 @@ class MockDb(object):
                 updated = handler_conf.__getattribute__(field)
                 self.handlers[handler_conf.node_id()][handler_type.name].__setattr__(field, updated)
 
-    def enable_handler(self, node_id):
-        if node_id not in self.handlers:
-            return
-
-        for handler_type in self.env.handler_types:
-            self.handlers[node_id][handler_type.name].enabled = True
-
-    def find_one_handler(self, service_id, hostname, node):
-        for model_type in [ModelTypes.MODEL, ModelTypes.CANARY]:
-            node_id = HandlerConf.to_node_id(service_id, hostname, model_type, node)
-            handlers = self.handlers.get(node_id, None)
-            if handlers is not None:
-                return handlers[self.env.handler_types[0].name]
-        return None
-
-    def update_consul_service_id_and_group_id(
-            self, handler_conf: HandlerConf, consul_service_id: str, tags: dict
-    ) -> HandlerConf:
-        handlers = self.handlers[handler_conf.node_id()]
-        if handlers is None:
-            return None
-
-        for handler_type in self.env.handler_types:
-            handlers[handler_type.name].consul_service_id = consul_service_id
-            handlers[handler_type.name].group_id = \
-                tags.get(ServiceTags.GROUP_ID, None) or handlers[handler_type.name].service_id.split('-')[0]
-
-        return handlers[self.env.handler_types[0].name]
-
-    def find_one_similar_handler(self, query_service_id):
-        for node_id, handlers in self.handlers.items():
-            service_id, hostname, model_type, node = HandlerConf.from_node_id(node_id)
-            if service_id == query_service_id:
-                return handlers[self.env.handler_types[0].name]
-        return None
-
 
 class MockCache(ICache):
-    def get_enabled_handlers_for(self, event_name: str) -> List[HandlerConf]:
-        pass
-
-    def reset_enabled_handlers_for(self, event_name: str) -> None:
-        pass
-
-    def set_enabled_handlers_for(self, event_name: str, handlers: List[HandlerConf]):
-        pass
+    pass
 
 
 class MockEnv(GNEnvironment):

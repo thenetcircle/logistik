@@ -276,62 +276,6 @@ def authorized():
     return environ.env.web_auth.authorized()
 
 
-@app.route('/promote/<node_id>')
-def promote(node_id: str) -> None:
-    environ.env.handlers_manager.stop_handler(node_id)
-    handler_conf = environ.env.db.promote_canary(node_id)
-
-    if handler_conf is not None:
-        environ.env.handlers_manager.start_handler(handler_conf.node_id())
-
-    return redirect('/')
-
-
-@app.route('/deregister/<consul_service_id>')
-def deregister(consul_service_id: str) -> None:
-    environ.env.consul.deregister(consul_service_id)
-    return redirect('/')
-
-
-@app.route('/enable/<node_id>')
-def enable(node_id: str) -> None:
-    environ.env.db.enable_handler(node_id)
-    environ.env.handlers_manager.start_handler(node_id)
-    return redirect('/')
-
-
-@app.route('/disable/<node_id>')
-def disable(node_id: str) -> None:
-    environ.env.handlers_manager.stop_handler(node_id)
-    environ.env.db.disable_handler(node_id)
-    return redirect('/')
-
-
-@app.route('/retire/<node_id>')
-def retire(node_id: str) -> None:
-    environ.env.handlers_manager.stop_handler(node_id)
-    environ.env.db.retire_model(node_id)
-    return redirect('/')
-
-
-@app.route('/delete/<node_id>')
-def delete_handler(node_id: str) -> None:
-    environ.env.handlers_manager.stop_handler(node_id)
-    environ.env.db.delete_handler(node_id)
-    return redirect('/')
-
-
-@app.route('/demote/<node_id>')
-def demote(node_id: str) -> None:
-    environ.env.handlers_manager.stop_handler(node_id)
-    handler_conf = environ.env.db.demote_model(node_id)
-
-    if handler_conf is not None:
-        environ.env.handlers_manager.start_handler(handler_conf.node_id())
-
-    return redirect('/')
-
-
 @app.route('/api/handlers', methods=['GET'])
 @requires_auth
 def get_handlers():
@@ -345,14 +289,6 @@ def get_handlers():
 def get_consumers():
     consumers = environ.env.handlers_manager.get_handlers()
     return api_response(200, consumers)
-
-
-@app.route('/api/stats/aggregated', methods=['GET'])
-@requires_auth
-def get_agg_stats():
-    """ Get aggregated statistics """
-    agg_stats = environ.env.db.get_all_aggregated_stats()
-    return api_response(200, [stat.to_json() for stat in agg_stats])
 
 
 @app.route('/api/graph', methods=['GET'])

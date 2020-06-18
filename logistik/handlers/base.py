@@ -2,4 +2,5 @@ from logistik.handlers import IHandler
 
 
 class BaseHandler(IHandler):
-    pass
+    OK = True
+    FAIL = False
