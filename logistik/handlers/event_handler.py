@@ -138,7 +138,6 @@ class EventHandler:
         handler_func = partial(HttpHandler.call_handler, data)
         responses = list()
         failures = list()
-        threads = list()
         handlers = list()
 
         for handler in all_handlers:
@@ -154,17 +153,27 @@ class EventHandler:
         manager = Manager()
         return_dict = manager.dict()
 
+        threads_to_start = list()
+        threads_to_join = list()
+
         # create one process for each http request
         for handler in handlers:
             p = Process(target=handler_func, args=(handler, return_dict))
-            threads.append((p, handler))
+            threads_to_start.append((p, handler))
 
         # start all http requests at the same time
-        for p, _ in threads:
-            p.start()
+        for p, handler in threads_to_start:
+            try:
+                p.start()
+                threads_to_join.append((p, handler))
+            except Exception as e:
+                self.logger.error(f"could not start to handle: {str(e)}")
+                self.logger.exception(e)
+                self.env.capture_exception(sys.exc_info())
+                failures.append(handler)
 
         # wait for all models to return responses
-        for p, handler in threads:
+        for p, handler in threads_to_join:
             try:
                 p.join()
             except Exception as e:
@@ -198,7 +207,7 @@ class EventHandler:
                 responses.append((handler, dict_response))
 
         # clean-up
-        for p, _ in threads:
+        for p, _ in threads_to_start:
             try:
                 p.terminate()
             except Exception as e:
@@ -207,27 +216,6 @@ class EventHandler:
                 self.env.capture_exception(sys.exc_info())
 
         return responses, failures
-
-    @staticmethod
-    def call_handler(data: dict, conf: HandlerConf):
-        schema = "http://"
-        json_header = {"Context-Type": "application/json"}
-
-        method = "POST"
-        if conf.method is not None and len(conf.method.strip()) > 0:
-            method = conf.method
-
-        separator = ""
-        if conf.path is not None and conf.path[0] != "/":
-            separator = "/"
-
-        url = "{}{}:{}{}{}".format(schema, conf.endpoint, conf.port, separator, conf.path)
-
-        response = Requester.request(
-            method=method, url=url, json=data, headers=json_header, timeout=conf.timeout, model=conf.service_id
-        )
-
-        return response.status_code, response
 
     def try_to_parse(self, data) -> Activity:
         try:
