@@ -30,10 +30,6 @@ class IKafkaReader(ABC):
 
 class IKafkaWriter(ABC):
     @abstractmethod
-    def log(self, topic: str, data: dict) -> None:
-        """pass"""
-
-    @abstractmethod
     def fail(self, topic: str, data: dict) -> None:
         """pass"""
 
