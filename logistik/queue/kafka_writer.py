@@ -64,6 +64,8 @@ class KafkaWriter(IKafkaWriter):
                 return
 
             key = data.get("actor", dict()).get("id", None)
+            if key is not None:
+                key = bytes(key, "utf-8")
 
             if "retries" in data:
                 del data["retries"]
@@ -75,7 +77,7 @@ class KafkaWriter(IKafkaWriter):
             self.env.capture_exception(sys.exc_info())
             self.drop_msg(data)
 
-    def try_to_publish(self, conf: HandlerConf, message, key=None) -> None:
+    def try_to_publish(self, conf: HandlerConf, message, key: bytes = None) -> None:
         if key is None:
             self.producer.send(conf.return_to, message)
         else:
