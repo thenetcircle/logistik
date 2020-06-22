@@ -50,31 +50,36 @@ class KafkaWriter(IKafkaWriter):
             bootstrap_servers=bootstrap_servers,
         )
 
-    def publish(self, conf: HandlerConf, str_msg: dict) -> None:
+    def publish(self, conf: HandlerConf, data: dict) -> None:
         try:
             # if rest api returns [response, error_code]
-            if type(str_msg) == list:
-                str_msg = str_msg[0]
+            if type(data) == list:
+                data = data[0]
         except Exception as e:
             self.logger.warning(f"could not get response from list: {str(e)}")
-            self.logger.warning(f"response was: {str_msg}")
+            self.logger.warning(f"response was: {data}")
 
         try:
             if conf.return_to is None or len(conf.return_to.strip()) == 0:
                 return
 
-            if "retries" in str_msg:
-                del str_msg["retries"]
+            key = data.get("actor", dict()).get("id", None)
 
-            self.try_to_publish(conf, str_msg)
+            if "retries" in data:
+                del data["retries"]
+
+            self.try_to_publish(conf, data, key=key)
         except Exception as e:
             self.logger.error("could not publish response: {}".format(str(e)))
             self.logger.exception(e)
             self.env.capture_exception(sys.exc_info())
-            self.drop_msg(str_msg)
+            self.drop_msg(data)
 
-    def try_to_publish(self, conf: HandlerConf, message) -> None:
-        self.producer.send(conf.return_to, message)
+    def try_to_publish(self, conf: HandlerConf, message, key=None) -> None:
+        if key is None:
+            self.producer.send(conf.return_to, message)
+        else:
+            self.producer.send(conf.return_to, message, key=key)
 
     def create_loggers(self):
         def _create_logger(_path: str, _name: str) -> logging.Logger:
@@ -92,9 +97,6 @@ class KafkaWriter(IKafkaWriter):
         )
 
         self.dropped_response_log = _create_logger(d_response_path, "DroppedResponses")
-
-    def log(self, topic: str, data: dict) -> None:
-        self.producer.send(topic, data)
 
     def fail(self, topic: str, data: dict) -> None:
         if topic is None or len(topic.strip()) == 0:
