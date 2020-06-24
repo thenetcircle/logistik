@@ -81,7 +81,7 @@ class EventHandler:
             except Exception as e:
                 message = f"could not call handlers: {str(e)}"
                 self.fail(message, data)
-                raise e  # noqa: pycharm thiks this is unreachable
+                raise e  # noqa: pycharm thinks this is unreachable
 
             if len(responses):
                 all_responses.extend(responses)
@@ -99,9 +99,6 @@ class EventHandler:
                 self.logger.warning(
                     f"[{event_id}] failed handlers: {failed_handler_names}"
                 )
-                self.logger.warning(
-                    f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s"
-                )
 
                 # only warn on the first retry
                 if retry_idx == 0:
@@ -118,17 +115,20 @@ class EventHandler:
 
                 retry_idx += 1
 
-            # if there were failures before, send an OK alert
-            elif retry_idx > 0:
-                info_str = f"[{event_id}] all handlers succeeded at retry {retry_idx}"
-                self.env.webhook.ok(info_str, topic_name, event_id)
-                self.logger.info(info_str)
-                break
+                self.logger.warning(
+                    f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s"
+                )
 
             # exponential back-off
             if retry_idx > 0:
                 self.logger.info(f"sleeping for {delay:.2f}s before next retry")
                 time.sleep(delay)
+
+        # if there were failures before, send an OK alert
+        if retry_idx > 0:
+            info_str = f"[{event_id}] all handlers succeeded at retry {retry_idx}"
+            self.env.webhook.ok(info_str, topic_name, event_id)
+            self.logger.info(info_str)
 
         return all_responses
 
