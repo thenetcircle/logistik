@@ -94,7 +94,7 @@ class EventHandler:
             if len(failures):
                 handlers.clear()
 
-                failed_handler_names = ",".join([handler.name for handler in handlers])
+                failed_handler_names = ",".join([handler.name for handler in failures])
                 self.logger.warning(
                     f"[{event_id}] failed handlers: {failed_handler_names}"
                 )
