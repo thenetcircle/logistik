@@ -93,12 +93,20 @@ class EventHandler:
             # handle any potential failures
             if len(failures):
                 handlers.clear()
-                handlers.extend(failures)
 
                 failed_handler_names = ",".join([handler.name for handler in handlers])
                 self.logger.warning(
                     f"[{event_id}] failed handlers: {failed_handler_names}"
                 )
+
+                # otherwise it may retry forever, might be an issue with the source image
+                if retry_idx > 20:
+                    ok_str = f"handlers failed too much, dropping event: {failed_handler_names}"
+                    self.env.webhook.ok(ok_str, topic_name, event_id)
+                    all_responses.extend(failures)
+                    continue
+
+                handlers.extend(failures)
 
                 # only warn on the first retry
                 if retry_idx == 0:
