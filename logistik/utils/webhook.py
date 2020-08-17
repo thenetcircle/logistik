@@ -40,12 +40,7 @@ class WebHookHandler(IWebHookHandler):
     def _format(self, severity, message, topic_name, event_id):
         return {
             "username": "Logistik",
-            "text": f"""
-                #### {severity}: Logistik has issues.\n
-                | Topic | Event | Failed Handlers |
-                |:-----------|:-----------:|:-----------------------------|
-                | {topic_name or 'unknown'} | {event_id or 'unknown'} | {message} | 
-            """,
+            "text": f"#### {severity}: Logistik has issues.\n| Topic | Event | Failed Handlers |\n|:-----------|:-----------:|:-----------------------------|\n| {topic_name or 'unknown'} | {event_id or 'unknown'} | {message} |",
         }
 
     def _send(self, data: dict):
