@@ -1,3 +1,4 @@
+import ast
 import logging
 import sys
 import time
@@ -5,7 +6,7 @@ import traceback
 from functools import partial
 from multiprocessing import Manager
 from multiprocessing import Process
-from typing import List
+from typing import List, Optional, Set
 from typing import Tuple
 
 from activitystreams import Activity
@@ -23,7 +24,7 @@ STATUS_CODES_NOT_TO_RETRY_FOR = {200, 422, 404, 400}
 
 
 class EventHandler:
-    def __init__(self, env, topic: str, handlers: list):
+    def __init__(self, env, topic: str, handlers: List[HandlerConf]):
         self.env = env
         self.logger = logging.getLogger(__name__)
         self.topic = topic
@@ -54,13 +55,63 @@ class EventHandler:
             self.env.capture_exception(sys.exc_info())
             raise e
 
-        handlers = self.handlers.copy()
+        handlers = self.get_handlers_for_request(data)
 
         try:
             return self.handle_with_exponential_back_off(activity, data, handlers)
         except Exception as e:
             self.fail(f"could not handle event: {str(e)}", data)
             raise e  # noqa: pycharm thiks this is unreachable
+
+    def get_handlers_for_request(self, activity: Activity):
+        """
+        target.content could be set to e.g. "[\"pose\",\"gender\"]", to
+        not use all models configured for the topic
+        """
+        channels = self.get_channels_for(activity)
+        all_handlers = self.handlers.copy()
+
+        if channels is None:
+            return all_handlers
+
+        return [
+            handler
+            for handler in all_handlers
+            if handler.group_id in channels
+        ]
+
+    def get_channels_for(self, activity: Activity) -> Optional[Set]:
+        default_response = None
+
+        if not hasattr(activity, "target"):
+            return default_response
+
+        target = activity.target
+        if not hasattr(target, "content") or not hasattr(target, "object_type"):
+            return default_response
+
+        if target.object_type != "channel":
+            return default_response
+        if target.content is None or len(target.content) == 0:
+            return default_response
+
+        try:
+            channels = ast.literal_eval(target.content)
+        except Exception as e:
+            self.logger.error(f"count not check target.content: {str(e)}")
+            self.logger.error(f"target.content was {target.content}")
+            self.logger.exception(e)
+            return default_response
+
+        # evaluating "[]" will have length 0
+        if len(channels) == 0 or not type(channels) == list:
+            return default_response
+
+        # evaluating "[\"\"]" will have length 1, and first element length 0
+        if len(channels) == 1 and len(channels[0]) == 0:
+            return default_response
+
+        return set(channels)
 
     def handle_with_exponential_back_off(
         self, activity, data, handlers: list
