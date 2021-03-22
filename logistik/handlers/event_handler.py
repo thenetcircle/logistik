@@ -98,7 +98,7 @@ class EventHandler:
         try:
             channels = ast.literal_eval(target.content)
         except Exception as e:
-            self.logger.error(f"count not check target.content: {str(e)}")
+            self.logger.error(f"could not check target.content: {str(e)}")
             self.logger.error(f"target.content was {target.content}")
             self.logger.exception(e)
             return default_response
