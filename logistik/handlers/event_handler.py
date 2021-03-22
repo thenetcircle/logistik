@@ -1,23 +1,25 @@
-import hashlib
 import logging
 import sys
+import time
 import traceback
 from functools import partial
-from multiprocessing import Process
 from multiprocessing import Manager
-import time
-from typing import List, Tuple, Any
+from multiprocessing import Process
+from typing import List
+from typing import Tuple
 
 from activitystreams import Activity
 from activitystreams import parse as parse_as
 
 from logistik.db.reprs.handler import HandlerConf
 from logistik.handlers.http import HttpHandler
-from logistik.handlers.request import Requester
 from logistik.queue.kafka_writer import KafkaWriter
 from logistik.utils.exceptions import ParseException
 
 ONE_MINUTE = 60_000
+
+# don't retry on: 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
+STATUS_CODES_NOT_TO_RETRY_FOR = {200, 422, 404, 400}
 
 
 class EventHandler:
@@ -200,11 +202,8 @@ class EventHandler:
                 failures.append(handler)
                 continue
 
-            # don't retry on: 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
-            if status_code not in {200, 422, 404, 400}:
-                self.logger.warning(
-                    f"got status code {status_code} for handler {handler.node_id()}"
-                )
+            if status_code not in STATUS_CODES_NOT_TO_RETRY_FOR:
+                self.logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
                 failures.append(handler)
 
             else:

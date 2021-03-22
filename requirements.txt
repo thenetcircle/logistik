@@ -44,7 +44,7 @@ PyYAML==4.2b1
 raven==6.7.0
 redis==2.10.6
 regex==2019.12.20
-requests==2.20.0
+requests==2.25.1
 requests-oauthlib==0.8.0
 scalable-cuckoo-filter==1.1
 six==1.11.0
@@ -57,7 +57,7 @@ ttldict==0.3.0
 typed-ast==1.4.0
 typing==3.6.4
 Unidecode==1.0.22
-urllib3==1.25.9
+urllib3==1.26.4
 vine==1.1.4
 Werkzeug==0.16.0
 Yapsy==1.11.223
