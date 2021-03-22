@@ -19,8 +19,8 @@ from logistik.utils.exceptions import ParseException
 
 ONE_MINUTE = 60_000
 
-# don't retry on: 'OK', 'Duplicate Request', 'Not Found' and 'Bad Request'
-STATUS_CODES_NOT_TO_RETRY_FOR = {200, 422, 404, 400}
+# don't retry on: 'OK', 'No Content', 'Duplicate Request', 'Not Found' and 'Bad Request'
+STATUS_CODES_NOT_TO_RETRY_FOR = {200, 204, 422, 404, 400}
 
 
 class EventHandler:
