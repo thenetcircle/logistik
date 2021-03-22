@@ -74,11 +74,18 @@ class EventHandler:
         if channels is None:
             return all_handlers
 
-        return [
-            handler
-            for handler in all_handlers
-            if handler.group_id in channels
-        ]
+        handlers = list()
+        for handler in handlers:
+            for channel in channels:
+                if channel in handler.group_id:
+                    handlers.append(handler)
+
+        self.logger.info("channels on request: {}".format(channels))
+        self.logger.info("handlers matching channels: {}".format(
+            ",".join([handler.group_id for handler in handlers]))
+        )
+
+        return handlers
 
     def get_channels_for(self, activity: Activity) -> Optional[Set]:
         default_response = None
