@@ -30,15 +30,20 @@ def get_channels_for(activity: Activity) -> Optional[Set]:
     default_response = None
 
     if not hasattr(activity, "target"):
+        logger.info("no target")
         return default_response
 
     target = activity.target
     if not hasattr(target, "content") or not hasattr(target, "object_type"):
+        logger.info("no content or object_type")
         return default_response
 
     if target.object_type != "channel":
+        logger.info("object_type is not 'channel': {}".format(target.object_type))
         return default_response
+
     if target.content is None or len(target.content) == 0:
+        logger.info("object_type is blank")
         return default_response
 
     try:
@@ -51,10 +56,12 @@ def get_channels_for(activity: Activity) -> Optional[Set]:
 
     # evaluating "[]" will have length 0
     if len(channels) == 0 or not type(channels) == list:
+        logger.info("channels is empty or not list: {}".format(channels))
         return default_response
 
     # evaluating "[\"\"]" will have length 1, and first element length 0
     if len(channels) == 1 and len(channels[0]) == 0:
+        logger.info("channels only contains empty string: {}".format(channels))
         return default_response
 
     return set(channels)
