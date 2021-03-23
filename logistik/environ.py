@@ -517,6 +517,8 @@ def init_event_reader(gn_env: GNEnvironment, all_handlers: List[HandlerConf]):
 
         topic_to_handlers[handler.event].append(handler)
 
+    # TODO: use a Pool and terminate on SIGTERM
+
     for topic, handlers in topic_to_handlers.items():
         reader = EventReader(topic, handlers)
         process = Process(target=reader.run)
