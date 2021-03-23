@@ -92,7 +92,10 @@ class EventHandler:
 
     def handle_event(self, data) -> List[Tuple[HandlerConf, dict]]:
         try:
+            logger.info("parsing activity: {}".format(data))
             activity = self.try_to_parse(data)
+            logger.info("this is the activity: {}".format(activity.__dict__))
+            logger.info("this is the activity.target: {}".format(activity.target.__dict__)
         except InterruptedError:
             raise
         except Exception as e:
