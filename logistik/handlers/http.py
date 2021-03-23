@@ -27,9 +27,13 @@ class HttpHandler(BaseHandler):
 
         url = "{}{}:{}{}{}".format(schema, endpoint, port, separator, path)
 
-        response = Requester.request(
-            method=method, url=url, json=data, headers=json_header,
-            timeout=timeout, model=handler_conf.service_id
-        )
+        try:
+            response = Requester.request(
+                method=method, url=url, json=data, headers=json_header,
+                timeout=timeout, model=handler_conf.service_id
+            )
+            return_dict[handler_conf] = (response.status_code, response)
 
-        return_dict[handler_conf] = (response.status_code, response)
+        except Exception as e:
+            # 503: Service Unavailable
+            return_dict[handler_conf] = (503, e)

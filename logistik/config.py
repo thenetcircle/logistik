@@ -123,6 +123,7 @@ class ConfigKeys(object):
     WEBHOOK = "webhook"
     TIMEOUT = "timeout"
     CHANNEL_NAME = "channel"
+    MAX_RETRIES = "max_retries"
 
     DISCOVERY = "discovery"
     INTERVAL = "interval"

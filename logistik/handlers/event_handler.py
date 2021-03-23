@@ -8,6 +8,7 @@ from multiprocessing import Manager
 from multiprocessing import Process
 from typing import List, Optional, Set
 from typing import Tuple
+from logistik.config import ConfigKeys
 
 from activitystreams import Activity
 from activitystreams import parse as parse_as
@@ -34,6 +35,7 @@ class EventHandler:
         self.dropped_msg_log = None
         self.consumer = None
         self.kafka_writer = None
+        self.max_retries = env.config.get(ConfigKeys.MAX_RETRIES, default=5)
 
         self.create_kafka_writer()
 
@@ -160,7 +162,7 @@ class EventHandler:
                 )
 
                 # otherwise it may retry forever, might be an issue with the source image
-                if retry_idx > 20:
+                if retry_idx > self.max_retries:
                     ok_str = f"handlers failed too much, dropping event: {failed_handler_names}"
                     self.env.webhook.ok(ok_str, topic_name, event_id)
                     all_responses.extend(failures)
@@ -252,13 +254,16 @@ class EventHandler:
 
         # deal with failures and successes
         for handler, (status_code, response) in return_dict.items():
-            try:
-                dict_response = response.json()
-            except Exception as e:
-                self.logger.error("could not decode response: {}".format(str(e)))
-                self.logger.exception(e)
-                failures.append(handler)
-                continue
+            dict_response = None
+
+            if type(response) != Exception:
+                try:
+                    dict_response = response.json()
+                except Exception as e:
+                    self.logger.error("could not decode response: {}".format(str(e)))
+                    self.logger.exception(e)
+                    failures.append(handler)
+                    continue
 
             if status_code not in STATUS_CODES_NOT_TO_RETRY_FOR:
                 self.logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
