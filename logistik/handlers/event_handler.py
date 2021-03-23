@@ -126,7 +126,7 @@ class EventHandler:
             return all_handlers
 
         handlers = list()
-        for handler in handlers:
+        for handler in all_handlers:
             for channel in channels:
                 logger.info("checking if channel '{}' is in group_id '{}'? {}".format(
                     channel, handler.group_id, channel in handler.group_id
