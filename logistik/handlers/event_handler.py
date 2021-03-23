@@ -8,11 +8,12 @@ from multiprocessing import Manager
 from multiprocessing import Process
 from typing import List, Optional, Set
 from typing import Tuple
-from logistik.config import ConfigKeys
 
 from activitystreams import Activity
 from activitystreams import parse as parse_as
+from requests.models import Response
 
+from logistik.config import ConfigKeys
 from logistik.db.reprs.handler import HandlerConf
 from logistik.handlers.http import HttpHandler
 from logistik.queue.kafka_writer import KafkaWriter
@@ -256,7 +257,7 @@ class EventHandler:
         for handler, (status_code, response) in return_dict.items():
             dict_response = None
 
-            if type(response) != Exception:
+            if type(response) == Response:
                 try:
                     dict_response = response.json()
                 except Exception as e:
