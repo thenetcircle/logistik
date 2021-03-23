@@ -19,16 +19,50 @@ from logistik.handlers.http import HttpHandler
 from logistik.queue.kafka_writer import KafkaWriter
 from logistik.utils.exceptions import ParseException
 
-ONE_MINUTE = 60_000
+logger = logging.getLogger(__name__)
 
 # don't retry on: 'OK', 'No Content', 'Duplicate Request', 'Not Found' and 'Bad Request'
 STATUS_CODES_NOT_TO_RETRY_FOR = {200, 204, 422, 404, 400}
+ONE_MINUTE = 60_000
+
+
+def get_channels_for(activity: Activity) -> Optional[Set]:
+    default_response = None
+
+    if not hasattr(activity, "target"):
+        return default_response
+
+    target = activity.target
+    if not hasattr(target, "content") or not hasattr(target, "object_type"):
+        return default_response
+
+    if target.object_type != "channel":
+        return default_response
+    if target.content is None or len(target.content) == 0:
+        return default_response
+
+    try:
+        channels = ast.literal_eval(target.content)
+    except Exception as e:
+        logger.error(f"could not check target.content: {str(e)}")
+        logger.error(f"target.content was {target.content}")
+        logger.exception(e)
+        return default_response
+
+    # evaluating "[]" will have length 0
+    if len(channels) == 0 or not type(channels) == list:
+        return default_response
+
+    # evaluating "[\"\"]" will have length 1, and first element length 0
+    if len(channels) == 1 and len(channels[0]) == 0:
+        return default_response
+
+    return set(channels)
 
 
 class EventHandler:
     def __init__(self, env, topic: str, handlers: List[HandlerConf]):
         self.env = env
-        self.logger = logging.getLogger(__name__)
         self.topic = topic
         self.handlers = handlers
 
@@ -50,11 +84,11 @@ class EventHandler:
         except InterruptedError:
             raise
         except Exception as e:
-            self.logger.error(
+            logger.error(
                 "could not parse data, original data was: {}".format(str(data))
             )
-            self.logger.exception(e)
-            self.logger.exception(traceback.format_exc())
+            logger.exception(e)
+            logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
             raise e
 
@@ -71,7 +105,7 @@ class EventHandler:
         target.content could be set to e.g. "[\"pose\",\"gender\"]", to
         not use all models configured for the topic
         """
-        channels = self.get_channels_for(activity)
+        channels = get_channels_for(activity)
         all_handlers = self.handlers.copy()
 
         if channels is None:
@@ -83,45 +117,12 @@ class EventHandler:
                 if channel in handler.group_id:
                     handlers.append(handler)
 
-        self.logger.info("channels on request: {}".format(channels))
-        self.logger.info("handlers matching channels: {}".format(
+        logger.info("channels on request: {}".format(channels))
+        logger.info("handlers matching channels: {}".format(
             ",".join([handler.group_id for handler in handlers]))
         )
 
         return handlers
-
-    def get_channels_for(self, activity: Activity) -> Optional[Set]:
-        default_response = None
-
-        if not hasattr(activity, "target"):
-            return default_response
-
-        target = activity.target
-        if not hasattr(target, "content") or not hasattr(target, "object_type"):
-            return default_response
-
-        if target.object_type != "channel":
-            return default_response
-        if target.content is None or len(target.content) == 0:
-            return default_response
-
-        try:
-            channels = ast.literal_eval(target.content)
-        except Exception as e:
-            self.logger.error(f"could not check target.content: {str(e)}")
-            self.logger.error(f"target.content was {target.content}")
-            self.logger.exception(e)
-            return default_response
-
-        # evaluating "[]" will have length 0
-        if len(channels) == 0 or not type(channels) == list:
-            return default_response
-
-        # evaluating "[\"\"]" will have length 1, and first element length 0
-        if len(channels) == 1 and len(channels[0]) == 0:
-            return default_response
-
-        return set(channels)
 
     def handle_with_exponential_back_off(
         self, activity, data, handlers: list
@@ -158,7 +159,7 @@ class EventHandler:
                 handlers.clear()
 
                 failed_handler_names = ",".join([handler.name for handler in failures])
-                self.logger.warning(
+                logger.warning(
                     f"[{event_id}] failed handlers: {failed_handler_names}"
                 )
 
@@ -185,21 +186,18 @@ class EventHandler:
                     delay *= 1.2
 
                 retry_idx += 1
-
-                self.logger.warning(
-                    f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s"
-                )
+                logger.warning(f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s")
 
             # exponential back-off
             if retry_idx > 0:
-                self.logger.info(f"sleeping for {delay:.2f}s before next retry")
+                logger.info(f"sleeping for {delay:.2f}s before next retry")
                 time.sleep(delay)
 
         # if there were failures before, send an OK alert
         if retry_idx > 0:
             info_str = f"[{event_id}] all handlers succeeded at retry {retry_idx}"
             self.env.webhook.ok(info_str, topic_name, event_id)
-            self.logger.info(info_str)
+            logger.info(info_str)
 
         return all_responses
 
@@ -218,7 +216,7 @@ class EventHandler:
                 handlers.append(handler)
             else:
                 key = self.env.cache.get_response_key_from_request(handler, data)
-                self.logger.info(f"found cached response for {key}")
+                logger.info(f"found cached response for {key}")
                 responses.append((handler, cached_response))
 
         manager = Manager()
@@ -238,8 +236,8 @@ class EventHandler:
                 p.start()
                 threads_to_join.append((p, handler))
             except Exception as e:
-                self.logger.error(f"could not start to handle: {str(e)}")
-                self.logger.exception(e)
+                logger.error(f"could not start to handle: {str(e)}")
+                logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
                 failures.append(handler)
 
@@ -248,8 +246,8 @@ class EventHandler:
             try:
                 p.join()
             except Exception as e:
-                self.logger.error(f"could not handle: {str(e)}")
-                self.logger.exception(e)
+                logger.error(f"could not handle: {str(e)}")
+                logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
                 failures.append(handler)
 
@@ -261,13 +259,13 @@ class EventHandler:
                 try:
                     dict_response = response.json()
                 except Exception as e:
-                    self.logger.error("could not decode response: {}".format(str(e)))
-                    self.logger.exception(e)
+                    logger.error("could not decode response: {}".format(str(e)))
+                    logger.exception(e)
                     failures.append(handler)
                     continue
 
             if status_code not in STATUS_CODES_NOT_TO_RETRY_FOR:
-                self.logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
+                logger.warning(f"got status code {status_code} for handler {handler.node_id()}")
                 failures.append(handler)
 
             else:
@@ -282,8 +280,8 @@ class EventHandler:
             try:
                 p.terminate()
             except Exception as e:
-                self.logger.error(f"could not close process: {str(e)}")
-                self.logger.exception(e)
+                logger.error(f"could not close process: {str(e)}")
+                logger.exception(e)
                 self.env.capture_exception(sys.exc_info())
 
         return responses, failures
@@ -296,11 +294,11 @@ class EventHandler:
 
     def fail(self, message, data) -> None:
         try:
-            self.logger.error(message)
-            self.logger.error(f"request was: {str(data)}")
-            self.logger.exception(traceback.format_exc())
+            logger.error(message)
+            logger.error(f"request was: {str(data)}")
+            logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
             self.env.webhook.critical(message, event_id=data.get("id")[:8])
         except Exception as e:
-            self.logger.error(f"exception in fail(): {str(e)}")
-            self.logger.exception(e)
+            logger.error(f"exception in fail(): {str(e)}")
+            logger.exception(e)

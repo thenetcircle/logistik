@@ -35,6 +35,7 @@ stats:
   prefix: '$LK_STATSD_PREFIX'
 
 secret: '$LK_SECRET_KEY'
+max_retries: $LK_MAX_RETRIES
 
 discovery:
   interval: 3
