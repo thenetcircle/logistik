@@ -84,9 +84,7 @@ class EventHandler:
         except InterruptedError:
             raise
         except Exception as e:
-            logger.error(
-                "could not parse data, original data was: {}".format(str(data))
-            )
+            logger.error("could not parse data, original data was: {}".format(str(data)))
             logger.exception(e)
             logger.exception(traceback.format_exc())
             self.env.capture_exception(sys.exc_info())
@@ -106,6 +104,7 @@ class EventHandler:
         not use all models configured for the topic
         """
         channels = get_channels_for(activity)
+        logger.info("channels on request: {}".format(channels))
         all_handlers = self.handlers.copy()
 
         if channels is None:
@@ -114,6 +113,9 @@ class EventHandler:
         handlers = list()
         for handler in handlers:
             for channel in channels:
+                logger.info("checking if channel '{}' is in group_id '{}'? {}".format(
+                    channel, handler.group_id, channel in handler.group_id
+                ))
                 if channel in handler.group_id:
                     handlers.append(handler)
 
