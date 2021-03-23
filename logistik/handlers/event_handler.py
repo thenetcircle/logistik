@@ -70,7 +70,12 @@ class EventHandler:
         self.dropped_msg_log = None
         self.consumer = None
         self.kafka_writer = None
-        self.max_retries = env.config.get(ConfigKeys.MAX_RETRIES, default=5)
+
+        try:
+            self.max_retries = int(float(env.config.get(ConfigKeys.MAX_RETRIES, default=5)))
+        except Exception as e:
+            logger.error("could not parse max_retries from config, defaulting to 5: {}".format(str(e)))
+            self.max_retries = 5
 
         self.create_kafka_writer()
 
