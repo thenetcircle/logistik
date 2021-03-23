@@ -105,7 +105,7 @@ class EventHandler:
             self.env.capture_exception(sys.exc_info())
             raise e
 
-        handlers = self.get_handlers_for_request(data)
+        handlers = self.get_handlers_for_request(activity)
 
         try:
             return self.handle_with_exponential_back_off(activity, data, handlers)
