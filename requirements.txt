@@ -40,7 +40,7 @@ python-consul==0.7.2
 python-dateutil==2.7.2
 python-slugify==1.2.6
 pytz==2018.4
-PyYAML==4.2b1
+PyYAML==5.4
 raven==6.7.0
 redis==2.10.6
 regex==2019.12.20
