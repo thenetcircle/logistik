@@ -124,6 +124,7 @@ class ConfigKeys(object):
     TIMEOUT = "timeout"
     CHANNEL_NAME = "channel"
     MAX_RETRIES = "max_retries"
+    GROUP_ID = "group_id"
 
     DISCOVERY = "discovery"
     INTERVAL = "interval"

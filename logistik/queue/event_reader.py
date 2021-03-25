@@ -89,25 +89,24 @@ class EventReader:
                 time.sleep(1)
 
     def create_consumer(self):
-        self.reader_factory = KafkaReaderFactory()
-
-        bootstrap_servers = self.env.config.get(
-            ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA
-        )
+        bootstrap_servers = self.env.config.get(ConfigKeys.HOSTS, domain=ConfigKeys.KAFKA)
+        group_id = self.group_id()
 
         self.logger.info("bootstrapping from servers: %s" % (str(bootstrap_servers)))
-        self.logger.info("consuming from topic {}".format(self.topic))
+        self.logger.info("consuming from topic {} using group_id {}".format(self.topic, group_id))
 
+        self.reader_factory = KafkaReaderFactory()
         self.consumer = self.reader_factory.create_consumer(
             self.topic,
-            group_id=self.group_id(),
+            group_id=group_id,
             bootstrap_servers=bootstrap_servers,
             enable_auto_commit=True,
             auto_offset_reset="latest",
             connections_max_idle_ms=9 * ONE_MINUTE,  # default: 9min
             max_poll_interval_ms=10 * ONE_MINUTE,  # default: 5min
             session_timeout_ms=ONE_MINUTE,  # default: 10s
-            max_poll_records=50,  # default: 500
+            max_poll_records=50,  # default: 500,
+            max_in_flight_requests_per_connection=10,  # default: 5
         )
 
     def create_event_manager(self):
@@ -174,6 +173,15 @@ class EventReader:
             return self.fail(e, message, data)
 
     def group_id(self):
+        group_id = self.env.config.get(
+            ConfigKeys.GROUP_ID,
+            domain=ConfigKeys.KAFKA,
+            default=""
+        )
+
+        if len(group_id) and not group_id != "$LK_GROUP_ID":
+            return group_id
+
         dt = datetime.utcnow().replace(tzinfo=pytz.utc).strftime("%y%m%d")
         return f"{self.topic}-{dt}"
 
