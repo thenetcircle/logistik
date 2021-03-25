@@ -2,6 +2,7 @@ kafka:
   topic: '$LK_TOPIC'
   hosts: '$LK_KAFKA_HOSTS'
   group_id: '$LK_GROUP_ID'
+  increment_group_id: $LK_INCREMENT_GROUP_ID
 
 database:
   type: 'rdbms'
