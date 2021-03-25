@@ -125,6 +125,7 @@ class ConfigKeys(object):
     CHANNEL_NAME = "channel"
     MAX_RETRIES = "max_retries"
     GROUP_ID = "group_id"
+    INCREMENT_GROUP_ID = "increment_group_id"
 
     DISCOVERY = "discovery"
     INTERVAL = "interval"

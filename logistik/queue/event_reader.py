@@ -182,8 +182,17 @@ class EventReader:
         if len(group_id) and not group_id != "$LK_GROUP_ID":
             return group_id
 
-        dt = datetime.utcnow().replace(tzinfo=pytz.utc).strftime("%y%m%d")
-        return f"{self.topic}-{dt}"
+        increment_group_id = self.env.config.get(
+            ConfigKeys.INCREMENT_GROUP_ID,
+            domain=ConfigKeys.KAFKA,
+            default=True
+        )
+
+        suffix = ""
+        if type(increment_group_id) == bool and increment_group_id:
+            suffix = "-" + datetime.utcnow().replace(tzinfo=pytz.utc).strftime("%y%m%d")
+
+        return f"{self.topic}{suffix}"
 
     def fail(self, e, message, message_value):
         self.logger.error("got uncaught exception: {}".format(str(e)))
