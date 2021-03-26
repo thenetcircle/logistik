@@ -179,7 +179,7 @@ class EventReader:
             default=""
         )
 
-        if len(group_id) and not group_id != "$LK_GROUP_ID":
+        if len(group_id) and group_id != "$LK_GROUP_ID":
             return group_id
 
         increment_group_id = self.env.config.get(
