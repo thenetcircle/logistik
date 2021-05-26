@@ -68,7 +68,7 @@ class CacheRedis(ICache):
         handler_hash = self._hash_for(handler)
         provider_id = request.get("provider", dict()).get("id", "-1")
         user_id = request.get("actor", dict()).get("id", "-1")
-        image_id = request.get("object", dict()).get("id", "-1")
+        image_id = request.get("object", dict()).get("url", "").split("/")[-1].split(".")[0]
 
         return RedisKeys.response_for(
             provider_id=provider_id,
