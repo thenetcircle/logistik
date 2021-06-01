@@ -57,7 +57,7 @@ ttldict==0.3.0
 typed-ast==1.4.0
 typing==3.6.4
 Unidecode==1.0.22
-urllib3==1.26.4
+urllib3==1.26.5
 vine==1.1.4
 Werkzeug==0.16.0
 Yapsy==1.11.223
