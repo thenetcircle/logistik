@@ -149,7 +149,7 @@ class EventHandler:
             except InterruptedError:
                 raise
             except Exception as e:
-                message = f"could not call handlers: {str(e)}"
+                message = f"[{event_id}] could not call handlers: {str(e)}"
                 self.fail(message, data)
                 raise e  # noqa: pycharm thinks this is unreachable
 
@@ -171,7 +171,7 @@ class EventHandler:
 
                 # otherwise it may retry forever, might be an issue with the source image
                 if retry_idx > self.max_retries:
-                    ok_str = f"handlers failed too much, dropping event: {failed_handler_names}"
+                    ok_str = f"[{event_id}] handlers failed too much, dropping event: {failed_handler_names}"
                     self.env.webhook.ok(ok_str, topic_name, event_id)
                     all_responses.extend(failures)
                     continue
@@ -180,12 +180,12 @@ class EventHandler:
 
                 # only warn on the first retry
                 if retry_idx == 0:
-                    warning_str = f"handlers failed: {failed_handler_names}"
+                    warning_str = f"[{event_id}] handlers failed: {failed_handler_names}"
                     self.env.webhook.warning(warning_str, topic_name, event_id)
 
                 # max delay is 10m, send critical alert
                 if delay >= 600:
-                    warning_str = f"handlers still failing after {retry_idx} retries: {failed_handler_names}"
+                    warning_str = f"[{event_id}] handlers still failing after {retry_idx} retries: {failed_handler_names}"
                     self.env.webhook.critical(warning_str, event_id=data.get("id")[:8])
                     delay = 600
                 else:
@@ -196,7 +196,7 @@ class EventHandler:
 
             # exponential back-off
             if retry_idx > 0:
-                logger.info(f"sleeping for {delay:.2f}s before next retry")
+                logger.info(f"[{event_id}] sleeping for {delay:.2f}s before next retry")
                 time.sleep(delay)
 
         # if there were failures before, send an OK alert
