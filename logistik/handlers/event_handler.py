@@ -141,7 +141,9 @@ class EventHandler:
         else:
             topic_name = "<unknown>"
 
-        while len(all_responses) < len(handlers):
+        n_responses_expected = len(handlers)
+
+        while len(all_responses) < n_responses_expected:
             try:
                 responses, failures = self.call_handlers(data, handlers)
             except InterruptedError:
