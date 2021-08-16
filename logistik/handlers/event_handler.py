@@ -181,7 +181,7 @@ class EventHandler:
                 # only warn on the first retry
                 if retry_idx == 0:
                     warning_str = f"[{event_id}] handlers failed: {failed_handler_names}"
-                    self.env.webhook.warning(warning_str, topic_name, event_id)
+                    # self.env.webhook.warning(warning_str, topic_name, event_id)
 
                 # max delay is 10m, send critical alert
                 if delay >= 600:
@@ -202,8 +202,8 @@ class EventHandler:
         # if there were failures before, send an OK alert
         if retry_idx > 0:
             info_str = f"[{event_id}] all handlers succeeded at retry {retry_idx}"
-            self.env.webhook.ok(info_str, topic_name, event_id)
             logger.info(info_str)
+            # self.env.webhook.ok(info_str, topic_name, event_id)
 
         return all_responses
 
