@@ -191,12 +191,9 @@ class EventHandler:
                 else:
                     delay *= 1.2
 
+                # exponential back-off
                 retry_idx += 1
                 logger.warning(f"[{event_id}] retry {retry_idx}, delay {delay:.2f}s")
-
-            # exponential back-off
-            if retry_idx > 0:
-                logger.info(f"[{event_id}] sleeping for {delay:.2f}s before next retry")
                 time.sleep(delay)
 
         # if there were failures before, send an OK alert
