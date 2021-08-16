@@ -15,6 +15,7 @@ class Requester(IRequester):
     def request(method, url, json=None, headers=None, model=None, timeout=10, verbose=True):
         provider = "unknown provider"
         image_id = "unknown image_id"
+        event_id = "unknown act id"
 
         if timeout is None or int(float(timeout)) <= 0:
             timeout = 10
@@ -25,6 +26,7 @@ class Requester(IRequester):
         if json is not None:
             provider = json.get("provider", dict()).get("id", provider)
             image_id = json.get("object", dict()).get("id", image_id)
+            event_id = json.get("id", event_id)[:8]
 
         try:
             response = requests.request(
@@ -33,11 +35,11 @@ class Requester(IRequester):
 
             if verbose:
                 response_code = response.status_code
-                logger.info(f"[{provider}] [{image_id}]: {response_code} - {url} ({model})")
+                logger.info(f"[{provider}] [{event_id}] [{image_id}]: {response_code} - {url} ({model})")
 
         except Exception as e:
             response_code = str(e)
-            logger.info(f"[{provider}] [{image_id}]: {response_code} - {url} ({model})")
+            logger.error(f"[{provider}] [{event_id}] [{image_id}]: {response_code} - {url} ({model})")
             raise e
 
         return response
