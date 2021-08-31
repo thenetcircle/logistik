@@ -215,8 +215,8 @@ class EventHandler:
         def call_handler(_handler, _return_dict):
             handler_func = partial(HttpHandler.call_handler, data)
 
-            with self.tracer.start_span(operation_name=f"remote:{_handler.name}", child_of=span_ctx) as _:
-                handler_func(_handler, _return_dict)
+            with self.tracer.start_span(operation_name=f"remote:{_handler.name}", child_of=span_ctx) as child_span:
+                handler_func(_handler, _return_dict, child_span)
 
         responses = list()
         failures = list()

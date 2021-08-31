@@ -1,5 +1,7 @@
 import logging
 import requests
+import opentracing
+from opentracing import Format
 
 from logistik.handlers import IRequester
 
@@ -12,7 +14,7 @@ class Requester(IRequester):
     """
 
     @staticmethod
-    def request(method, url, json=None, headers=None, model=None, timeout=10, verbose=True):
+    def request(method, url, json=None, headers=None, model=None, timeout=10, verbose=True, child_span=None):
         provider = "unknown provider"
         image_id = "unknown image_id"
         event_id = "unknown act id"
@@ -29,6 +31,14 @@ class Requester(IRequester):
             event_id = json.get("id", event_id)[:8]
 
         try:
+            if child_span is not None:
+                headers = headers or dict()
+                opentracing.global_tracer().inject(
+                    span_context=child_span.context,
+                    format=Format.HTTP_HEADERS,
+                    carrier=headers
+                )
+
             response = requests.request(
                 method=method, url=url, json=json, headers=headers, timeout=timeout
             )
