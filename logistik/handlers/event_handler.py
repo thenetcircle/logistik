@@ -62,7 +62,7 @@ def get_channels_for(activity: Activity) -> Optional[Set]:
 
 
 class EventHandler:
-    def __init__(self, env, topic: str, handlers: List[HandlerConf]):
+    def __init__(self, env, topic: str, handlers: List[HandlerConf], tracer):
         self.env = env
         self.topic = topic
         self.handlers = handlers
@@ -71,6 +71,7 @@ class EventHandler:
         self.dropped_msg_log = None
         self.consumer = None
         self.kafka_writer = None
+        self.tracer = tracer
 
         try:
             self.max_retries = int(float(env.config.get(ConfigKeys.MAX_RETRIES, default=5)))
@@ -84,7 +85,7 @@ class EventHandler:
         self.kafka_writer = KafkaWriter(self.env)
         self.kafka_writer.setup()
 
-    def handle_event(self, data) -> List[Tuple[HandlerConf, dict]]:
+    def handle_event(self, data, span_ctx=None) -> List[Tuple[HandlerConf, dict]]:
         try:
             activity = self.try_to_parse(data)
         except InterruptedError:
@@ -99,7 +100,7 @@ class EventHandler:
         handlers = self.get_handlers_for_request(activity)
 
         try:
-            return self.handle_with_exponential_back_off(activity, data, handlers)
+            return self.handle_with_exponential_back_off(activity, data, handlers, span_ctx=span_ctx)
         except Exception as e:
             self.fail(f"could not handle event: {str(e)}", data)
             raise e  # noqa: pycharm thiks this is unreachable
@@ -129,7 +130,11 @@ class EventHandler:
         return handlers
 
     def handle_with_exponential_back_off(
-        self, activity, data, handlers: list
+            self,
+            activity,
+            data,
+            handlers: list,
+            span_ctx=None
     ) -> List[Tuple[HandlerConf, dict]]:
         all_responses: List[Tuple[HandlerConf, dict]] = list()
         retry_idx = 0
@@ -145,7 +150,7 @@ class EventHandler:
 
         while len(all_responses) < n_responses_expected:
             try:
-                responses, failures = self.call_handlers(data, handlers)
+                responses, failures = self.call_handlers(data, handlers, pan_ctx=span_ctx)
             except InterruptedError:
                 raise
             except Exception as e:
@@ -205,9 +210,14 @@ class EventHandler:
         return all_responses
 
     def call_handlers(
-        self, data: dict, all_handlers: List[HandlerConf]
+        self, data: dict, all_handlers: List[HandlerConf], span_ctx=None
     ) -> (List[Tuple[HandlerConf, dict]], list):
-        handler_func = partial(HttpHandler.call_handler, data)
+        def call_handler(_handler, _return_dict):
+            handler_func = partial(HttpHandler.call_handler, data)
+
+            with self.tracer.start_span(operation_name=f"remote:{_handler.name}", child_of=span_ctx) as _:
+                handler_func(_handler, _return_dict)
+
         responses = list()
         failures = list()
         handlers = list()
@@ -230,7 +240,7 @@ class EventHandler:
 
         # create one process for each http request
         for handler in handlers:
-            p = Process(target=handler_func, args=(handler, return_dict))
+            p = Process(target=call_handler, args=(handler, return_dict))
             threads_to_start.append((p, handler))
 
         # start all http requests at the same time

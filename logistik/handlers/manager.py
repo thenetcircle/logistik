@@ -14,13 +14,13 @@ class HandlersManager(IHandlersManager):
         self.logger = logging.getLogger(__name__)
         self.handler: EventHandler = None
 
-    def handle_event(self, topic, event):
+    def handle_event(self, topic, event, span_ctx=None):
         if topic != self.handler.topic:
             self.logger.error(f"no handler configured for topic '{topic}'")
             return list()
 
-        return self.handler.handle_event(event)
+        return self.handler.handle_event(event, span_ctx=None)
 
-    def start_event_handler(self, topic: str, handlers: list):
+    def start_event_handler(self, topic: str, handlers: list, tracer=None):
         self.logger.info(f"starting handler for {topic}")
-        self.handler = EventHandler(self.env, topic, handlers.copy())
+        self.handler = EventHandler(self.env, topic, handlers.copy(), tracer)

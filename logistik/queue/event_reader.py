@@ -6,6 +6,7 @@ import time
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
+from functools import wraps
 from typing import Union
 
 import pytz
@@ -20,6 +21,18 @@ from logistik.queue.kafka_writer import KafkaWriter
 from logistik.utils.exceptions import ParseException
 
 ONE_MINUTE = 60_000
+
+
+def trace(tracer, name, event):
+    def factory(view_func):
+        @wraps(view_func)
+        def decorator(*args, **kwargs):
+            with tracer.start_span(name) as span:
+                span.set_tag('event', event)
+                return view_func(*args, **kwargs)
+
+        return decorator
+    return factory
 
 
 class IKafkaReaderFactory(ABC):
@@ -50,12 +63,36 @@ class EventReader:
         self.reader_factory = None
         self.consumer = None
         self.env = None
+        self.tracer = None
         self.handler_manager = None
         self.kafka_writer: IKafkaWriter = None
+
+    def init_tracer(self):
+        try:
+            from jaeger_client import Config
+        except ImportError:
+            self.logger.warning("[detectorlib] jaeger-client is not installed, not enabling tracing")
+            return
+
+        config = Config(
+            config={
+                'sampler': {
+                    'type': 'const',
+                    'param': 1,
+                },
+                'logging': True,
+            },
+            service_name=f"lk:{self.topic}",
+            validate=True
+        )
+
+        # this also sets opentracing.tracer
+        self.tracer = config.initialize_tracer(io_loop=None)
 
     def run(self, sleep_time=3, exit_on_failure=False):
         self.create_env()
         self.create_loggers()
+        self.init_tracer()
 
         if self.topic == "UNMAPPED":
             self.logger.warning("not enabling reading, topic is UNMAPPED")
@@ -119,7 +156,7 @@ class EventReader:
             event_handlers.append(handler)
 
         self.handler_manager = HandlersManager(self.env)
-        self.handler_manager.start_event_handler(self.topic, event_handlers)
+        self.handler_manager.start_event_handler(self.topic, event_handlers, self.tracer)
 
     def create_env(self):
         config_paths = None
@@ -131,6 +168,13 @@ class EventReader:
 
         self.env = env
 
+    def handle_event(self, topic, data):
+        self.logger.info(f"request: {data}")
+
+        with self.tracer.start_span("call event handler") as span:
+            span.set_tag('event', data)
+            self.handler_manager.handle_event(topic, data, span_ctx=span)
+
     def try_to_read(self):
         for message in self.consumer:
             data = self.try_to_parse(message)
@@ -138,8 +182,7 @@ class EventReader:
                 continue
 
             try:
-                self.logger.info(f"request: {data}")
-                self.handler_manager.handle_event(message.topic, data)
+                self.handle_event(message.topic, data)
             except Exception as e:
                 event_id = data.get("id")[:8]
                 self.logger.error(

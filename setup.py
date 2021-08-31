@@ -36,6 +36,8 @@ setup(
         'codecov',
         'coverage',
         'kombu',
+        'jaeger-client',
+        'opentracing'
         'ttldict',
         'typing',
         'nose-parameterized',
