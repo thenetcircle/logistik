@@ -171,8 +171,8 @@ class EventReader:
     def handle_event(self, topic, data):
         self.logger.info(f"request: {data}")
 
-        with self.tracer.start_span("call event handler") as span:
-            span.set_tag('event', data)
+        with self.tracer.start_span("handle-event") as span:
+            span.log_kv(data)
             span.set_tag('event_id', data['id'])
             self.handler_manager.handle_event(topic, data, span_ctx=span)
 
