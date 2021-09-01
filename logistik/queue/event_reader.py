@@ -82,7 +82,7 @@ class EventReader:
                 },
                 'logging': True,
             },
-            service_name=f"lk:{self.topic}",
+            service_name=f"lk-{self.topic}",
             validate=True
         )
 
@@ -173,6 +173,7 @@ class EventReader:
 
         with self.tracer.start_span("call event handler") as span:
             span.set_tag('event', data)
+            span.set_tag('event_id', data['id'])
             self.handler_manager.handle_event(topic, data, span_ctx=span)
 
     def try_to_read(self):
