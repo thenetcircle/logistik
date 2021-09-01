@@ -150,7 +150,7 @@ class EventHandler:
 
         while len(all_responses) < n_responses_expected:
             try:
-                responses, failures = self.call_handlers(data, handlers, pan_ctx=span_ctx)
+                responses, failures = self.call_handlers(data, handlers, span_ctx=span_ctx)
             except InterruptedError:
                 raise
             except Exception as e:
@@ -183,15 +183,10 @@ class EventHandler:
 
                 handlers.extend(failures)
 
-                # only warn on the first retry
-                if retry_idx == 0:
-                    warning_str = f"[{event_id}] handlers failed: {failed_handler_names}"
-                    # self.env.webhook.warning(warning_str, topic_name, event_id)
-
                 # max delay is 10m, send critical alert
                 if delay >= 600:
-                    warning_str = f"[{event_id}] handlers still failing after {retry_idx} retries: {failed_handler_names}"
-                    self.env.webhook.critical(warning_str, event_id=data.get("id")[:8])
+                    warn_str = f"[{event_id}] handlers still failing after {retry_idx} retries: {failed_handler_names}"
+                    self.env.webhook.critical(warn_str, event_id=data.get("id")[:8])
                     delay = 600
                 else:
                     delay *= 1.2
