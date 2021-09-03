@@ -63,36 +63,12 @@ class EventReader:
         self.reader_factory = None
         self.consumer = None
         self.env = None
-        self.tracer = None
         self.handler_manager = None
         self.kafka_writer: IKafkaWriter = None
-
-    def init_tracer(self):
-        try:
-            from jaeger_client import Config
-        except ImportError:
-            self.logger.warning("[detectorlib] jaeger-client is not installed, not enabling tracing")
-            return
-
-        config = Config(
-            config={
-                'sampler': {
-                    'type': 'const',
-                    'param': 1,
-                },
-                'logging': True,
-            },
-            service_name=f"lk-{self.topic}",
-            validate=True
-        )
-
-        # this also sets opentracing.tracer
-        self.tracer = config.initialize_tracer(io_loop=None)
 
     def run(self, sleep_time=3, exit_on_failure=False):
         self.create_env()
         self.create_loggers()
-        self.init_tracer()
 
         if self.topic == "UNMAPPED":
             self.logger.warning("not enabling reading, topic is UNMAPPED")
@@ -156,7 +132,7 @@ class EventReader:
             event_handlers.append(handler)
 
         self.handler_manager = HandlersManager(self.env)
-        self.handler_manager.start_event_handler(self.topic, event_handlers, self.tracer)
+        self.handler_manager.start_event_handler(self.topic, event_handlers)
 
     def create_env(self):
         config_paths = None
@@ -171,9 +147,8 @@ class EventReader:
     def handle_event(self, topic, data):
         self.logger.info(f"request: {data}")
 
-        with self.tracer.start_span("handle-event") as span:
+        with self.env.tracer.start_span("handle-event") as span:
             span.log_kv(data)
-            span.set_tag('event_id', data['id'])
             self.handler_manager.handle_event(topic, data, span_ctx=span)
 
     def try_to_read(self):

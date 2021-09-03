@@ -62,7 +62,7 @@ def get_channels_for(activity: Activity) -> Optional[Set]:
 
 
 class EventHandler:
-    def __init__(self, env, topic: str, handlers: List[HandlerConf], tracer):
+    def __init__(self, env, topic: str, handlers: List[HandlerConf]):
         self.env = env
         self.topic = topic
         self.handlers = handlers
@@ -71,7 +71,6 @@ class EventHandler:
         self.dropped_msg_log = None
         self.consumer = None
         self.kafka_writer = None
-        self.tracer = tracer
 
         try:
             self.max_retries = int(float(env.config.get(ConfigKeys.MAX_RETRIES, default=5)))
@@ -210,7 +209,7 @@ class EventHandler:
         def call_handler(_handler, _return_dict):
             handler_func = partial(HttpHandler.call_handler, data)
 
-            with self.tracer.start_span(operation_name=f"remote:{_handler.name}", child_of=span_ctx) as child_span:
+            with self.env.tracer.start_span(name=f"remote:{_handler.name}", child_of=span_ctx) as child_span:
                 handler_func(_handler, _return_dict, child_span)
 
         responses = list()

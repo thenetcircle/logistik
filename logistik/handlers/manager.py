@@ -19,8 +19,8 @@ class HandlersManager(IHandlersManager):
             self.logger.error(f"no handler configured for topic '{topic}'")
             return list()
 
-        return self.handler.handle_event(event, span_ctx=None)
+        return self.handler.handle_event(event, span_ctx=span_ctx)
 
-    def start_event_handler(self, topic: str, handlers: list, tracer=None):
+    def start_event_handler(self, topic: str, handlers: list):
         self.logger.info(f"starting handler for {topic}")
-        self.handler = EventHandler(self.env, topic, handlers.copy(), tracer)
+        self.handler = EventHandler(self.env, topic, handlers.copy())

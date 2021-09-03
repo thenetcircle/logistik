@@ -69,6 +69,27 @@ class ReverseProxied(object):
         return self.app(env, start_response)
 
 
+def init_tracer():
+    try:
+        from jaeger_client import Config
+    except ImportError:
+        logger.warning("[detectorlib] jaeger-client is not installed, not enabling tracing")
+        return
+
+    config = Config(
+        config={
+            'sampler': {
+                'type': 'const',
+                'param': 1,
+            },
+            'logging': True,
+        },
+        service_name=f"logistik",
+        validate=True
+    )
+    return config.initialize_tracer()
+
+
 def create_app():
     config_paths = None
     if "LK_CONFIG" in os.environ:
@@ -76,6 +97,7 @@ def create_app():
 
     env = create_env(config_paths)
     initialize_env(env, is_parent_process=True)
+    env.tracer = init_tracer()
 
     environ.env = env
     environ.env.dbman = env.dbman

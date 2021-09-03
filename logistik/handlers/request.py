@@ -1,7 +1,7 @@
 import logging
 import requests
-import opentracing
-from opentracing import Format
+import easytracer
+from easytracer import Format
 
 from logistik.handlers import IRequester
 
@@ -33,7 +33,7 @@ class Requester(IRequester):
         try:
             if child_span is not None:
                 headers = headers or dict()
-                opentracing.global_tracer().inject(
+                easytracer.inject(
                     span_context=child_span.context,
                     format=Format.HTTP_HEADERS,
                     carrier=headers

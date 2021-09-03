@@ -30,7 +30,7 @@ class HttpHandler(BaseHandler):
         try:
             response = Requester.request(
                 method=method, url=url, json=data, headers=json_header,
-                timeout=timeout, model=handler_conf.service_id
+                timeout=timeout, model=handler_conf.service_id, child_span=child_span
             )
             return_dict[handler_conf] = (response.status_code, response)
 
