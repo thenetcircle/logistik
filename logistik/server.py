@@ -10,7 +10,6 @@ from werkzeug.contrib.fixers import ProxyFix
 from logistik import environ
 from logistik.config import ConfigKeys
 from logistik.environ import create_env, initialize_env
-from logistik.utils.exceptions import QueryException
 
 log_level = os.environ.get("LOG_LEVEL", "DEBUG")
 if log_level == "DEBUG":
@@ -71,9 +70,9 @@ class ReverseProxied(object):
 
 def init_tracer():
     try:
-        from jaeger_client import Config
+        from easytracer import Config
     except ImportError:
-        logger.warning("[detectorlib] jaeger-client is not installed, not enabling tracing")
+        logger.warning("[detectorlib] easytracer is not installed, not enabling tracing")
         return
 
     config = Config(
@@ -84,8 +83,7 @@ def init_tracer():
             },
             'logging': True,
         },
-        service_name=f"logistik",
-        validate=True
+        service_name="logistik"
     )
     return config.initialize_tracer()
 
