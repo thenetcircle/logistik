@@ -161,6 +161,7 @@ class GNEnvironment(object):
         self.dbman = None
         self.app = None
         self.api = None
+        self.tracer = None
         self.root_path = root_path
         self.config = config
         self.cache: ICache = None
@@ -532,6 +533,28 @@ def init_webhook(gn_env: GNEnvironment):
     gn_env.webhook = WebHookHandler(gn_env)
 
 
+def init_tracer(gn_env: GNEnvironment):
+    try:
+        from easytracer import Config
+    except ImportError:
+        logger.warning("easytracer is not installed, not enabling tracing")
+        return
+
+    config = Config(
+        config={
+            'sampler': {
+                'type': 'const',
+                'param': 1,
+            },
+            'logging': True,
+        },
+        service_name="logistik"
+    )
+
+    gn_env.tracer = config.init_tracer()
+    logger.info(f"configured tracer...")
+
+
 def initialize_env(lk_env, is_parent_process=True):
     global env
     env = lk_env
@@ -541,6 +564,7 @@ def initialize_env(lk_env, is_parent_process=True):
     init_stats_service(lk_env)
     init_enrichment_service(lk_env)
     init_webhook(lk_env)
+    init_tracer(lk_env)
 
     if is_parent_process:
         init_db_service(lk_env)
