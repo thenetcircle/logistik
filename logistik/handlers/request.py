@@ -33,7 +33,7 @@ class Requester(IRequester):
             if child_span is not None:
                 headers = headers or dict()
                 easytracer.inject(
-                    span=child_span.context,
+                    span=child_span,
                     carrier=headers
                 )
 
