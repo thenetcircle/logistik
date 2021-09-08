@@ -85,7 +85,7 @@ def init_tracer():
         },
         service_name="logistik"
     )
-    return config.initialize_tracer()
+    return config.init_tracer()
 
 
 def create_app():

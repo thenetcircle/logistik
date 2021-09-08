@@ -34,5 +34,4 @@ strict-rfc3339==0.7
 urllib3==1.26.4
 Werkzeug==0.16.0
 Yapsy==1.11.223
-jaeger-client>=4.3,<5
-opentracing==2.4.0
+easytracer==0.1.1
