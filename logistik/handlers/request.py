@@ -1,7 +1,6 @@
 import logging
 import requests
 import easytracer
-from easytracer import Format
 
 from logistik.handlers import IRequester
 
