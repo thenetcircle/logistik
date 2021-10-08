@@ -34,4 +34,4 @@ strict-rfc3339==0.7
 urllib3==1.26.4
 Werkzeug==0.16.0
 Yapsy==1.11.223
-easytracer==0.1.1
+easytracer==0.1.3
