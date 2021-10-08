@@ -147,7 +147,7 @@ class EventReader:
     def handle_event(self, topic, data):
         self.logger.info(f"request: {data}")
 
-        with self.env.tracer.start_span("handle-event") as span:
+        with self.env.tracer.start_span("handle-event", event_id=data["id"]) as span:
             span.log_kv(data)
             self.handler_manager.handle_event(topic, data, span_ctx=span)
 
