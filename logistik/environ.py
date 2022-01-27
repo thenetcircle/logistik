@@ -547,6 +547,7 @@ def init_tracer(gn_env: GNEnvironment):
                 'param': 1,
             },
             'logging': True,
+            'mock': True
         },
         service_name="logistik"
     )
