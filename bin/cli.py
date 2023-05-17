@@ -273,6 +273,7 @@ def main():
     options = prompt(initial_options)
     env = load_env(options['environment'])
     env.engine = create_db(env)
+    print()
 
     if options['action'] == 'list':
         list_handlers(env, options['filter'])
