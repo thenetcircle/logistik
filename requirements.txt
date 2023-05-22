@@ -1,7 +1,7 @@
 activitystreams==0.2.1
-eventlet==0.33.3
+eventlet==0.29.1
 fakeredis==2.12.1
-flask==2.3.2
+flask==2.2.2
 flask-cors==3.0.10
 Flask-OAuthlib==0.9.6
 flask-restful==0.3.9
@@ -22,3 +22,4 @@ tabulate==0.9.0
 statsd==4.0.1
 Yapsy==1.12.2
 urllib3==1.26.15
+dnspython==1.16.0
