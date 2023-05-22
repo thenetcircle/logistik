@@ -16,7 +16,7 @@ from requests.models import Response
 from logistik.config import ConfigKeys
 from logistik.db.reprs.handler import HandlerConf
 from logistik.handlers.http import HttpHandler
-from logistik.queue.kafka_writer import KafkaWriter
+from logistik.queues.kafka_writer import KafkaWriter
 from logistik.utils.exceptions import ParseException
 
 logger = logging.getLogger(__name__)

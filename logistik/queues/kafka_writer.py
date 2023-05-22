@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from requests import Response
 
 from logistik.db.reprs.handler import HandlerConf
-from logistik.queue import IKafkaWriter
+from logistik.queues import IKafkaWriter
 from logistik.config import ConfigKeys
 
 logging.getLogger("kafka").setLevel(logging.WARNING)

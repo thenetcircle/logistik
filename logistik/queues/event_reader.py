@@ -16,8 +16,8 @@ from activitystreams import parse as parse_as
 from logistik.config import ConfigKeys
 from logistik.environ import create_env, initialize_env
 from logistik.handlers.manager import HandlersManager
-from logistik.queue import IKafkaWriter
-from logistik.queue.kafka_writer import KafkaWriter
+from logistik.queues import IKafkaWriter
+from logistik.queues.kafka_writer import KafkaWriter
 from logistik.utils.exceptions import ParseException
 
 ONE_MINUTE = 60_000

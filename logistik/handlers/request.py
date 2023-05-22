@@ -1,6 +1,5 @@
 import logging
 import requests
-import easytracer
 
 from logistik.handlers import IRequester
 
@@ -30,13 +29,6 @@ class Requester(IRequester):
             event_id = json.get("id", event_id)[:8]
 
         try:
-            if child_span is not None:
-                headers = headers or dict()
-                easytracer.inject(
-                    span=child_span,
-                    carrier=headers
-                )
-
             response = requests.request(
                 method=method, url=url, json=json, headers=headers, timeout=timeout
             )

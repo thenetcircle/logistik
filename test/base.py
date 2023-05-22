@@ -15,8 +15,8 @@ from logistik.environ import ConfigDict
 from logistik.environ import GNEnvironment
 from logistik.handlers import IRequester
 from logistik.handlers.base import BaseHandler
-from logistik.queue import IKafkaWriter
-from logistik.queue.kafka_writer import IKafkaWriterFactory
+from logistik.queues import IKafkaWriter
+from logistik.queues.kafka_writer import IKafkaWriterFactory
 from logistik.stats import IStats
 from logistik.utils.exceptions import HandlerNotFoundException
 

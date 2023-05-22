@@ -16,7 +16,7 @@ from logistik.enrich import IEnrichmentManager
 from logistik.enrich import IEnricher
 from logistik.stats import IStats
 from logistik.cache import ICache
-from logistik.queue import IKafkaWriter
+from logistik.queues import IKafkaWriter
 from logistik.db import IDatabase, HandlerConf
 from logistik.utils import IWebHookHandler
 
@@ -507,7 +507,7 @@ def init_event_reader(gn_env: GNEnvironment, all_handlers: List[HandlerConf]):
     gn_env.event_readers = dict()
     topic_to_handlers = dict()
 
-    from logistik.queue.event_reader import EventReader
+    from logistik.queues.event_reader import EventReader
 
     for handler in all_handlers:
         if handler.retired or handler.event == "UNMAPPED":
@@ -533,29 +533,6 @@ def init_webhook(gn_env: GNEnvironment):
     gn_env.webhook = WebHookHandler(gn_env)
 
 
-def init_tracer(gn_env: GNEnvironment):
-    try:
-        from easytracer import Config
-    except ImportError:
-        logger.warning("easytracer is not installed, not enabling tracing")
-        return
-
-    config = Config(
-        config={
-            'sampler': {
-                'type': 'const',
-                'param': 1,
-            },
-            'logging': True,
-            'mock': True
-        },
-        service_name="logistik"
-    )
-
-    gn_env.tracer = config.init_tracer()
-    logger.info(f"configured tracer...")
-
-
 def initialize_env(lk_env, is_parent_process=True):
     global env
     env = lk_env
@@ -565,7 +542,6 @@ def initialize_env(lk_env, is_parent_process=True):
     init_stats_service(lk_env)
     init_enrichment_service(lk_env)
     init_webhook(lk_env)
-    init_tracer(lk_env)
 
     if is_parent_process:
         init_db_service(lk_env)
