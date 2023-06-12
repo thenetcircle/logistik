@@ -2,11 +2,10 @@ from activitystreams import Activity
 from flask import Flask
 from flask_testing import TestCase
 from requests import Response
-from typing import List
 
 from logistik.cache import ICache
 from logistik.cache.redis import CacheRedis
-from logistik.config import ErrorCodes, ServiceTags, ModelTypes, HandlerType
+from logistik.config import ErrorCodes, HandlerType, ConfigKeys
 from logistik.db import HandlerConf
 from logistik.enrich.identity import IdentityEnrichment
 from logistik.enrich.manager import EnrichmentManager
@@ -18,7 +17,6 @@ from logistik.handlers.base import BaseHandler
 from logistik.queues import IKafkaWriter
 from logistik.queues.kafka_writer import IKafkaWriterFactory
 from logistik.stats import IStats
-from logistik.utils.exceptions import HandlerNotFoundException
 
 
 class ResponseObject:
@@ -220,6 +218,7 @@ class MockEnv(GNEnvironment):
         self.stats = MockStats()
         self.cache = cache
         self.db = db
+        self.config.set(key=ConfigKeys.HOST, val='localhost', domain=ConfigKeys.WEBHOOK)
 
         if self.db is not None:
             self.db.setup(self)
@@ -244,8 +243,10 @@ class BaseTest(TestCase):
         app.config['TESTING'] = True
         return app
 
-    def setUp(self):
+    def setUp(self, use_cache=True):
         self.env = MockEnv()
         self.env.handlers_manager = MockHandler()
         self.env.enrichment_manager = EnrichmentManager(self.env)
-        self.env.cache = CacheRedis(self.env, host='mock')
+
+        if use_cache:
+            self.env.cache = CacheRedis(self.env, host='mock')

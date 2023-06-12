@@ -168,6 +168,12 @@ class EventHandler:
             if len(failures):
                 handlers.clear()
 
+                failed_handler_info = [["Name", "IP", "Port"]]
+                failed_handler_info.extend([
+                    [handler.name, handler.endpoint, handler.port]
+                    for handler in failures
+                ])
+
                 failed_handler_names = ",".join([handler.name for handler in failures])
                 logger.warning(
                     f"[{event_id}] failed handlers: {failed_handler_names}"
@@ -175,8 +181,8 @@ class EventHandler:
 
                 # otherwise it may retry forever, might be an issue with the source image
                 if retry_idx > self.max_retries:
-                    ok_str = f"[{event_id}] handlers failed too much, dropping event: {failed_handler_names}"
-                    self.env.webhook.ok(ok_str, topic_name, event_id)
+                    ok_str = f"handlers failed too much, dropping event"
+                    self.env.webhook.ok(ok_str, topic_name, event_id, failed_handler_info)
                     all_responses.extend(failures)
                     continue
 

@@ -19,10 +19,10 @@ class IWebHookHandler(ABC):
             return
         return self._send_critical(message, topic_name, event_id)
 
-    def ok(self, message, topic_name=None, event_id=None) -> None:
+    def ok(self, message, topic_name=None, event_id=None, failed_handler_info=None) -> None:
         if not self.enabled:
             return
-        return self._send_ok(message, topic_name, event_id)
+        return self._send_ok(message, topic_name, event_id, failed_handler_info)
 
     @abstractmethod
     def _send_warning(self, message, topic_name=None, event_id=None) -> None:
@@ -33,5 +33,5 @@ class IWebHookHandler(ABC):
         pass
 
     @abstractmethod
-    def _send_ok(self, message, topic_name=None, event_id=None) -> None:
+    def _send_ok(self, message, topic_name=None, event_id=None, failed_handler_info=None) -> None:
         pass
