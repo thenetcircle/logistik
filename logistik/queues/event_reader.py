@@ -1,24 +1,24 @@
 import json
 import logging
 import os
+import random
 import sys
 import time
 import traceback
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from datetime import datetime
 from functools import wraps
 from typing import Union
 
 import pytz
 from activitystreams import Activity
-from activitystreams import parse as parse_as
 
 from logistik.config import ConfigKeys
-from logistik.environ import create_env, initialize_env
+from logistik.environ import create_env
+from logistik.environ import initialize_env
 from logistik.handlers.manager import HandlersManager
 from logistik.queues import IKafkaWriter
-from logistik.queues.kafka_writer import KafkaWriter
-from logistik.utils.exceptions import ParseException
 
 ONE_MINUTE = 60_000
 
@@ -66,7 +66,7 @@ class EventReader:
         self.handler_manager = None
         self.kafka_writer: IKafkaWriter = None
 
-    def run(self, sleep_time=3, exit_on_failure=False):
+    def run(self, sleep_time=9, exit_on_failure=False):
         self.create_env()
         self.create_loggers()
 
@@ -78,10 +78,11 @@ class EventReader:
         self.create_event_manager()
 
         if sleep_time > 0:
+            random_sleep = random.random() * sleep_time + 1
             self.logger.info(
-                "sleeping for {} second(s) before consuming".format(sleep_time)
+                "sleeping for {:.1f} second(s) before consuming".format(random_sleep)
             )
-            time.sleep(sleep_time)
+            time.sleep(random_sleep)
 
         while True:
             try:
